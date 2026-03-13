@@ -1,0 +1,24 @@
+{
+  "name": "Territorio Aluvional - Relevamiento",
+  "short_name": "Aluvional",
+  "description": "Sistema de relevamiento territorial para los nodos del Territorio Aluvional",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080c14",
+  "theme_color": "#c9a54a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

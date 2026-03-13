@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c9a54a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aluvional">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Territorio Aluvional — Sistema de Relevamiento</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080c14;--surface:#0f1623;--surface2:#162034;--surface3:#1c2a45;
+  --border:#1b2a48;--border2:#263b62;--gold:#c9a54a;--gold-dark:#a88838;
+  --gold-light:#e0c46e;--text:#e2dace;--muted:#7e8fa8;--dim:#4e5e78;
+  --blue:#3878cc;--green:#2c8858;--red:#b83a2e;--orange:#cc8a1a;
+  --font:'EB Garamond',Georgia,serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* AUTH SCREEN */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 30px;width:100%;max-width:380px;text-align:center}
+.auth-logo{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;color:var(--bg);margin:0 auto 16px}
+.auth-title{font-size:22px;font-weight:600;color:var(--gold);margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.auth-field{text-align:left;margin-bottom:14px}
+.auth-field label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:4px}
+.auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none}
+.auth-field input:focus{border-color:var(--gold)}
+.auth-btn{width:100%;padding:11px;background:var(--gold);color:var(--bg);border:none;border-radius:7px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:background .2s}
+.auth-btn:hover{background:var(--gold-light)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-error{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+.auth-link{color:var(--gold);font-size:13px;cursor:pointer;margin-top:14px;display:inline-block}
+.auth-link:hover{text-decoration:underline}
+
+/* APP (hidden until login) */
+#app-screen{display:none}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:var(--bg)}
+.header-title{font-size:17px;font-weight:600;letter-spacing:.5px;color:var(--gold)}
+.header-sub{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-user{font-size:12px;color:var(--muted);text-align:right}
+.header-user b{color:var(--gold);display:block;font-size:13px}
+.header-logout{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--mono)}
+.header-logout:hover{border-color:var(--red);color:var(--red)}
+.offline-badge{background:var(--orange);color:var(--bg);font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;font-weight:600;display:none}
+
+/* NAV */
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex:0 0 auto;padding:11px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font);font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:all .2s}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn.active{color:var(--gold);background:var(--surface2);border-bottom-color:var(--gold);font-weight:600}
+.nav-btn svg{width:16px;height:16px}
+
+.main{max-width:980px;margin:0 auto;padding:20px 14px 80px}
+.section{display:none;flex-direction:column;gap:20px}
+.section.active{display:flex;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* COMPONENTS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px}
+.card-gold{border-color:rgba(201,165,74,.25)}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
+.section-title{font-size:21px;font-weight:600;color:var(--gold);margin-bottom:4px}
+.section-sub{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.stats{display:flex;flex-wrap:wrap;gap:10px}
+.stat{flex:1 1 110px;min-width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center}
+.stat-val{font-size:26px;font-weight:700;font-family:var(--mono)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.3}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field-label{font-size:12.5px;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:60px}
+.field select{cursor:pointer}
+.checkbox-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
+.checkbox-row label{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer;color:var(--text)}
+.checkbox-row input[type="checkbox"]{accent-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:6px;border:none;font-family:var(--font);font-size:14px;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--gold);color:var(--bg);font-weight:600}
+.btn-primary:hover{background:var(--gold-light)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.badge-gold{background:rgba(201,165,74,.14);color:var(--gold);border:1px solid rgba(201,165,74,.3)}
+.badge-blue{background:rgba(56,120,204,.14);color:var(--blue);border:1px solid rgba(56,120,204,.3)}
+.badge-green{background:rgba(44,136,88,.14);color:var(--green);border:1px solid rgba(44,136,88,.3)}
+.badge-red{background:rgba(184,58,46,.14);color:var(--red);border:1px solid rgba(184,58,46,.3)}
+.badge-orange{background:rgba(204,138,26,.14);color:var(--orange);border:1px solid rgba(204,138,26,.3)}
+.list-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:14px;margin-bottom:6px}
+.list-item-body{flex:1}
+.list-item-actions{display:flex;gap:4px;flex-shrink:0}
+.list-item-actions button{background:none;border:none;color:var(--dim);cursor:pointer;padding:3px;border-radius:4px}
+.list-item-actions button:hover{color:var(--text)}
+.layer{margin-top:10px;padding:13px 15px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.layer-title{font-size:13.5px;font-weight:600;margin-bottom:10px}
+.detail-panel{margin-top:14px;padding:14px;background:var(--bg);border-radius:8px;border:1px solid rgba(201,165,74,.25)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;font-size:13px;color:var(--muted)}
+.detail-grid strong{color:var(--text)}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{padding:8px 10px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
+.data-table td{padding:8px 10px;border-bottom:1px solid rgba(27,42,72,.3)}
+.data-table td.mono{font-family:var(--mono)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.bar-label{width:90px;font-size:12px;color:var(--muted);text-align:right;text-transform:capitalize}
+.bar-track{flex:1;background:var(--bg);border-radius:4px;height:18px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;min-width:22px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .4s ease}
+.bar-fill span{font-size:10px;color:#fff;font-family:var(--mono);font-weight:600}
+#map-container{width:100%;height:420px;border-radius:10px;overflow:hidden;border:1px solid var(--border);position:relative}
+.leaflet-container{background:var(--bg)!important}
+.map-controls{position:absolute;top:10px;right:10px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.map-control-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px)}
+.map-control-btn:hover{background:var(--surface2);border-color:var(--gold)}
+.map-nodo-select{position:absolute;top:10px;left:10px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;backdrop-filter:blur(8px)}
+.map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(15,22,35,.92);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;backdrop-filter:blur(8px)}
+.map-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;font-family:var(--font);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{opacity:1}
+.toast.error{background:var(--red)}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--dim);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:14px;color:var(--muted)}
+@media(max-width:600px){.header{padding:12px 14px}.header-title{font-size:14px}.header-user{display:none}.nav-btn{padding:10px 12px;font-size:12px}.main{padding:14px 10px 80px}.card{padding:14px}.form-grid{grid-template-columns:1fr}#map-container{height:350px}.stat{padding:10px}.stat-val{font-size:22px}.auth-box{padding:28px 20px}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">A</div>
+    <div class="auth-title">TERRITORIO ALUVIONAL</div>
+    <div class="auth-sub">Sistema de Relevamiento Territorial</div>
+    <div id="auth-form-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com"></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+      <button class="auth-btn" id="btn-login" onclick="doLogin()">Entrar</button>
+      <div class="auth-error" id="login-error"></div>
+      <div style="font-size:12px;color:var(--dim);margin-top:14px">Tu coordinador te asigna el acceso.</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen">
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">A</div>
+      <div><div class="header-title">TERRITORIO ALUVIONAL</div><div class="header-sub">RELEVAMIENTO</div></div>
+    </div>
+    <div class="header-right">
+      <span class="offline-badge" id="offline-badge">SIN CONEXIÓN</span>
+      <div class="header-user"><b id="header-nombre"></b><span id="header-nodo"></span></div>
+      <button class="header-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+  <div class="toast" id="toast"></div>
+  <div class="main">
+    <!-- INICIO -->
+    <div class="section" id="sec-inicio">
+      <div class="card card-gold" style="position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle at top right,rgba(201,165,74,.08),transparent);pointer-events:none"></div>
+        <h1 style="font-size:24px;font-weight:700;color:var(--gold);line-height:1.2">Relevamiento Territorial</h1>
+        <p style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:620px;line-height:1.6" id="inicio-welcome"></p>
+      </div>
+      <div class="stats" id="inicio-stats"></div>
+      <div class="card" id="inicio-hallazgos" style="display:none"><div class="card-title" style="color:var(--gold)">Hallazgos del relevamiento</div><div class="stats" id="inicio-hallazgos-stats"></div></div>
+    </div>
+
+    <!-- MAPA -->
+    <div class="section" id="sec-mapa">
+      <div><div class="section-title">Mapa del Territorio</div><div class="section-sub">Visualización georreferenciada del relevamiento de tu nodo.</div></div>
+      <div style="position:relative">
+        <div id="map-container"></div>
+        <div class="map-controls">
+          <button class="map-control-btn" onclick="captureMyLocation()">📍 Mi ubicación</button>
+          <button class="map-control-btn" onclick="fitMapToMarkers()">🔍 Ver todo</button>
+        </div>
+        <div class="map-legend">
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--red)"></div> Analfabeto</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--orange)"></div> Sin secundario</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--green)"></div> Alfabetizador pot.</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--blue)"></div> Visita estándar</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--gold)"></div> Institución</div>
+        </div>
+      </div>
+      <div class="stats" id="map-stats"></div>
+    </div>
+
+    <!-- TERRITORIO -->
+    <div class="section" id="sec-territorio">
+      <div><div class="section-title">Mapeo del Territorio</div><div class="section-sub">Fase 1: Hacé clic en el mapa para ubicar cada manzana. Completá los datos y guardá.</div></div>
+      
+      <!-- MAPA DE TERRITORIO -->
+      <div class="card" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+          <div style="font-size:14px;color:var(--gold);font-weight:600">📍 Hacé clic en el mapa para ubicar la manzana</div>
+          <div id="mz-map-coords" style="font-size:12px;font-family:var(--mono);color:var(--dim)"></div>
+        </div>
+        <div id="mz-map-container" style="width:100%;height:380px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Agregar Manzana</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">N° Manzana</span><input id="mz-num" placeholder="Ej: 42"></div>
+          <div class="field"><span class="field-label">Cuadrícula</span><input id="mz-cuad" placeholder="Ej: C-4"></div>
+          <div class="field"><span class="field-label">Cantidad de casas</span><input id="mz-casas" type="number" placeholder="0"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><input id="mz-notas" placeholder="Referencias, instituciones cercanas..."></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="guardarManzana()">＋ Agregar manzana</button>
+          <button class="btn btn-secondary btn-sm" onclick="captureMzLoc()">📍 Usar mi GPS</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearMzPin()">✕ Quitar pin</button>
+          <span id="mz-loc-status" style="font-size:12px;color:var(--dim)"></span>
+        </div>
+        <input type="hidden" id="mz-lat"><input type="hidden" id="mz-lng">
+      </div>
+      <div class="card" id="mz-list-card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin-bottom:0">Manzanas (<span id="mz-count">0</span>)</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-green" id="mz-relevadas-badge"></span>
+            <span class="badge badge-orange" id="mz-pendientes-badge"></span>
+          </div>
+        </div>
+        <div id="mz-list"></div>
+      </div>
+    </div>
+
+    <!-- RELEVAMIENTO -->
+    <div class="section" id="sec-relevamiento">
+      <div><div class="section-title">Relevamiento Casa por Casa</div><div class="section-sub">Tres capas: cómo vivimos, qué hacemos, cómo pensamos. Siempre en parejas.</div></div>
+      <div class="card">
+        <div class="card-title" style="color:var(--gold)">Nueva Visita</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Manzana</span><select id="vis-manzana"><option value="">Seleccionar...</option></select></div>
+          <div class="field"><span class="field-label">Dirección</span><input id="vis-dir" placeholder="Calle y número"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-secondary btn-sm" onclick="captureVisitaLoc()">📍 Capturar ubicación</button>
+          <span id="vis-loc-status" style="font-size:12px;color:var(--dim)"></span>
+        </div>
+        <input type="hidden" id="vis-lat"><input type="hidden" id="vis-lng">
+        <div class="layer" style="border-left:3px solid var(--gold)">
+          <div class="layer-title" style="color:var(--gold)">Capa 1: Cómo y de qué vivimos</div>
+          <div class="form-grid">
+            <div class="field"><span class="field-label">Ocupación</span><select id="vis-ocup"><option value="">Seleccionar...</option><option value="empleo_formal">Empleo formal</option><option value="changa">Changa / Informal</option><option value="plan">Plan social</option><option value="jubilacion">Jubilación</option><option value="desempleo">Desempleo</option><option value="otro">Otro</option></select></div>
+            <div class="field"><span class="field-label">Vivienda</span><select id="vis-viv"><option value="">Seleccionar...</option><option value="propia">Propia</option><option value="alquiler">Alquiler</option><option value="prestada">Prestada</option><option value="ocupada">Ocupada</option><option value="otro">Otro</option></select></div>
+            <div class="field"><span class="field-label">Comedor</span><select id="vis-comedor"><option value="">Seleccionar...</option><option value="asiste">Asiste</option><option value="necesita">Necesitaría</option><option value="no_necesita">No necesita</option></select></div>
+          </div>
+        </div>
+        <div class="layer" style="border-left:3px solid var(--blue)">
+          <div class="layer-title" style="color:var(--blue)">Capa 2: Qué hacemos</div>
+          <div class="form-grid">
+            <div class="field"><span class="field-label">Pibes y escuela</span><select id="vis-pibes"><option value="">Seleccionar...</option><option value="van_bien">Van y les va bien</option><option value="van_mal">Van pero les cuesta</option><option value="abandonaron">Abandonaron</option><option value="no_van">No van</option><option value="no_hay_pibes">No hay pibes</option></select></div>
+            <div class="field"><span class="field-label">Participa del barrio</span><input id="vis-participa" placeholder="Club, iglesia..."></div>
+          </div>
+          <div class="checkbox-row">
+            <label><input type="checkbox" id="vis-analfabeto"> No sabe leer/escribir</label>
+            <label><input type="checkbox" id="vis-sinsec"> Sin secundario completo</label>
+          </div>
+        </div>
+        <div class="layer" style="border-left:3px solid var(--green)">
+          <div class="layer-title" style="color:var(--green)">Capa 3: Cómo pensamos y sentimos</div>
+          <div class="form-grid">
+            <div class="field"><span class="field-label">Opinión gobierno</span><select id="vis-opin"><option value="">Seleccionar...</option><option value="apoyo">Apoya</option><option value="critico">Crítico</option><option value="indiferente">Indiferente</option><option value="no_opina">No opina</option></select></div>
+            <div class="field"><span class="field-label">Preocupación</span><input id="vis-preocup" placeholder="Trabajo, seguridad..."></div>
+            <div class="field"><span class="field-label">Qué cambiaría</span><input id="vis-cambio"></div>
+          </div>
+        </div>
+        <div class="checkbox-row" style="margin-top:12px">
+          <label style="color:var(--green);font-weight:500"><input type="checkbox" id="vis-disp-alf" style="accent-color:var(--green)"> Quiere alfabetizar</label>
+          <label style="color:var(--orange);font-weight:500"><input type="checkbox" id="vis-disp-ret" style="accent-color:var(--orange)"> Quiere retomar estudios</label>
+        </div>
+        <div class="field" style="margin-top:12px"><span class="field-label">Observaciones</span><textarea id="vis-obs" placeholder="Estado de la casa, tono de la conversación..."></textarea></div>
+        <div style="margin-top:14px"><button class="btn btn-primary" id="btn-guardar-visita" onclick="guardarVisita()">✓ Registrar visita</button></div>
+      </div>
+      <div class="card" id="vis-list-card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin-bottom:0">Visitas (<span id="vis-count">0</span>)</div>
+        </div>
+        <div id="vis-list"></div>
+        <div id="vis-detail" class="detail-panel" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- INSTITUCIONES -->
+    <div class="section" id="sec-instituciones">
+      <div><div class="section-title">Instituciones del Barrio</div><div class="section-sub">Escuelas, clubes, capillas, sociedades de fomento.</div></div>
+      <div class="card">
+        <div class="card-title">Agregar institución</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Nombre</span><input id="inst-nombre" placeholder="Club Atlético San José"></div>
+          <div class="field"><span class="field-label">Tipo</span><select id="inst-tipo"></select></div>
+          <div class="field"><span class="field-label">Contacto</span><input id="inst-contacto" placeholder="Nombre del referente"></div>
+          <div class="field"><span class="field-label">Teléfono</span><input id="inst-tel" placeholder="11-XXXX-XXXX"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><textarea id="inst-notas" placeholder="Horarios, disposición..."></textarea></div>
+        <div class="checkbox-row"><label><input type="checkbox" id="inst-colabora"> Colabora con alfabetización</label></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="guardarInstitucion()">＋ Agregar</button>
+          <button class="btn btn-secondary btn-sm" onclick="captureInstLoc()">📍 Ubicación</button>
+          <span id="inst-loc-status" style="font-size:12px;color:var(--dim)"></span>
+        </div>
+        <input type="hidden" id="inst-lat"><input type="hidden" id="inst-lng">
+      </div>
+      <div class="card" id="inst-list-card" style="display:none"><div class="card-title">Instituciones (<span id="inst-count">0</span>)</div><div id="inst-list"></div></div>
+    </div>
+
+    <!-- ALFABETIZACIÓN -->
+    <div class="section" id="sec-alfabetizacion">
+      <div><div class="section-title">Seguimiento DALE!</div><div class="section-sub">Dos sesiones por semana, 20 minutos. Cada pibe es un mundo.</div></div>
+      <div class="stats" id="dale-niveles"></div>
+      <div class="card">
+        <div class="card-title">Nuevo Alfabetizando</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Nombre</span><input id="alf-nombre" placeholder="Nombre completo"></div>
+          <div class="field"><span class="field-label">Edad</span><input id="alf-edad" type="number"></div>
+          <div class="field"><span class="field-label">Nivel DALE!</span><select id="alf-nivel"><option value="1">Nivel 1 - Básico</option><option value="2">Nivel 2 - Intermedio</option><option value="3">Nivel 3 - Consolidación</option></select></div>
+          <div class="field"><span class="field-label">Alfabetizador</span><input id="alf-alfabetizador" placeholder="Nombre del compañero"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><textarea id="alf-notas" placeholder="Diagnóstico inicial..."></textarea></div>
+        <div style="margin-top:12px"><button class="btn btn-primary" onclick="guardarAlfabetizando()">＋ Agregar</button></div>
+      </div>
+      <div class="card" id="alf-list-card" style="display:none"><div class="card-title">Alfabetizandos (<span id="alf-count">0</span>)</div><div id="alf-list"></div></div>
+    </div>
+
+    <!-- EQUIPO -->
+    <div class="section" id="sec-equipo">
+      <div><div class="section-title">Equipo del Nodo</div><div class="section-sub">Gestión de compañeros. Solo coordinadores pueden crear y administrar usuarios.</div></div>
+      <div class="card" id="equipo-crear-card">
+        <div class="card-title" style="color:var(--gold)">Agregar compañero/a al nodo</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Nombre completo</span><input id="eq-nombre" placeholder="María González"></div>
+          <div class="field"><span class="field-label">Email</span><input type="email" id="eq-email" placeholder="maria@email.com"></div>
+          <div class="field"><span class="field-label">Contraseña inicial</span><input id="eq-pass" placeholder="Mín. 6 caracteres" value=""></div>
+          <div class="field"><span class="field-label">Rol</span>
+            <select id="eq-rol">
+              <option value="alfabetizador">Alfabetizador</option>
+              <option value="coordinador_nodo">Coordinador de nodo</option>
+            </select>
+          </div>
+          <div class="field" id="eq-nodo-field" style="display:none"><span class="field-label">Nodo</span><select id="eq-nodo"></select></div>
+        </div>
+        <div class="field" style="margin-top:10px"><span class="field-label">Teléfono (opcional)</span><input id="eq-tel" placeholder="11-XXXX-XXXX"></div>
+        <div style="margin-top:14px">
+          <button class="btn btn-primary" id="btn-crear-usuario" onclick="crearUsuario()">＋ Crear cuenta</button>
+        </div>
+        <div id="eq-error" style="color:var(--red);font-size:13px;margin-top:8px;min-height:18px"></div>
+        <div id="eq-success" style="color:var(--green);font-size:13px;margin-top:4px;min-height:18px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Compañeros del nodo (<span id="eq-count">0</span>)</div>
+        <div id="eq-list"></div>
+      </div>
+    </div>
+
+    <!-- DATOS -->
+    <div class="section" id="sec-datos">
+      <div><div class="section-title">Panel de Datos</div><div class="section-sub">Análisis del relevamiento de tu nodo.</div></div>
+      <div style="margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button></div>
+      <div class="stats" id="data-stats"></div>
+      <div id="data-charts" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+// ═══════════════════════════════════════════════════════════════════
+// FIREBASE CONFIG
+// ═══════════════════════════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
+  authDomain: "aluviondb.firebaseapp.com",
+  projectId: "aluviondb",
+  storageBucket: "aluviondb.firebasestorage.app",
+  messagingSenderId: "695668160599",
+  appId: "1:695668160599:web:5a7c3baa00d7ef719a8b12"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// La sesión dura solo mientras el navegador esté abierto. Al cerrar, se desloguea.
+await setPersistence(auth, browserSessionPersistence);
+
+// Segunda instancia de Firebase para crear usuarios sin desloguear al actual
+const secondaryApp = initializeApp({
+  apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
+  authDomain: "aluviondb.firebaseapp.com",
+  projectId: "aluviondb",
+  storageBucket: "aluviondb.firebasestorage.app",
+  messagingSenderId: "695668160599",
+  appId: "1:695668160599:web:5a7c3baa00d7ef719a8b12"
+}, 'secondary');
+const secondaryAuth = getAuth(secondaryApp);
+
+// Offline persistence
+try { await enableIndexedDbPersistence(db); } catch(e) { console.warn('Offline mode limited:', e.code); }
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let currentUser = null; // { uid, nombre, email, nodo_id, rol }
+let currentTab = 'inicio';
+let isRegistering = false; // flag para evitar race condition en registro
+let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [];
+let map = null, markers = [], userMarker = null;
+let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null;
+
+const NODOS = [
+  {id:'merlo',nombre:'Merlo',lat:-34.6717,lng:-58.7275},
+  {id:'moron',nombre:'Morón',lat:-34.6528,lng:-58.6198},
+  {id:'tres_de_febrero',nombre:'Tres de Febrero',lat:-34.6043,lng:-58.5628},
+  {id:'san_martin',nombre:'San Martín',lat:-34.5764,lng:-58.5358},
+  {id:'dolores',nombre:'Dolores',lat:-36.3134,lng:-57.6795},
+  {id:'mar_del_plata',nombre:'Mar del Plata',lat:-38.0055,lng:-57.5426},
+  {id:'general_alvarado',nombre:'General Alvarado',lat:-38.2671,lng:-57.8413},
+  {id:'lomas_de_zamora',nombre:'Lomas de Zamora',lat:-34.7613,lng:-58.3988},
+  {id:'la_plata',nombre:'La Plata',lat:-34.9205,lng:-57.9536}
+];
+const TIPOS_INST = ["Escuela Pública","Escuela Privada","Club de Barrio","Sociedad de Fomento","Capilla/Iglesia","Centro de Jubilados","Merendero","Comedor","Biblioteca Popular","Centro de Salud","Otro"];
+
+// ═══════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+window.toast = toast;
+
+// ═══════════════════════════════════════════════════════════════════
+// ONLINE/OFFLINE
+// ═══════════════════════════════════════════════════════════════════
+window.addEventListener('online', () => { document.getElementById('offline-badge').style.display = 'none'; toast('Conexión restaurada'); });
+window.addEventListener('offline', () => { document.getElementById('offline-badge').style.display = 'inline'; });
+
+// ═══════════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════════
+
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('btn-login');
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando...'; errEl.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/invalid-credential' ? 'Email o contraseña incorrectos' : e.message;
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+};
+
+window.doLogout = async () => {
+  if (unsubVisitas) unsubVisitas();
+  if (unsubInst) unsubInst();
+  if (unsubAlf) unsubAlf();
+  if (unsubMz) unsubMz();
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // Si estamos en medio del registro, no hacer nada (doRegister maneja todo)
+    if (isRegistering) return;
+    try {
+      // Reintentar hasta 3 veces por si el perfil aún no se escribió
+      let snap = null;
+      for (let i = 0; i < 3; i++) {
+        snap = await getDoc(doc(db, 'usuarios', user.uid));
+        if (snap.exists()) break;
+        await new Promise(r => setTimeout(r, 1000)); // esperar 1 segundo
+      }
+      if (!snap || !snap.exists()) { toast('Usuario no registrado en el sistema', true); await signOut(auth); return; }
+      currentUser = { uid: user.uid, ...snap.data() };
+      await updateDoc(doc(db, 'usuarios', user.uid), { ultimo_acceso: serverTimestamp() });
+      showApp();
+    } catch(e) { toast('Error al cargar perfil: ' + e.message, true); }
+  } else {
+    currentUser = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// APP INIT
+// ═══════════════════════════════════════════════════════════════════
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('header-nombre').textContent = currentUser.nombre;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  document.getElementById('header-nodo').textContent = nodo ? nodo.nombre + ' · ' + currentUser.rol.replace(/_/g,' ') : currentUser.nodo_id;
+  initNav();
+  initSelects();
+  subscribeToData();
+  switchTab('inicio');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════════
+const TABS = [
+  {id:'inicio',label:'Inicio',svg:'<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>'},
+  {id:'mapa',label:'Mapa',svg:'<path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>'},
+  {id:'territorio',label:'Territorio',svg:'<path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>'},
+  {id:'relevamiento',label:'Relevamiento',svg:'<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>'},
+  {id:'instituciones',label:'Instituciones',svg:'<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'},
+  {id:'alfabetizacion',label:'DALE!',svg:'<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>'},
+  {id:'datos',label:'Datos',svg:'<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>'},
+  {id:'equipo',label:'Equipo',svg:'<path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>',coordinador:true},
+];
+
+function getVisibleTabs() {
+  const esCoord = currentUser && (currentUser.rol === 'coordinador_nodo' || currentUser.rol === 'coordinador_general');
+  return TABS.filter(t => !t.coordinador || esCoord);
+}
+
+function initNav() {
+  const tabs = getVisibleTabs();
+  document.getElementById('nav').innerHTML = tabs.map(t =>
+    `<button class="nav-btn${t.id===currentTab?' active':''}" onclick="switchTab('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.svg}</svg>${t.label}</button>`
+  ).join('');
+}
+
+window.switchTab = (id) => {
+  currentTab = id;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-'+id)?.classList.add('active');
+  const tabs = getVisibleTabs();
+  document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]?.id===id));
+  if (id === 'mapa') setTimeout(initMap, 100);
+  if (id === 'territorio') setTimeout(initMzMap, 100);
+  if (id === 'equipo') loadEquipo();
+  renderAll();
+};
+
+function initSelects() {
+  document.getElementById('inst-tipo').innerHTML = TIPOS_INST.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// REALTIME SUBSCRIPTIONS (filtered by nodo_id)
+// ═══════════════════════════════════════════════════════════════════
+function subscribeToData() {
+  const nid = currentUser.nodo_id;
+
+  // Sin orderBy para evitar necesidad de índices compuestos. Ordenamos en JS.
+  unsubVisitas = onSnapshot(
+    query(collection(db, 'visitas'), where('nodo_id', '==', nid)),
+    snap => {
+      visitas = snap.docs.map(d => ({id:d.id,...d.data()}));
+      visitas.sort((a,b) => ((b.fecha?.seconds||0) - (a.fecha?.seconds||0)));
+      renderAll();
+    },
+    err => { console.error('Error visitas:', err); toast('Error cargando visitas. Abrí la consola (F12) para ver detalles.', true); }
+  );
+  unsubMz = onSnapshot(
+    query(collection(db, 'manzanas'), where('nodo_id', '==', nid)),
+    snap => { manzanas = snap.docs.map(d => ({id:d.id,...d.data()})); updateManzanaSelect(); renderAll(); },
+    err => { console.error('Error manzanas:', err); }
+  );
+  unsubInst = onSnapshot(
+    query(collection(db, 'instituciones'), where('nodo_id', '==', nid)),
+    snap => { instituciones = snap.docs.map(d => ({id:d.id,...d.data()})); renderAll(); },
+    err => { console.error('Error instituciones:', err); }
+  );
+  unsubAlf = onSnapshot(
+    query(collection(db, 'alfabetizandos'), where('nodo_id', '==', nid)),
+    snap => {
+      alfabetizandos = snap.docs.map(d => ({id:d.id,...d.data()}));
+      alfabetizandos.sort((a,b) => ((b.fecha_inicio?.seconds||0) - (a.fecha_inicio?.seconds||0)));
+      renderAll();
+    },
+    err => { console.error('Error alfabetizandos:', err); }
+  );
+}
+
+function updateManzanaSelect() {
+  const sel = document.getElementById('vis-manzana');
+  sel.innerHTML = '<option value="">Seleccionar...</option>' +
+    manzanas.map(m => `<option value="${m.numero}">Mz ${m.numero}${m.cuadricula?' ('+m.cuadricula+')':''}</option>`).join('') +
+    '<option value="__nueva">+ Nueva manzana</option>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GEOLOCATION
+// ═══════════════════════════════════════════════════════════════════
+function getLoc() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej('GPS no disponible');
+    navigator.geolocation.getCurrentPosition(
+      p => res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}),
+      e => rej(e.message||'Error GPS'), {enableHighAccuracy:true,timeout:15000,maximumAge:30000}
+    );
+  });
+}
+
+window.captureVisitaLoc = async () => {
+  const s = document.getElementById('vis-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    document.getElementById('vis-lat').value = loc.lat;
+    document.getElementById('vis-lng').value = loc.lng;
+    s.textContent = `✓ ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (~${Math.round(loc.acc)}m)`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.captureInstLoc = async () => {
+  const s = document.getElementById('inst-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    document.getElementById('inst-lat').value = loc.lat;
+    document.getElementById('inst-lng').value = loc.lng;
+    s.textContent = `✓ ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.captureMzLoc = async () => {
+  const s = document.getElementById('mz-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    document.getElementById('mz-lat').value = loc.lat;
+    document.getElementById('mz-lng').value = loc.lng;
+    s.textContent = `✓ ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.captureMyLocation = async () => {
+  try {
+    const loc = await getLoc();
+    if (map) {
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.circleMarker([loc.lat,loc.lng],{radius:10,fillColor:'#3878cc',fillOpacity:.9,color:'#fff',weight:2}).addTo(map).bindPopup(`<b>Tu ubicación</b><br>~${Math.round(loc.acc)}m`).openPopup();
+      map.setView([loc.lat,loc.lng],16);
+    }
+  } catch(e) { toast('Error GPS: '+e, true); }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// GUARDAR DATOS
+// ═══════════════════════════════════════════════════════════════════
+window.guardarVisita = async () => {
+  const dir = document.getElementById('vis-dir').value.trim();
+  if (!dir) return toast('Ingresá la dirección', true);
+  const btn = document.getElementById('btn-guardar-visita');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    await addDoc(collection(db, 'visitas'), {
+      nodo_id: currentUser.nodo_id,
+      manzana_numero: document.getElementById('vis-manzana').value,
+      direccion: dir,
+      lat: parseFloat(document.getElementById('vis-lat').value) || null,
+      lng: parseFloat(document.getElementById('vis-lng').value) || null,
+      ocupacion: document.getElementById('vis-ocup').value,
+      vivienda: document.getElementById('vis-viv').value,
+      comedor: document.getElementById('vis-comedor').value,
+      pibes_escuela: document.getElementById('vis-pibes').value,
+      analfabeto: document.getElementById('vis-analfabeto').checked,
+      sin_secundario: document.getElementById('vis-sinsec').checked,
+      participa_barrio: document.getElementById('vis-participa').value.trim(),
+      opinion_gobierno: document.getElementById('vis-opin').value,
+      preocupacion: document.getElementById('vis-preocup').value.trim(),
+      cambio_barrio: document.getElementById('vis-cambio').value.trim(),
+      dispuesto_alfabetizar: document.getElementById('vis-disp-alf').checked,
+      dispuesto_retomar: document.getElementById('vis-disp-ret').checked,
+      observaciones: document.getElementById('vis-obs').value.trim(),
+      creado_por: currentUser.uid,
+      fecha: serverTimestamp()
+    });
+    // Reset
+    ['vis-dir','vis-participa','vis-preocup','vis-cambio','vis-obs'].forEach(id => document.getElementById(id).value = '');
+    ['vis-ocup','vis-viv','vis-comedor','vis-pibes','vis-opin'].forEach(id => document.getElementById(id).selectedIndex = 0);
+    ['vis-analfabeto','vis-sinsec','vis-disp-alf','vis-disp-ret'].forEach(id => document.getElementById(id).checked = false);
+    document.getElementById('vis-lat').value = ''; document.getElementById('vis-lng').value = '';
+    document.getElementById('vis-loc-status').textContent = '';
+    toast('Visita registrada ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+  btn.disabled = false; btn.textContent = '✓ Registrar visita';
+};
+
+window.guardarManzana = async () => {
+  const num = document.getElementById('mz-num').value.trim();
+  if (!num) return toast('Ingresá el número de manzana', true);
+  try {
+    await addDoc(collection(db, 'manzanas'), {
+      nodo_id: currentUser.nodo_id,
+      numero: num,
+      cuadricula: document.getElementById('mz-cuad').value.trim(),
+      casas: Number(document.getElementById('mz-casas').value) || 0,
+      notas: document.getElementById('mz-notas').value.trim(),
+      lat: parseFloat(document.getElementById('mz-lat').value) || null,
+      lng: parseFloat(document.getElementById('mz-lng').value) || null,
+      relevada: false,
+      creado_por: currentUser.uid,
+      fecha_creacion: serverTimestamp()
+    });
+    ['mz-num','mz-cuad','mz-casas','mz-notas'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mz-lat').value = ''; document.getElementById('mz-lng').value = '';
+    document.getElementById('mz-loc-status').textContent = '';
+    document.getElementById('mz-map-coords').textContent = '';
+    // Quitar el pin del mapa de territorio
+    if (mzPinMarker && mzMap) { mzMap.removeLayer(mzPinMarker); mzPinMarker = null; }
+    toast('Manzana agregada ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.toggleMzRelevada = async (id) => {
+  const mz = manzanas.find(m => m.id === id);
+  if (!mz) return;
+  try {
+    await updateDoc(doc(db, 'manzanas', id), { relevada: !mz.relevada });
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.deleteManzana = async (id) => {
+  if (!confirm('¿Eliminar esta manzana?')) return;
+  try {
+    await deleteDoc(doc(db, 'manzanas', id));
+    toast('Manzana eliminada');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.guardarInstitucion = async () => {
+  const nombre = document.getElementById('inst-nombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre', true);
+  try {
+    await addDoc(collection(db, 'instituciones'), {
+      nodo_id: currentUser.nodo_id, nombre,
+      tipo: document.getElementById('inst-tipo').value,
+      contacto: document.getElementById('inst-contacto').value.trim(),
+      telefono: document.getElementById('inst-tel').value.trim(),
+      notas: document.getElementById('inst-notas').value.trim(),
+      colabora_alfabetizacion: document.getElementById('inst-colabora').checked,
+      lat: parseFloat(document.getElementById('inst-lat').value) || null,
+      lng: parseFloat(document.getElementById('inst-lng').value) || null,
+      creado_por: currentUser.uid, fecha_creacion: serverTimestamp()
+    });
+    ['inst-nombre','inst-contacto','inst-tel','inst-notas'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('inst-colabora').checked = false;
+    document.getElementById('inst-lat').value = ''; document.getElementById('inst-lng').value = '';
+    document.getElementById('inst-loc-status').textContent = '';
+    toast('Institución agregada ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.guardarAlfabetizando = async () => {
+  const nombre = document.getElementById('alf-nombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre', true);
+  try {
+    await addDoc(collection(db, 'alfabetizandos'), {
+      nodo_id: currentUser.nodo_id, nombre,
+      edad: document.getElementById('alf-edad').value || null,
+      nivel_dale: Number(document.getElementById('alf-nivel').value),
+      alfabetizador_nombre: document.getElementById('alf-alfabetizador').value.trim(),
+      alfabetizador_uid: currentUser.uid,
+      sesiones: 0, activo: true,
+      notas: document.getElementById('alf-notas').value.trim(),
+      creado_por: currentUser.uid, fecha_inicio: serverTimestamp()
+    });
+    ['alf-nombre','alf-edad','alf-alfabetizador','alf-notas'].forEach(id => document.getElementById(id).value = '');
+    toast('Alfabetizando agregado ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.sumarSesion = async (id) => {
+  const a = alfabetizandos.find(x => x.id === id);
+  if (!a) return;
+  await updateDoc(doc(db, 'alfabetizandos', id), { sesiones: (a.sesiones||0)+1 });
+};
+window.restarSesion = async (id) => {
+  const a = alfabetizandos.find(x => x.id === id);
+  if (!a || (a.sesiones||0) <= 0) return;
+  await updateDoc(doc(db, 'alfabetizandos', id), { sesiones: a.sesiones - 1 });
+};
+window.cambiarNivel = async (id, nivel) => {
+  await updateDoc(doc(db, 'alfabetizandos', id), { nivel_dale: Number(nivel) });
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════════════════════════════
+function initMap() {
+  if (map) { updateMap(); return; }
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  map = L.map('map-container',{zoomControl:false}).setView([nodo?.lat||-34.6,nodo?.lng||-58.5],13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',maxZoom:19}).addTo(map);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  setTimeout(() => { map.invalidateSize(); updateMap(); }, 200);
+}
+
+function mkIcon(color, sz) {
+  return L.divIcon({className:'',html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,.7);box-shadow:0 0 8px ${color}88"></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+
+function updateMap() {
+  if (!map) return;
+  markers.forEach(m => map.removeLayer(m)); markers = [];
+  visitas.forEach(v => {
+    if (!v.lat||!v.lng) return;
+    let c = '#3878cc';
+    if (v.analfabeto) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (v.dispuesto_alfabetizar) c = '#2c8858';
+    const m = L.marker([v.lat,v.lng],{icon:mkIcon(c,12)}).addTo(map)
+      .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>${v.direccion||'Sin dir.'}</b><br>Mz ${v.manzana_numero||'s/n'}<br>${v.analfabeto?'<span style="color:#b83a2e">● Analfabeto</span><br>':''}${v.sin_secundario?'<span style="color:#cc8a1a">● Sin sec.</span><br>':''}${v.dispuesto_alfabetizar?'<span style="color:#2c8858">● Quiere alfabetizar</span><br>':''}${v.observaciones?'<i>'+v.observaciones.slice(0,80)+'</i>':''}</div>`);
+    markers.push(m);
+  });
+  instituciones.forEach(inst => {
+    if (!inst.lat||!inst.lng) return;
+    const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#c9a54a',14)}).addTo(map)
+      .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🏛 ${inst.nombre}</b><br>${inst.tipo}<br>${inst.colabora_alfabetizacion?'<span style="color:#2c8858">Colabora</span>':''}</div>`);
+    markers.push(m);
+  });
+  // Manzanas en el mapa
+  manzanas.forEach(mz => {
+    if (!mz.lat||!mz.lng) return;
+    const m = L.marker([mz.lat,mz.lng],{
+      icon: L.divIcon({className:'',html:`<div style="width:22px;height:22px;border-radius:4px;background:${mz.relevada?'rgba(44,136,88,.6)':'rgba(78,94,120,.5)'};border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:#fff;font-weight:600">${mz.numero}</div>`,iconSize:[22,22],iconAnchor:[11,11]})
+    }).addTo(map).bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>Manzana ${mz.numero}</b>${mz.cuadricula?' ('+mz.cuadricula+')':''}<br>${mz.casas} casas · ${mz.relevada?'✓ Relevada':'Pendiente'}</div>`);
+    markers.push(m);
+  });
+  if (markers.length) fitMapToMarkers();
+
+  const geoV = visitas.filter(v=>v.lat&&v.lng).length;
+  document.getElementById('map-stats').innerHTML = `
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Visitas</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--blue)">${geoV}</div><div class="stat-label">Con GPS</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. pot.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${instituciones.length}</div><div class="stat-label">Instituciones</div></div>`;
+}
+
+window.fitMapToMarkers = () => {
+  if (!map||!markers.length) return;
+  map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// MAPA DE TERRITORIO (click para ubicar manzanas)
+// ═══════════════════════════════════════════════════════════════════
+let mzMap = null;
+let mzPinMarker = null;   // El pin temporal que se coloca al hacer clic
+let mzMapMarkers = [];     // Markers de manzanas ya guardadas
+
+function initMzMap() {
+  if (mzMap) { updateMzMap(); return; }
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  mzMap = L.map('mz-map-container', {zoomControl: true}).setView([nodo?.lat||-34.6, nodo?.lng||-58.5], 15);
+
+  // Capa base: satélite con calles para ver las manzanas reales
+  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri', maxZoom: 19
+  });
+  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© CartoDB', maxZoom: 19
+  });
+  const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OSM', maxZoom: 19
+  });
+
+  satellite.addTo(mzMap);
+  L.control.layers({'Satélite': satellite, 'Oscuro': dark, 'Calles': streets}, {}, {position: 'topright'}).addTo(mzMap);
+
+  // Click en el mapa → colocar pin
+  mzMap.on('click', (e) => {
+    const {lat, lng} = e.latlng;
+    placeMzPin(lat, lng);
+  });
+
+  setTimeout(() => { mzMap.invalidateSize(); updateMzMap(); }, 250);
+}
+
+function placeMzPin(lat, lng) {
+  // Guardar en los campos hidden
+  document.getElementById('mz-lat').value = lat;
+  document.getElementById('mz-lng').value = lng;
+  document.getElementById('mz-loc-status').textContent = `✓ ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  document.getElementById('mz-map-coords').textContent = `Pin: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+  // Mover o crear el pin
+  if (mzPinMarker) {
+    mzPinMarker.setLatLng([lat, lng]);
+  } else {
+    mzPinMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:28px;height:28px;border-radius:50%;background:var(--gold);border:3px solid #fff;box-shadow:0 0 12px rgba(201,165,74,.8);display:flex;align-items:center;justify-content:center;font-size:14px;animation:pulse 1.5s infinite">＋</div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14]
+      })
+    }).addTo(mzMap).bindPopup('<b>Nueva manzana</b><br>Completá los datos y guardá.').openPopup();
+  }
+}
+
+window.clearMzPin = () => {
+  if (mzPinMarker) { mzMap.removeLayer(mzPinMarker); mzPinMarker = null; }
+  document.getElementById('mz-lat').value = '';
+  document.getElementById('mz-lng').value = '';
+  document.getElementById('mz-loc-status').textContent = '';
+  document.getElementById('mz-map-coords').textContent = '';
+};
+
+function updateMzMap() {
+  if (!mzMap) return;
+  // Limpiar markers viejos
+  mzMapMarkers.forEach(m => mzMap.removeLayer(m));
+  mzMapMarkers = [];
+
+  // Dibujar manzanas existentes
+  manzanas.forEach(mz => {
+    if (!mz.lat || !mz.lng) return;
+    const m = L.marker([mz.lat, mz.lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:24px;height:24px;border-radius:4px;background:${mz.relevada ? 'rgba(44,136,88,.7)' : 'rgba(78,94,120,.6)'};border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#fff;font-weight:600;cursor:pointer">${mz.numero}</div>`,
+        iconSize: [24, 24], iconAnchor: [12, 12]
+      })
+    }).addTo(mzMap).bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px">
+      <b>Mz ${mz.numero}</b>${mz.cuadricula ? ' (' + mz.cuadricula + ')' : ''}<br>
+      ${mz.casas || 0} casas · ${mz.relevada ? '✓ Relevada' : 'Pendiente'}<br>
+      ${mz.notas ? '<i>' + mz.notas + '</i>' : ''}
+    </div>`);
+    mzMapMarkers.push(m);
+  });
+
+  // Fit bounds si hay manzanas
+  if (mzMapMarkers.length > 0) {
+    mzMap.fitBounds(L.featureGroup(mzMapMarkers).getBounds().pad(0.15));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDERS
+// ═══════════════════════════════════════════════════════════════════
+function getNodoName() { return NODOS.find(n=>n.id===currentUser?.nodo_id)?.nombre || ''; }
+
+function renderAll() {
+  if (!currentUser) return;
+  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos();
+  if (currentTab === 'mapa') updateMap();
+  if (currentTab === 'territorio') updateMzMap();
+}
+
+function renderInicio() {
+  document.getElementById('inicio-welcome').textContent =
+    `Bienvenido/a, ${currentUser.nombre}. Estás relevando en ${getNodoName()}. Los datos se sincronizan en tiempo real con tu nodo.`;
+  document.getElementById('inicio-stats').innerHTML = `
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares Relevados</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--blue)">${manzanas.length}</div><div class="stat-label">Manzanas</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${instituciones.length}</div><div class="stat-label">Instituciones</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--orange)">${alfabetizandos.length}</div><div class="stat-label">Alfabetizandos</div></div>`;
+  const h = document.getElementById('inicio-hallazgos');
+  if (visitas.length) {
+    h.style.display = 'block';
+    document.getElementById('inicio-hallazgos-stats').innerHTML = `
+      <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--orange)">${visitas.filter(v=>v.sin_secundario).length}</div><div class="stat-label">Sin secundario</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. potenciales</div></div>`;
+  } else h.style.display = 'none';
+}
+
+function renderManzanas() {
+  const card = document.getElementById('mz-list-card');
+  if (!manzanas.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const relevadas = manzanas.filter(m => m.relevada).length;
+  const pendientes = manzanas.length - relevadas;
+  document.getElementById('mz-count').textContent = manzanas.length;
+  document.getElementById('mz-relevadas-badge').textContent = relevadas + ' relevadas';
+  document.getElementById('mz-pendientes-badge').textContent = pendientes + ' pendientes';
+
+  // Ordenar: pendientes primero, después por número
+  const sorted = [...manzanas].sort((a,b) => {
+    if (a.relevada !== b.relevada) return a.relevada ? 1 : -1;
+    return (a.numero||'').localeCompare(b.numero||'', undefined, {numeric:true});
+  });
+
+  document.getElementById('mz-list').innerHTML = sorted.map(m => {
+    const visitasEnMz = visitas.filter(v => v.manzana_numero === m.numero).length;
+    return `<div class="list-item" style="${m.relevada?'border-color:rgba(44,136,88,.35);background:rgba(44,136,88,.06)':''}">
+      <button onclick="toggleMzRelevada('${m.id}')" style="width:24px;height:24px;border-radius:5px;background:${m.relevada?'var(--green)':'transparent'};border:2px solid ${m.relevada?'var(--green)':'var(--dim)'};cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px">${m.relevada?'✓':''}</button>
+      <div class="list-item-body">
+        <b>Mz ${m.numero}</b>
+        ${m.cuadricula?`<span style="color:var(--dim)"> (${m.cuadricula})</span>`:''}
+        ${m.lat?'<span style="font-size:11px;color:var(--dim);margin-left:4px">📍</span>':''}
+        <div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--muted)">${m.casas||0} casas</span>
+          ${visitasEnMz > 0 ? `<span class="badge badge-blue">${visitasEnMz} visita${visitasEnMz>1?'s':''}</span>` : ''}
+          ${m.notas ? `<span style="font-size:11px;color:var(--dim);font-style:italic">${m.notas.slice(0,40)}${m.notas.length>40?'...':''}</span>` : ''}
+        </div>
+      </div>
+      <div class="list-item-actions">
+        <button onclick="deleteManzana('${m.id}')" title="Eliminar">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderVisitas() {
+  const card = document.getElementById('vis-list-card');
+  if (!visitas.length) { card.style.display='none'; return; }
+  card.style.display = 'block';
+  document.getElementById('vis-count').textContent = visitas.length;
+  document.getElementById('vis-list').innerHTML = visitas.slice(0,40).map(v => {
+    let badges = '';
+    if (v.analfabeto) badges += '<span class="badge badge-red">Analfabeto</span> ';
+    if (v.sin_secundario) badges += '<span class="badge badge-orange">Sin sec.</span> ';
+    if (v.dispuesto_alfabetizar) badges += '<span class="badge badge-green">Alfabetizador</span> ';
+    if (v.lat) badges += '<span class="badge badge-gold">📍</span> ';
+    return `<div class="list-item"><div class="list-item-body"><b>${v.direccion}</b> <span style="color:var(--muted)">Mz ${v.manzana_numero||'s/n'}</span><div style="margin-top:3px">${badges}</div></div><div class="list-item-actions"><button onclick="showDetail('${v.id}')">👁</button></div></div>`;
+  }).join('');
+}
+
+window.showDetail = (id) => {
+  const v = visitas.find(x=>x.id===id); if (!v) return;
+  const el = document.getElementById('vis-detail');
+  el.style.display = 'block';
+  el.innerHTML = `<h4 style="color:var(--gold);margin-bottom:10px">${v.direccion}</h4>
+    <div class="detail-grid">
+      <div><strong>Ocupación:</strong> ${v.ocupacion||'—'}</div><div><strong>Vivienda:</strong> ${v.vivienda||'—'}</div>
+      <div><strong>Comedor:</strong> ${v.comedor||'—'}</div><div><strong>Pibes/escuela:</strong> ${v.pibes_escuela||'—'}</div>
+      <div><strong>Participa:</strong> ${v.participa_barrio||'—'}</div><div><strong>Opinión gob.:</strong> ${v.opinion_gobierno||'—'}</div>
+      <div><strong>Preocupación:</strong> ${v.preocupacion||'—'}</div><div><strong>GPS:</strong> ${v.lat?v.lat.toFixed(5)+', '+v.lng.toFixed(5):'Sin GPS'}</div>
+    </div>${v.observaciones?`<div style="margin-top:10px;font-size:13px;font-style:italic;color:var(--muted)">Obs: ${v.observaciones}</div>`:''}`;
+};
+
+function renderInstituciones() {
+  const card = document.getElementById('inst-list-card');
+  if (!instituciones.length) { card.style.display='none'; return; }
+  card.style.display = 'block';
+  document.getElementById('inst-count').textContent = instituciones.length;
+  document.getElementById('inst-list').innerHTML = instituciones.map(i => `
+    <div style="padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid ${i.colabora_alfabetizacion?'rgba(44,136,88,.35)':'var(--border)'};margin-bottom:8px">
+      <div style="font-weight:600;font-size:15px">${i.nombre}</div>
+      <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+        <span class="badge badge-blue">${i.tipo}</span>
+        ${i.colabora_alfabetizacion?'<span class="badge badge-green">Colabora</span>':''}
+        ${i.lat?'<span class="badge badge-gold">📍</span>':''}
+      </div>
+      ${i.contacto?`<div style="font-size:13px;color:var(--muted);margin-top:5px">Ref: ${i.contacto}${i.telefono?' · '+i.telefono:''}</div>`:''}
+      ${i.notas?`<div style="font-size:12px;color:var(--dim);margin-top:3px;font-style:italic">${i.notas}</div>`:''}
+    </div>`).join('');
+}
+
+function renderAlfabetizandos() {
+  const niveles = [{id:1,n:'Nivel 1',d:'Básico',c:'var(--red)'},{id:2,n:'Nivel 2',d:'Intermedio',c:'var(--orange)'},{id:3,n:'Nivel 3',d:'Consolidación',c:'var(--green)'}];
+  document.getElementById('dale-niveles').innerHTML = niveles.map(nv =>
+    `<div class="stat" style="flex:1 1 180px"><div style="font-size:13px;font-weight:600;color:var(--gold)">${nv.n}</div><div style="font-size:11px;color:var(--muted)">${nv.d}</div><div class="stat-val" style="color:${nv.c}">${alfabetizandos.filter(a=>a.nivel_dale===nv.id&&a.activo).length}</div></div>`
+  ).join('');
+  const card = document.getElementById('alf-list-card');
+  if (!alfabetizandos.length) { card.style.display='none'; return; }
+  card.style.display = 'block';
+  const activos = alfabetizandos.filter(a=>a.activo).length;
+  document.getElementById('alf-count').textContent = `${activos} activos / ${alfabetizandos.length} total`;
+  document.getElementById('alf-list').innerHTML = alfabetizandos.map(a => {
+    const nc = a.nivel_dale===1?'red':a.nivel_dale===2?'orange':'green';
+    return `<div style="padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:8px;opacity:${a.activo?1:.5}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div><span style="font-weight:600;font-size:15px">${a.nombre}</span>${a.edad?` <span style="color:var(--muted)">${a.edad} años</span>`:''}
+          <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap"><span class="badge badge-${nc}">Nivel ${a.nivel_dale}</span>${a.alfabetizador_nombre?`<span class="badge badge-blue">${a.alfabetizador_nombre}</span>`:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 7px">
+            <button onclick="restarSesion('${a.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;font-weight:700">−</button>
+            <span style="font-family:var(--mono);font-size:14px;min-width:26px;text-align:center">${a.sesiones||0}</span>
+            <button onclick="sumarSesion('${a.id}')" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:16px;font-weight:700">+</button>
+          </div>
+          <span style="font-size:11px;color:var(--dim)">ses.</span>
+          <select onchange="cambiarNivel('${a.id}',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;color:var(--text);font-size:12px;font-family:var(--font)">
+            ${[1,2,3].map(n=>`<option value="${n}"${a.nivel_dale===n?' selected':''}>N${n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${a.notas?`<div style="font-size:12px;color:var(--dim);margin-top:5px;font-style:italic">${a.notas}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderDatos() {
+  document.getElementById('data-stats').innerHTML = `
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--orange)">${visitas.filter(v=>v.sin_secundario).length}</div><div class="stat-label">Sin sec.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. pot.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--blue)">${alfabetizandos.filter(a=>a.activo).length}</div><div class="stat-label">En DALE!</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${alfabetizandos.reduce((s,a)=>s+(a.sesiones||0),0)}</div><div class="stat-label">Sesiones</div></div>`;
+
+  if (visitas.length) {
+    const count = (field) => { const c={}; visitas.forEach(v=>{const val=v[field];if(val)c[val]=(c[val]||0)+1;}); return c; };
+    const bar = (data,color) => {
+      const e=Object.entries(data),mx=Math.max(...e.map(([,v])=>v),1);
+      return e.map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k.replace(/_/g,' ')}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/mx)*100}%;background:${typeof color==='function'?color(k):color}"><span>${v}</span></div></div></div>`).join('');
+    };
+    document.getElementById('data-charts').innerHTML = `
+      <div class="card"><div class="card-title">Ocupación</div>${bar(count('ocupacion'),'var(--gold)')}</div>
+      <div class="card"><div class="card-title">Vivienda</div>${bar(count('vivienda'),'var(--blue)')}</div>
+      <div class="card"><div class="card-title">Opinión gobierno</div>${bar(count('opinion_gobierno'),k=>k==='apoyo'?'var(--green)':k==='critico'?'var(--red)':'var(--muted)')}</div>`;
+  } else document.getElementById('data-charts').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════════════════════
+window.exportCSV = () => {
+  const h = ["Dirección","Manzana","Lat","Lng","Ocupación","Vivienda","Comedor","Pibes/Escuela","Analfabeto","Sin Sec.","Participa","Opinión Gob.","Preocupación","Cambio","Disp. Alfabetizar","Disp. Retomar","Observaciones"];
+  const rows = visitas.map(v => [v.direccion,v.manzana_numero,v.lat||'',v.lng||'',v.ocupacion,v.vivienda,v.comedor,v.pibes_escuela,v.analfabeto?'Sí':'No',v.sin_secundario?'Sí':'No',v.participa_barrio,v.opinion_gobierno,v.preocupacion,v.cambio_barrio,v.dispuesto_alfabetizar?'Sí':'No',v.dispuesto_retomar?'Sí':'No',v.observaciones]);
+  const csv = [h,...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `relevamiento_${currentUser.nodo_id}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); toast('CSV exportado');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// GESTIÓN DE USUARIOS (EQUIPO)
+// ═══════════════════════════════════════════════════════════════════
+let equipoUsers = [];
+
+async function loadEquipo() {
+  try {
+    // Coordinador general: mostrar selector de nodo y cargar todos los usuarios
+    const esGeneral = currentUser.rol === 'coordinador_general';
+    const nodoField = document.getElementById('eq-nodo-field');
+    if (esGeneral) {
+      nodoField.style.display = 'flex';
+      document.getElementById('eq-nodo').innerHTML = NODOS.map(n => `<option value="${n.id}">${n.nombre}</option>`).join('');
+    } else {
+      nodoField.style.display = 'none';
+    }
+
+    let snap;
+    if (esGeneral) {
+      snap = await getDocs(collection(db, 'usuarios'));
+    } else {
+      snap = await getDocs(query(collection(db, 'usuarios'), where('nodo_id', '==', currentUser.nodo_id)));
+    }
+    equipoUsers = snap.docs.map(d => ({id:d.id,...d.data()}));
+    // Ordenar por nodo y nombre
+    equipoUsers.sort((a,b) => (a.nodo_id||'').localeCompare(b.nodo_id||'') || (a.nombre||'').localeCompare(b.nombre||''));
+    renderEquipo();
+  } catch(e) { console.error('Error cargando equipo:', e); }
+}
+
+function renderEquipo() {
+  document.getElementById('eq-count').textContent = equipoUsers.length;
+  const esGeneral = currentUser.rol === 'coordinador_general';
+  document.getElementById('eq-list').innerHTML = equipoUsers.length === 0
+    ? '<div style="text-align:center;color:var(--dim);padding:20px">No hay compañeros registrados.</div>'
+    : equipoUsers.map(u => {
+      const rolLabel = u.rol === 'coordinador_general' ? 'Coord. General' : u.rol === 'coordinador_nodo' ? 'Coord. Nodo' : 'Alfabetizador';
+      const rolColor = u.rol.includes('coordinador') ? 'gold' : 'blue';
+      const esYo = u.id === currentUser.uid;
+      const nodoName = NODOS.find(n => n.id === u.nodo_id)?.nombre || u.nodo_id;
+      return `<div class="list-item" style="${!u.activo?'opacity:.5':''}">
+        <div class="list-item-body">
+          <b>${u.nombre}</b>${esYo?' <span style="color:var(--gold)">(vos)</span>':''}
+          <div style="margin-top:3px">
+            <span class="badge badge-${rolColor}">${rolLabel}</span>
+            ${esGeneral?`<span class="badge badge-gold">${nodoName}</span>`:''}
+            ${u.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}
+          </div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">${u.email}${u.telefono?' · '+u.telefono:''}</div>
+        </div>
+        ${!esYo && (currentUser.rol==='coordinador_nodo'||esGeneral) ?
+          `<div class="list-item-actions">
+            <button onclick="toggleUsuarioActivo('${u.id}',${!u.activo})" style="font-size:12px;color:${u.activo?'var(--red)':'var(--green)'}">${u.activo?'Desactivar':'Activar'}</button>
+          </div>` : ''}
+      </div>`;
+    }).join('');
+}
+
+window.crearUsuario = async () => {
+  const nombre = document.getElementById('eq-nombre').value.trim();
+  const email = document.getElementById('eq-email').value.trim();
+  const pass = document.getElementById('eq-pass').value;
+  const rol = document.getElementById('eq-rol').value;
+  const tel = document.getElementById('eq-tel').value.trim();
+  const errEl = document.getElementById('eq-error');
+  const sucEl = document.getElementById('eq-success');
+  const btn = document.getElementById('btn-crear-usuario');
+  errEl.textContent = ''; sucEl.textContent = '';
+
+  // El nodo: si es coord general usa el selector, sino su propio nodo
+  const esGeneral = currentUser.rol === 'coordinador_general';
+  const nodoId = esGeneral ? document.getElementById('eq-nodo').value : currentUser.nodo_id;
+
+  if (!nombre || !email || !pass) { errEl.textContent = 'Completá nombre, email y contraseña'; return; }
+  if (pass.length < 6) { errEl.textContent = 'La contraseña necesita al menos 6 caracteres'; return; }
+
+  btn.disabled = true; btn.textContent = 'Creando...';
+  try {
+    // Crear usuario en Auth usando la instancia secundaria (no desloguea al coordinador)
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+
+    // Crear perfil en Firestore
+    await setDoc(doc(db, 'usuarios', cred.user.uid), {
+      nombre, email, telefono: tel,
+      nodo_id: nodoId,
+      rol,
+      activo: true,
+      fecha_alta: serverTimestamp(),
+      ultimo_acceso: null,
+      creado_por: currentUser.uid
+    });
+
+    // Desloguear de la instancia secundaria
+    await signOut(secondaryAuth);
+
+    // Limpiar formulario
+    ['eq-nombre','eq-email','eq-pass','eq-tel'].forEach(id => document.getElementById(id).value = '');
+    sucEl.textContent = `✓ Cuenta creada para ${nombre} en ${NODOS.find(n=>n.id===nodoId)?.nombre||nodoId}. Ya puede entrar con ${email}`;
+    toast('Compañero/a agregado/a ✓');
+    loadEquipo();
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Ese email ya está registrado' : e.message;
+  }
+  btn.disabled = false; btn.textContent = '＋ Crear cuenta';
+};
+
+window.toggleUsuarioActivo = async (uid, nuevoEstado) => {
+  try {
+    await updateDoc(doc(db, 'usuarios', uid), { activo: nuevoEstado });
+    toast(nuevoEstado ? 'Usuario activado' : 'Usuario desactivado');
+    loadEquipo();
+  } catch(e) { toast('Error: ' + e.message, true); }
+};
+</script>
+<script>
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+</script>
+</body>
+</html>
