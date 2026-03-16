@@ -215,6 +215,60 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 /* Print-inspired divider for section titles */
 .section-title::after{content:'';display:block;width:40px;height:2px;background:var(--gold);margin-top:6px}
+
+/* ═══ WIZARD RELEVAMIENTO ═══ */
+.wiz-steps{display:flex;align-items:center;gap:0;margin-bottom:20px}
+.wiz-step{flex:1;text-align:center;position:relative}
+.wiz-step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);background:var(--bg);color:var(--dim);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;transition:all .2s;font-family:var(--mono)}
+.wiz-step.active .wiz-step-dot{border-color:var(--gold);color:var(--gold);background:rgba(196,153,61,.1)}
+.wiz-step.done .wiz-step-dot{border-color:var(--green);background:var(--green);color:#fff}
+.wiz-step-label{font-size:10px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;transition:color .2s}
+.wiz-step.active .wiz-step-label{color:var(--gold)}
+.wiz-step.done .wiz-step-label{color:var(--green)}
+.wiz-step-line{position:absolute;top:14px;left:50%;right:-50%;height:2px;background:var(--border);z-index:0}
+.wiz-step:last-child .wiz-step-line{display:none}
+.wiz-step.done .wiz-step-line{background:var(--green)}
+
+.wiz-panel{display:none;animation:fadeIn .2s ease}
+.wiz-panel.active{display:block}
+
+/* Botones táctiles grandes para campo */
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:6px}
+.opt-btn{padding:14px 10px;background:var(--surface2);border:2px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font);font-size:14px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.3}
+.opt-btn:hover{border-color:var(--gold);background:var(--gold-bg)}
+.opt-btn.selected{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
+.opt-btn.selected-green{border-color:var(--green);background:rgba(74,144,96,.1);color:var(--green);font-weight:600}
+.opt-btn.selected-red{border-color:var(--red);background:rgba(196,80,64,.1);color:var(--red);font-weight:600}
+.opt-btn.selected-blue{border-color:var(--blue);background:rgba(90,142,196,.1);color:var(--blue);font-weight:600}
+
+/* Checkboxes táctiles */
+.check-btn{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface2);border:2px solid var(--border);border-radius:4px;cursor:pointer;transition:all .15s;width:100%;font-family:var(--font);font-size:15px;color:var(--text)}
+.check-btn.checked{border-color:var(--gold);background:var(--gold-bg)}
+.check-btn.checked-red{border-color:var(--red);background:rgba(196,80,64,.1);color:var(--red)}
+.check-btn.checked-green{border-color:var(--green);background:rgba(74,144,96,.1);color:var(--green)}
+.check-btn.checked-orange{border-color:var(--orange);background:rgba(200,144,48,.1);color:var(--orange)}
+.check-icon{width:22px;height:22px;border-radius:4px;border:2px solid var(--border2);background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s}
+.check-btn.checked .check-icon,.check-btn.checked-red .check-icon,.check-btn.checked-green .check-icon,.check-btn.checked-orange .check-icon{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+.check-btn.checked-red .check-icon{background:var(--red);border-color:var(--red)}
+.check-btn.checked-green .check-icon{background:var(--green);border-color:var(--green)}
+.check-btn.checked-orange .check-icon{background:var(--orange);border-color:var(--orange)}
+
+.wiz-nav{display:flex;gap:10px;margin-top:20px;align-items:center}
+.wiz-progress{font-size:12px;color:var(--dim);font-family:var(--mono);flex:1;text-align:center}
+
+/* Resumen post-guardado */
+.vis-resumen{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:16px;margin-top:14px;display:none}
+.vis-resumen-title{font-size:14px;color:var(--green);font-weight:600;margin-bottom:10px}
+.vis-resumen-flags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.vis-resumen-dale{background:rgba(74,144,96,.1);border:1px solid rgba(74,144,96,.35);border-radius:3px;padding:12px;margin-top:8px}
+
+/* Filtros lista visitas */
+.vis-filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.filtro-btn{padding:5px 12px;border-radius:2px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;transition:all .15s}
+.filtro-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* Campo texto inline grande */
+.field-lg input,.field-lg textarea{font-size:16px;padding:12px 13px}
 </style>
 </head>
 <body>
@@ -326,54 +380,201 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <!-- RELEVAMIENTO -->
     <div class="section" id="sec-relevamiento">
       <div><div class="section-title">Relevamiento Casa por Casa</div><div class="section-sub">Tres capas: cómo vivimos, qué hacemos, cómo pensamos. Siempre en parejas.</div></div>
+
       <div class="card">
-        <div class="card-title" style="color:var(--gold)">Nueva Visita</div>
-        <div class="form-grid">
-          <div class="field"><span class="field-label">Manzana</span><select id="vis-manzana"><option value="">Seleccionar...</option></select></div>
-          <div class="field"><span class="field-label">Dirección</span><input id="vis-dir" placeholder="Calle y número"></div>
-        </div>
-        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-          <button class="btn btn-secondary btn-sm" onclick="captureVisitaLoc()">📍 Capturar ubicación</button>
-          <span id="vis-loc-status" style="font-size:12px;color:var(--dim)"></span>
-        </div>
-        <input type="hidden" id="vis-lat"><input type="hidden" id="vis-lng">
-        <div class="layer" style="border-left:3px solid var(--gold)">
-          <div class="layer-title" style="color:var(--gold)">Capa 1: Cómo y de qué vivimos</div>
-          <div class="form-grid">
-            <div class="field"><span class="field-label">Ocupación</span><select id="vis-ocup"><option value="">Seleccionar...</option><option value="empleo_formal">Empleo formal</option><option value="changa">Changa / Informal</option><option value="plan">Plan social</option><option value="jubilacion">Jubilación</option><option value="desempleo">Desempleo</option><option value="otro">Otro</option></select></div>
-            <div class="field"><span class="field-label">Vivienda</span><select id="vis-viv"><option value="">Seleccionar...</option><option value="propia">Propia</option><option value="alquiler">Alquiler</option><option value="prestada">Prestada</option><option value="ocupada">Ocupada</option><option value="otro">Otro</option></select></div>
-            <div class="field"><span class="field-label">Comedor</span><select id="vis-comedor"><option value="">Seleccionar...</option><option value="asiste">Asiste</option><option value="necesita">Necesitaría</option><option value="no_necesita">No necesita</option></select></div>
+        <!-- Indicador de pasos -->
+        <div class="wiz-steps" id="wiz-steps">
+          <div class="wiz-step active" id="wiz-dot-0">
+            <div class="wiz-step-line"></div>
+            <div class="wiz-step-dot">1</div>
+            <div class="wiz-step-label">Ubicación</div>
+          </div>
+          <div class="wiz-step" id="wiz-dot-1">
+            <div class="wiz-step-line"></div>
+            <div class="wiz-step-dot">2</div>
+            <div class="wiz-step-label">Vivimos</div>
+          </div>
+          <div class="wiz-step" id="wiz-dot-2">
+            <div class="wiz-step-line"></div>
+            <div class="wiz-step-dot">3</div>
+            <div class="wiz-step-label">Hacemos</div>
+          </div>
+          <div class="wiz-step" id="wiz-dot-3">
+            <div class="wiz-step-dot">4</div>
+            <div class="wiz-step-label">Pensamos</div>
           </div>
         </div>
-        <div class="layer" style="border-left:3px solid var(--blue)">
-          <div class="layer-title" style="color:var(--blue)">Capa 2: Qué hacemos</div>
-          <div class="form-grid">
-            <div class="field"><span class="field-label">Pibes y escuela</span><select id="vis-pibes"><option value="">Seleccionar...</option><option value="van_bien">Van y les va bien</option><option value="van_mal">Van pero les cuesta</option><option value="abandonaron">Abandonaron</option><option value="no_van">No van</option><option value="no_hay_pibes">No hay pibes</option></select></div>
-            <div class="field"><span class="field-label">Participa del barrio</span><input id="vis-participa" placeholder="Club, iglesia..."></div>
+
+        <!-- PASO 0: Ubicación -->
+        <div class="wiz-panel active" id="wiz-panel-0">
+          <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">¿En qué casa estamos?</div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="field field-lg"><span class="field-label">Manzana</span><select id="vis-manzana"><option value="">Seleccionar...</option></select></div>
+            <div class="field field-lg"><span class="field-label">Dirección</span><input id="vis-dir" placeholder="Calle y número" style="font-size:16px;padding:12px 13px"></div>
           </div>
-          <div class="checkbox-row">
-            <label><input type="checkbox" id="vis-analfabeto"> No sabe leer/escribir</label>
-            <label><input type="checkbox" id="vis-sinsec"> Sin secundario completo</label>
+          <button class="btn btn-secondary" onclick="captureVisitaLoc()" style="width:100%;justify-content:center;padding:12px">
+            📍 Capturar ubicación GPS
+          </button>
+          <div id="vis-loc-status" style="font-size:12px;color:var(--dim);margin-top:6px;text-align:center;min-height:18px"></div>
+          <input type="hidden" id="vis-lat"><input type="hidden" id="vis-lng">
+          <div class="wiz-nav">
+            <div class="wiz-progress">Paso 1 de 4</div>
+            <button class="btn btn-primary" onclick="wizNext(0)">Siguiente →</button>
           </div>
         </div>
-        <div class="layer" style="border-left:3px solid var(--green)">
-          <div class="layer-title" style="color:var(--green)">Capa 3: Cómo pensamos y sentimos</div>
-          <div class="form-grid">
-            <div class="field"><span class="field-label">Opinión gobierno</span><select id="vis-opin"><option value="">Seleccionar...</option><option value="apoyo">Apoya</option><option value="critico">Crítico</option><option value="indiferente">Indiferente</option><option value="no_opina">No opina</option></select></div>
-            <div class="field"><span class="field-label">Preocupación</span><input id="vis-preocup" placeholder="Trabajo, seguridad..."></div>
-            <div class="field"><span class="field-label">Qué cambiaría</span><input id="vis-cambio"></div>
+
+        <!-- PASO 1: Cómo y de qué vivimos -->
+        <div class="wiz-panel" id="wiz-panel-1">
+          <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Capa 1 — Cómo y de qué vivimos</div>
+
+          <div class="field-label" style="margin-top:14px;margin-bottom:6px">Ocupación</div>
+          <div class="opt-grid" id="opt-ocup">
+            <button class="opt-btn" onclick="selectOpt('ocup','empleo_formal',this)">Empleo<br>formal</button>
+            <button class="opt-btn" onclick="selectOpt('ocup','changa',this)">Changa /<br>Informal</button>
+            <button class="opt-btn" onclick="selectOpt('ocup','plan',this)">Plan<br>social</button>
+            <button class="opt-btn" onclick="selectOpt('ocup','jubilacion',this)">Jubilación</button>
+            <button class="opt-btn" onclick="selectOpt('ocup','desempleo',this)">Desempleo</button>
+            <button class="opt-btn" onclick="selectOpt('ocup','otro',this)">Otro</button>
+          </div>
+          <input type="hidden" id="vis-ocup">
+
+          <div class="field-label" style="margin-top:16px;margin-bottom:6px">Vivienda</div>
+          <div class="opt-grid" id="opt-viv">
+            <button class="opt-btn" onclick="selectOpt('viv','propia',this)">Propia</button>
+            <button class="opt-btn" onclick="selectOpt('viv','alquiler',this)">Alquiler</button>
+            <button class="opt-btn" onclick="selectOpt('viv','prestada',this)">Prestada</button>
+            <button class="opt-btn" onclick="selectOpt('viv','ocupada',this)">Ocupada</button>
+            <button class="opt-btn" onclick="selectOpt('viv','otro',this)">Otro</button>
+          </div>
+          <input type="hidden" id="vis-viv">
+
+          <div class="field-label" style="margin-top:16px;margin-bottom:6px">Comedor</div>
+          <div class="opt-grid" id="opt-comedor">
+            <button class="opt-btn" onclick="selectOpt('comedor','asiste',this)">Asiste</button>
+            <button class="opt-btn" onclick="selectOpt('comedor','necesita',this)">Necesitaría</button>
+            <button class="opt-btn" onclick="selectOpt('comedor','no_necesita',this)">No necesita</button>
+          </div>
+          <input type="hidden" id="vis-comedor">
+
+          <div class="wiz-nav">
+            <button class="btn btn-secondary" onclick="wizBack(1)">← Volver</button>
+            <div class="wiz-progress">Paso 2 de 4</div>
+            <button class="btn btn-primary" onclick="wizNext(1)">Siguiente →</button>
           </div>
         </div>
-        <div class="checkbox-row" style="margin-top:12px">
-          <label style="color:var(--green);font-weight:500"><input type="checkbox" id="vis-disp-alf" style="accent-color:var(--green)"> Quiere alfabetizar</label>
-          <label style="color:var(--orange);font-weight:500"><input type="checkbox" id="vis-disp-ret" style="accent-color:var(--orange)"> Quiere retomar estudios</label>
+
+        <!-- PASO 2: Qué hacemos -->
+        <div class="wiz-panel" id="wiz-panel-2">
+          <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Capa 2 — Qué hacemos</div>
+
+          <div class="field-label" style="margin-top:14px;margin-bottom:6px">Pibes y escuela</div>
+          <div class="opt-grid" id="opt-pibes">
+            <button class="opt-btn" onclick="selectOpt('pibes','van_bien',this)">Van y<br>les va bien</button>
+            <button class="opt-btn" onclick="selectOpt('pibes','van_mal',this)">Van pero<br>les cuesta</button>
+            <button class="opt-btn" onclick="selectOpt('pibes','abandonaron',this)">Abandonaron</button>
+            <button class="opt-btn" onclick="selectOpt('pibes','no_van',this)">No van</button>
+            <button class="opt-btn" onclick="selectOpt('pibes','no_hay_pibes',this)">Sin pibes</button>
+          </div>
+          <input type="hidden" id="vis-pibes">
+
+          <div class="field-label" style="margin-top:16px;margin-bottom:8px">Educación en el hogar</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="check-btn checked-red" id="chk-analfabeto" onclick="toggleChk('analfabeto',this,'checked-red')">
+              <span class="check-icon" id="chk-icon-analfabeto"></span>
+              <span>No sabe leer / escribir</span>
+            </button>
+            <button class="check-btn checked-orange" id="chk-sinsec" onclick="toggleChk('sinsec',this,'checked-orange')">
+              <span class="check-icon" id="chk-icon-sinsec"></span>
+              <span>Sin secundario completo</span>
+            </button>
+          </div>
+          <input type="hidden" id="vis-analfabeto" value="false">
+          <input type="hidden" id="vis-sinsec" value="false">
+
+          <div class="field field-lg" style="margin-top:16px">
+            <span class="field-label">¿Participa en algo del barrio?</span>
+            <input id="vis-participa" placeholder="Club, iglesia, merendero..." style="font-size:16px;padding:12px 13px;margin-top:6px">
+          </div>
+
+          <div class="wiz-nav">
+            <button class="btn btn-secondary" onclick="wizBack(2)">← Volver</button>
+            <div class="wiz-progress">Paso 3 de 4</div>
+            <button class="btn btn-primary" onclick="wizNext(2)">Siguiente →</button>
+          </div>
         </div>
-        <div class="field" style="margin-top:12px"><span class="field-label">Observaciones</span><textarea id="vis-obs" placeholder="Estado de la casa, tono de la conversación..."></textarea></div>
-        <div style="margin-top:14px"><button class="btn btn-primary" id="btn-guardar-visita" onclick="guardarVisita()">✓ Registrar visita</button></div>
+
+        <!-- PASO 3: Cómo pensamos -->
+        <div class="wiz-panel" id="wiz-panel-3">
+          <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Capa 3 — Cómo pensamos y sentimos</div>
+
+          <div class="field-label" style="margin-top:14px;margin-bottom:6px">Opinión sobre el gobierno</div>
+          <div class="opt-grid" id="opt-opin">
+            <button class="opt-btn" onclick="selectOpt('opin','apoyo',this)">Apoya</button>
+            <button class="opt-btn" onclick="selectOpt('opin','critico',this)">Crítico</button>
+            <button class="opt-btn" onclick="selectOpt('opin','indiferente',this)">Indiferente</button>
+            <button class="opt-btn" onclick="selectOpt('opin','no_opina',this)">No opina</button>
+          </div>
+          <input type="hidden" id="vis-opin">
+
+          <div class="field field-lg" style="margin-top:16px">
+            <span class="field-label">¿Qué le preocupa más?</span>
+            <input id="vis-preocup" placeholder="Trabajo, seguridad, salud..." style="font-size:16px;padding:12px 13px;margin-top:6px">
+          </div>
+          <div class="field field-lg" style="margin-top:12px">
+            <span class="field-label">¿Qué cambiaría del barrio?</span>
+            <input id="vis-cambio" style="font-size:16px;padding:12px 13px;margin-top:6px">
+          </div>
+
+          <div class="field-label" style="margin-top:16px;margin-bottom:8px">Disposición a participar</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="check-btn checked-green" id="chk-disp-alf" onclick="toggleChk('disp-alf',this,'checked-green')">
+              <span class="check-icon" id="chk-icon-disp-alf"></span>
+              <span>Quiere ser alfabetizador/a</span>
+            </button>
+            <button class="check-btn checked-orange" id="chk-disp-ret" onclick="toggleChk('disp-ret',this,'checked-orange')">
+              <span class="check-icon" id="chk-icon-disp-ret"></span>
+              <span>Quiere retomar estudios</span>
+            </button>
+          </div>
+          <input type="hidden" id="vis-disp-alf" value="false">
+          <input type="hidden" id="vis-disp-ret" value="false">
+
+          <div class="field field-lg" style="margin-top:14px">
+            <span class="field-label">Observaciones</span>
+            <textarea id="vis-obs" placeholder="Estado de la casa, tono de la conversación..." style="font-size:15px;padding:12px;margin-top:6px"></textarea>
+          </div>
+
+          <div class="wiz-nav">
+            <button class="btn btn-secondary" onclick="wizBack(3)">← Volver</button>
+            <div class="wiz-progress">Paso 4 de 4</div>
+            <button class="btn btn-primary" id="btn-guardar-visita" onclick="guardarVisita()">✓ Registrar visita</button>
+          </div>
+        </div>
+
+        <!-- Resumen post-guardado -->
+        <div class="vis-resumen" id="vis-resumen">
+          <div class="vis-resumen-title">✓ Visita registrada</div>
+          <div class="vis-resumen-flags" id="vis-resumen-flags"></div>
+          <div class="vis-resumen-dale" id="vis-resumen-dale" style="display:none">
+            <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:8px">Esta persona puede sumarse a DALE!</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:10px" id="vis-resumen-dale-msg"></div>
+            <button class="btn btn-primary btn-sm" onclick="irADaleConDatos()" style="background:var(--green)">+ Agregar a DALE! ahora</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="resetWizard()" style="margin-top:10px">Nueva visita</button>
+        </div>
       </div>
+
+      <!-- Lista de visitas con filtros -->
       <div class="card" id="vis-list-card" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
           <div class="card-title" style="margin-bottom:0">Visitas (<span id="vis-count">0</span>)</div>
+        </div>
+        <div class="vis-filtros">
+          <button class="filtro-btn active" id="filtro-todos" onclick="setFiltro('todos',this)">Todas</button>
+          <button class="filtro-btn" id="filtro-analfabeto" onclick="setFiltro('analfabeto',this)">No leen</button>
+          <button class="filtro-btn" id="filtro-sinsec" onclick="setFiltro('sinsec',this)">Sin sec.</button>
+          <button class="filtro-btn" id="filtro-dale" onclick="setFiltro('dale',this)">→ DALE!</button>
+          <button class="filtro-btn" id="filtro-retomar" onclick="setFiltro('retomar',this)">→ Retomar</button>
         </div>
         <div id="vis-list"></div>
         <div id="vis-detail" class="detail-panel" style="display:none"></div>
@@ -751,13 +952,127 @@ window.captureMyLocation = async () => {
 // ═══════════════════════════════════════════════════════════════════
 // GUARDAR DATOS
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// WIZARD RELEVAMIENTO
+// ═══════════════════════════════════════════════════════════════════
+let wizCurrentStep = 0;
+let lastVisitaData = null; // guarda datos de la última visita para el botón DALE!
+
+window.selectOpt = (group, value, btn) => {
+  // Deseleccionar todos en el grupo
+  document.querySelectorAll(`#opt-${group} .opt-btn`).forEach(b => b.classList.remove('selected','selected-green','selected-red','selected-blue'));
+  btn.classList.add('selected');
+  document.getElementById(`vis-${group}`).value = value;
+};
+
+window.toggleChk = (id, btn, cls) => {
+  const hidden = document.getElementById(`vis-${id}`);
+  const icon = document.getElementById(`chk-icon-${id}`);
+  const isChecked = hidden.value === 'true';
+  if (isChecked) {
+    hidden.value = 'false';
+    btn.classList.remove(cls);
+    icon.textContent = '';
+  } else {
+    hidden.value = 'true';
+    btn.classList.add(cls);
+    icon.textContent = '✓';
+  }
+};
+
+window.wizNext = (step) => {
+  // Validación mínima
+  if (step === 0) {
+    const dir = document.getElementById('vis-dir').value.trim();
+    if (!dir) { toast('Ingresá la dirección', true); return; }
+  }
+  wizGoTo(step + 1);
+};
+
+window.wizBack = (step) => { wizGoTo(step - 1); };
+
+function wizGoTo(step) {
+  // Ocultar panel actual
+  document.getElementById(`wiz-panel-${wizCurrentStep}`).classList.remove('active');
+  // Marcar paso anterior como done
+  const prevDot = document.getElementById(`wiz-dot-${wizCurrentStep}`);
+  prevDot.classList.remove('active');
+  if (step > wizCurrentStep) prevDot.classList.add('done');
+  else prevDot.classList.remove('done');
+
+  wizCurrentStep = step;
+  document.getElementById(`wiz-panel-${step}`).classList.add('active');
+  // Actualizar dots
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`wiz-dot-${i}`);
+    dot.classList.remove('active','done');
+    if (i < step) dot.classList.add('done');
+    else if (i === step) dot.classList.add('active');
+  }
+  // Scroll al top del card
+  document.getElementById('sec-relevamiento').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+window.resetWizard = () => {
+  // Reset valores
+  document.getElementById('vis-dir').value = '';
+  document.getElementById('vis-participa').value = '';
+  document.getElementById('vis-preocup').value = '';
+  document.getElementById('vis-cambio').value = '';
+  document.getElementById('vis-obs').value = '';
+  document.getElementById('vis-lat').value = '';
+  document.getElementById('vis-lng').value = '';
+  document.getElementById('vis-loc-status').textContent = '';
+  ['ocup','viv','comedor','pibes','opin'].forEach(g => {
+    document.getElementById(`vis-${g}`).value = '';
+    document.querySelectorAll(`#opt-${g} .opt-btn`).forEach(b => b.classList.remove('selected'));
+  });
+  ['analfabeto','sinsec','disp-alf','disp-ret'].forEach(id => {
+    document.getElementById(`vis-${id}`).value = 'false';
+    const btn = document.getElementById(`chk-${id}`);
+    if (btn) {
+      btn.classList.remove('checked-red','checked-orange','checked-green');
+      const icon = document.getElementById(`chk-icon-${id}`);
+      if (icon) icon.textContent = '';
+    }
+  });
+  // Ocultar resumen, mostrar wizard desde paso 0
+  document.getElementById('vis-resumen').style.display = 'none';
+  document.getElementById('wiz-steps').style.display = 'flex';
+  lastVisitaData = null;
+  wizCurrentStep = 0;
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`wiz-panel-${i}`).classList.remove('active');
+    const dot = document.getElementById(`wiz-dot-${i}`);
+    dot.classList.remove('active','done');
+  }
+  document.getElementById('wiz-panel-0').classList.add('active');
+  document.getElementById('wiz-dot-0').classList.add('active');
+};
+
+// Ir a DALE! prellenando con datos de la última visita
+window.irADaleConDatos = () => {
+  if (!lastVisitaData) return;
+  // Precompletar nombre si tenemos dirección
+  document.getElementById('alf-nombre').value = '';
+  document.getElementById('alf-alfabetizador').value = currentUser.nombre;
+  // Navegar a DALE!
+  window.switchTab('alfabetizacion');
+  toast('Completá el nombre de la persona en el formulario');
+};
+
 window.guardarVisita = async () => {
   const dir = document.getElementById('vis-dir').value.trim();
   if (!dir) return toast('Ingresá la dirección', true);
   const btn = document.getElementById('btn-guardar-visita');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try {
-    await addDoc(collection(db, 'visitas'), {
+    const analfabeto = document.getElementById('vis-analfabeto').value === 'true';
+    const sinSec = document.getElementById('vis-sinsec').value === 'true';
+    const dispAlf = document.getElementById('vis-disp-alf').value === 'true';
+    const dispRet = document.getElementById('vis-disp-ret').value === 'true';
+
+    const data = {
       nodo_id: currentUser.nodo_id,
       manzana_numero: document.getElementById('vis-manzana').value,
       direccion: dir,
@@ -767,25 +1082,53 @@ window.guardarVisita = async () => {
       vivienda: document.getElementById('vis-viv').value,
       comedor: document.getElementById('vis-comedor').value,
       pibes_escuela: document.getElementById('vis-pibes').value,
-      analfabeto: document.getElementById('vis-analfabeto').checked,
-      sin_secundario: document.getElementById('vis-sinsec').checked,
+      analfabeto,
+      sin_secundario: sinSec,
       participa_barrio: document.getElementById('vis-participa').value.trim(),
       opinion_gobierno: document.getElementById('vis-opin').value,
       preocupacion: document.getElementById('vis-preocup').value.trim(),
       cambio_barrio: document.getElementById('vis-cambio').value.trim(),
-      dispuesto_alfabetizar: document.getElementById('vis-disp-alf').checked,
-      dispuesto_retomar: document.getElementById('vis-disp-ret').checked,
+      dispuesto_alfabetizar: dispAlf,
+      dispuesto_retomar: dispRet,
       observaciones: document.getElementById('vis-obs').value.trim(),
       creado_por: currentUser.uid,
       fecha: serverTimestamp()
-    });
-    // Reset
-    ['vis-dir','vis-participa','vis-preocup','vis-cambio','vis-obs'].forEach(id => document.getElementById(id).value = '');
-    ['vis-ocup','vis-viv','vis-comedor','vis-pibes','vis-opin'].forEach(id => document.getElementById(id).selectedIndex = 0);
-    ['vis-analfabeto','vis-sinsec','vis-disp-alf','vis-disp-ret'].forEach(id => document.getElementById(id).checked = false);
-    document.getElementById('vis-lat').value = ''; document.getElementById('vis-lng').value = '';
-    document.getElementById('vis-loc-status').textContent = '';
-    toast('Visita registrada ✓');
+    };
+    await addDoc(collection(db, 'visitas'), data);
+    lastVisitaData = { direccion: dir, analfabeto, sinSec, dispAlf, dispRet };
+
+    // Mostrar resumen
+    document.getElementById('wiz-steps').style.display = 'none';
+    document.getElementById(`wiz-panel-3`).classList.remove('active');
+    const resumen = document.getElementById('vis-resumen');
+    resumen.style.display = 'block';
+
+    // Flags detectadas
+    const flags = [];
+    if (analfabeto) flags.push('<span class="badge badge-red">No sabe leer/escribir</span>');
+    if (sinSec) flags.push('<span class="badge badge-orange">Sin secundario</span>');
+    if (dispAlf) flags.push('<span class="badge badge-green">Quiere alfabetizar</span>');
+    if (dispRet) flags.push('<span class="badge badge-gold">Quiere retomar estudios</span>');
+    document.getElementById('vis-resumen-flags').innerHTML = flags.length
+      ? flags.join(' ')
+      : '<span style="font-size:13px;color:var(--dim)">Sin alertas especiales</span>';
+
+    // Sugerencia DALE!
+    const daleBlock = document.getElementById('vis-resumen-dale');
+    const daleMsg = document.getElementById('vis-resumen-dale-msg');
+    if (analfabeto) {
+      daleBlock.style.display = 'block';
+      daleMsg.textContent = 'Detectaste que no sabe leer/escribir. Podés agregarla ahora al programa de alfabetización.';
+    } else if (dispAlf) {
+      daleBlock.style.display = 'block';
+      daleMsg.textContent = 'Esta persona quiere ser alfabetizadora. Podés registrarla en DALE! como voluntaria.';
+    } else if (sinSec) {
+      daleBlock.style.display = 'block';
+      daleMsg.textContent = 'Tiene secundario incompleto y quizás quiera retomar. Podés agregarla a DALE!.';
+    } else {
+      daleBlock.style.display = 'none';
+    }
+
   } catch(e) { toast('Error: '+e.message, true); }
   btn.disabled = false; btn.textContent = '✓ Registrar visita';
 };
@@ -1105,32 +1448,96 @@ function renderManzanas() {
   }).join('');
 }
 
+let filtroActivo = 'todos';
+
+window.setFiltro = (f, btn) => {
+  filtroActivo = f;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVisitas();
+};
+
 function renderVisitas() {
   const card = document.getElementById('vis-list-card');
   if (!visitas.length) { card.style.display='none'; return; }
   card.style.display = 'block';
   document.getElementById('vis-count').textContent = visitas.length;
-  document.getElementById('vis-list').innerHTML = visitas.slice(0,40).map(v => {
-    let badges = '';
-    if (v.analfabeto) badges += '<span class="badge badge-red">Analfabeto</span> ';
-    if (v.sin_secundario) badges += '<span class="badge badge-orange">Sin sec.</span> ';
-    if (v.dispuesto_alfabetizar) badges += '<span class="badge badge-green">Alfabetizador</span> ';
-    if (v.lat) badges += '<span class="badge badge-gold">📍</span> ';
-    return `<div class="list-item"><div class="list-item-body"><b>${v.direccion}</b> <span style="color:var(--muted)">Mz ${v.manzana_numero||'s/n'}</span><div style="margin-top:3px">${badges}</div></div><div class="list-item-actions"><button onclick="showDetail('${v.id}')">👁</button></div></div>`;
-  }).join('');
+
+  let filtered = visitas;
+  if (filtroActivo === 'analfabeto') filtered = visitas.filter(v => v.analfabeto);
+  else if (filtroActivo === 'sinsec') filtered = visitas.filter(v => v.sin_secundario);
+  else if (filtroActivo === 'dale') filtered = visitas.filter(v => v.analfabeto || v.dispuesto_alfabetizar);
+  else if (filtroActivo === 'retomar') filtered = visitas.filter(v => v.dispuesto_retomar);
+
+  const shown = filtered.slice(0, 60);
+  document.getElementById('vis-list').innerHTML = shown.length === 0
+    ? '<div style="text-align:center;color:var(--dim);padding:16px;font-size:13px">Sin visitas con este filtro.</div>'
+    : shown.map(v => {
+      let badges = '';
+      if (v.analfabeto) badges += '<span class="badge badge-red">No lee</span> ';
+      if (v.sin_secundario) badges += '<span class="badge badge-orange">Sin sec.</span> ';
+      if (v.dispuesto_alfabetizar) badges += '<span class="badge badge-green">→ DALE!</span> ';
+      if (v.dispuesto_retomar) badges += '<span class="badge badge-gold">→ Retomar</span> ';
+      if (v.lat) badges += '<span class="badge badge-blue">📍</span> ';
+      return `<div class="list-item">
+        <div class="list-item-body">
+          <b>${v.direccion}</b> <span style="color:var(--muted);font-size:13px">Mz ${v.manzana_numero||'s/n'}</span>
+          <div style="margin-top:4px">${badges}</div>
+        </div>
+        <div class="list-item-actions">
+          <button onclick="showDetail('${v.id}')" title="Ver detalle" style="font-size:18px">👁</button>
+        </div>
+      </div>`;
+    }).join('');
+  if (filtered.length > 60) {
+    document.getElementById('vis-list').innerHTML += `<div style="text-align:center;color:var(--dim);padding:10px;font-size:12px;font-family:var(--mono)">Mostrando 60 de ${filtered.length}. Usá los filtros para acotar.</div>`;
+  }
 }
 
 window.showDetail = (id) => {
   const v = visitas.find(x=>x.id===id); if (!v) return;
   const el = document.getElementById('vis-detail');
+  // Cerrar si ya está mostrando el mismo
+  if (el.dataset.id === id && el.style.display !== 'none') { el.style.display='none'; el.dataset.id=''; return; }
+  el.dataset.id = id;
   el.style.display = 'block';
-  el.innerHTML = `<h4 style="color:var(--gold);margin-bottom:10px">${v.direccion}</h4>
+
+  const daleBtn = (v.analfabeto || v.dispuesto_alfabetizar || v.sin_secundario)
+    ? `<button class="btn btn-sm" onclick="irADaleDesdeDetalle('${v.id}')" style="background:var(--green);color:#fff;margin-top:10px">+ Agregar a DALE!</button>`
+    : '';
+
+  const ocupLabels = {empleo_formal:'Empleo formal',changa:'Changa/Informal',plan:'Plan social',jubilacion:'Jubilación',desempleo:'Desempleo',otro:'Otro'};
+  const vivLabels = {propia:'Propia',alquiler:'Alquiler',prestada:'Prestada',ocupada:'Ocupada',otro:'Otro'};
+  const opinLabels = {apoyo:'Apoya',critico:'Crítico',indiferente:'Indiferente',no_opina:'No opina'};
+
+  el.innerHTML = `
+    <h4 style="color:var(--gold);margin-bottom:10px">${v.direccion} <span style="color:var(--dim);font-size:13px;font-weight:400">· Mz ${v.manzana_numero||'s/n'}</span></h4>
     <div class="detail-grid">
-      <div><strong>Ocupación:</strong> ${v.ocupacion||'—'}</div><div><strong>Vivienda:</strong> ${v.vivienda||'—'}</div>
-      <div><strong>Comedor:</strong> ${v.comedor||'—'}</div><div><strong>Pibes/escuela:</strong> ${v.pibes_escuela||'—'}</div>
-      <div><strong>Participa:</strong> ${v.participa_barrio||'—'}</div><div><strong>Opinión gob.:</strong> ${v.opinion_gobierno||'—'}</div>
-      <div><strong>Preocupación:</strong> ${v.preocupacion||'—'}</div><div><strong>GPS:</strong> ${v.lat?v.lat.toFixed(5)+', '+v.lng.toFixed(5):'Sin GPS'}</div>
-    </div>${v.observaciones?`<div style="margin-top:10px;font-size:13px;font-style:italic;color:var(--muted)">Obs: ${v.observaciones}</div>`:''}`;
+      <div><strong>Ocupación:</strong> ${ocupLabels[v.ocupacion]||v.ocupacion||'—'}</div>
+      <div><strong>Vivienda:</strong> ${vivLabels[v.vivienda]||v.vivienda||'—'}</div>
+      <div><strong>Comedor:</strong> ${v.comedor?.replace(/_/g,' ')||'—'}</div>
+      <div><strong>Pibes/escuela:</strong> ${v.pibes_escuela?.replace(/_/g,' ')||'—'}</div>
+      <div><strong>Participa:</strong> ${v.participa_barrio||'—'}</div>
+      <div><strong>Opinión gob.:</strong> ${opinLabels[v.opinion_gobierno]||v.opinion_gobierno||'—'}</div>
+      <div><strong>Preocupación:</strong> ${v.preocupacion||'—'}</div>
+      <div><strong>Qué cambiaría:</strong> ${v.cambio_barrio||'—'}</div>
+    </div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+      ${v.analfabeto?'<span class="badge badge-red">No lee/escribe</span>':''}
+      ${v.sin_secundario?'<span class="badge badge-orange">Sin secundario</span>':''}
+      ${v.dispuesto_alfabetizar?'<span class="badge badge-green">Quiere alfabetizar</span>':''}
+      ${v.dispuesto_retomar?'<span class="badge badge-gold">Quiere retomar</span>':''}
+    </div>
+    ${v.observaciones?`<div style="margin-top:10px;font-size:13px;font-style:italic;color:var(--muted)">"${v.observaciones}"</div>`:''}
+    ${daleBtn}`;
+};
+
+window.irADaleDesdeDetalle = (id) => {
+  const v = visitas.find(x=>x.id===id); if (!v) return;
+  lastVisitaData = v;
+  document.getElementById('alf-alfabetizador').value = currentUser.nombre;
+  window.switchTab('alfabetizacion');
+  toast('Completá el nombre de la persona en DALE!');
 };
 
 function renderInstituciones() {
