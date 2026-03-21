@@ -202,6 +202,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .btn-sino{padding:8px 14px;border-radius:3px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s;min-width:44px;text-align:center}
 .btn-sino.active-si{background:var(--green);color:#fff;border-color:var(--green)}
 .btn-sino.active-no{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sino.active-quizas{background:var(--orange);color:#fff;border-color:var(--orange)}
 
 /* RESPONSIVE */
 @media(max-width:600px){
@@ -458,6 +459,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
               <span style="font-size:15px;flex:1">¿Alguien quiere ser alfabetizador?</span>
               <div style="display:flex;gap:6px;flex-shrink:0">
                 <button type="button" class="btn-sino" data-field="vis-disp-alf" data-val="si" onclick="toggleSiNo(this)">Sí</button>
+                <button type="button" class="btn-sino btn-quizas" data-field="vis-disp-alf" data-val="quizas" onclick="toggleSiNo(this)">Quizás</button>
                 <button type="button" class="btn-sino" data-field="vis-disp-alf" data-val="no" onclick="toggleSiNo(this)">No</button>
               </div>
               <input type="hidden" id="vis-disp-alf" value="">
@@ -472,9 +474,30 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             </div>
           </div>
 
-          <div class="field" style="margin-top:14px">
-            <span class="field-label">¿Participa de algo en el barrio?</span>
-            <input id="vis-participa" placeholder="Club, iglesia, fomento..." style="font-size:15px;padding:10px">
+          <!-- Participación barrial -->
+          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:15px;color:var(--text);margin-bottom:8px;font-weight:500">¿Participa de algo en el barrio?</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-club" style="accent-color:var(--gold);width:18px;height:18px"> Club de barrio
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-iglesia" style="accent-color:var(--gold);width:18px;height:18px"> Iglesia / Capilla
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-fomento" style="accent-color:var(--gold);width:18px;height:18px"> Sociedad de fomento
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-comedor" style="accent-color:var(--gold);width:18px;height:18px"> Comedor / Merendero
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-ninguno" style="accent-color:var(--dim);width:18px;height:18px"> No participa de nada
+              </label>
+            </div>
+            <div class="field" style="margin-top:8px">
+              <span class="field-label">Otro (especificar)</span>
+              <input id="vis-participa" placeholder="Biblioteca, centro de jubilados..." style="font-size:15px;padding:10px">
+            </div>
           </div>
         </div>
 
@@ -897,22 +920,30 @@ window.toggleSiNo = (btn) => {
   const val = btn.dataset.val;
   const hidden = document.getElementById(field);
   const parent = btn.parentElement;
-  parent.querySelectorAll('.btn-sino').forEach(b => b.classList.remove('active-si','active-no'));
+  parent.querySelectorAll('.btn-sino').forEach(b => b.classList.remove('active-si','active-no','active-quizas'));
   hidden.value = val;
-  btn.classList.add(val === 'si' ? 'active-si' : 'active-no');
+  if (val === 'si') btn.classList.add('active-si');
+  else if (val === 'quizas') btn.classList.add('active-quizas');
+  else btn.classList.add('active-no');
 };
 
 // Set a Sí/No field programmatically (for edit mode)
 function setSiNo(fieldId, val) {
   const hidden = document.getElementById(fieldId);
   if (!hidden) return;
-  hidden.value = val ? 'si' : '';
+  // val puede ser true/false (legacy) o 'si'/'no'/'quizas' (nuevo)
+  let strVal = '';
+  if (val === true || val === 'si') strVal = 'si';
+  else if (val === 'quizas') strVal = 'quizas';
+  else if (val === false || val === 'no') strVal = 'no';
+  hidden.value = strVal;
   const parent = hidden.parentElement;
   if (!parent) return;
   parent.querySelectorAll('.btn-sino').forEach(b => {
-    b.classList.remove('active-si','active-no');
-    if (val && b.dataset.val === 'si') b.classList.add('active-si');
-    if (!val && b.dataset.val === 'no') b.classList.add('active-no');
+    b.classList.remove('active-si','active-no','active-quizas');
+    if (strVal === 'si' && b.dataset.val === 'si') b.classList.add('active-si');
+    if (strVal === 'quizas' && b.dataset.val === 'quizas') b.classList.add('active-quizas');
+    if (strVal === 'no' && b.dataset.val === 'no') b.classList.add('active-no');
   });
 }
 
@@ -961,6 +992,8 @@ function resetVisitaForm() {
   document.getElementById('vis-lng').value = '';
   document.getElementById('vis-loc-status').textContent = '';
   document.getElementById('vis-manzana').selectedIndex = 0;
+  // Participación barrial
+  ['vis-part-club','vis-part-iglesia','vis-part-fomento','vis-part-comedor','vis-part-ninguno'].forEach(id => document.getElementById(id).checked = false);
   // Habitantes y edades
   document.getElementById('vis-habitantes').value = '';
   ['vis-edad-0-5','vis-edad-6-12','vis-edad-13-17','vis-edad-18-35','vis-edad-36-59','vis-edad-60'].forEach(id => document.getElementById(id).value = '0');
@@ -985,6 +1018,11 @@ window.editarVisita = (id) => {
   document.getElementById('vis-preocup').value = v.preocupacion || '';
   document.getElementById('vis-cambio').value = v.cambio_barrio || '';
   document.getElementById('vis-participa').value = v.participa_barrio || '';
+  document.getElementById('vis-part-club').checked = v.participa_club || false;
+  document.getElementById('vis-part-iglesia').checked = v.participa_iglesia || false;
+  document.getElementById('vis-part-fomento').checked = v.participa_fomento || false;
+  document.getElementById('vis-part-comedor').checked = v.participa_comedor || false;
+  document.getElementById('vis-part-ninguno').checked = v.participa_ninguno || false;
   document.getElementById('vis-obs').value = v.observaciones || '';
   // Set manzana
   const mzSel = document.getElementById('vis-manzana');
@@ -1037,10 +1075,15 @@ window.guardarVisita = async () => {
     analfabeto: document.getElementById('vis-analfabeto').value === 'si',
     sin_secundario: document.getElementById('vis-sinsec').value === 'si',
     participa_barrio: document.getElementById('vis-participa').value.trim(),
+    participa_club: document.getElementById('vis-part-club').checked,
+    participa_iglesia: document.getElementById('vis-part-iglesia').checked,
+    participa_fomento: document.getElementById('vis-part-fomento').checked,
+    participa_comedor: document.getElementById('vis-part-comedor').checked,
+    participa_ninguno: document.getElementById('vis-part-ninguno').checked,
     opinion_gobierno: document.getElementById('vis-opin').value,
     preocupacion: document.getElementById('vis-preocup').value.trim(),
     cambio_barrio: document.getElementById('vis-cambio').value.trim(),
-    dispuesto_alfabetizar: document.getElementById('vis-disp-alf').value === 'si',
+    dispuesto_alfabetizar: document.getElementById('vis-disp-alf').value || '',
     dispuesto_retomar: document.getElementById('vis-disp-ret').value === 'si',
     observaciones: document.getElementById('vis-obs').value.trim(),
     habitantes: Number(document.getElementById('vis-habitantes').value) || null,
