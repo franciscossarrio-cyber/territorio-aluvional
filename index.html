@@ -203,6 +203,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .btn-sino.active-si{background:var(--green);color:#fff;border-color:var(--green)}
 .btn-sino.active-no{background:var(--red);color:#fff;border-color:var(--red)}
 .btn-sino.active-quizas{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn-sino.active-quizas{background:var(--orange);color:#fff;border-color:var(--orange)}
 
 /* RESPONSIVE */
 @media(max-width:600px){
@@ -340,14 +341,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <div id="vis-form-wrapper" style="display:none">
         <div class="card">
           <!-- Ubicación y dirección -->
-          <div class="field" style="margin-bottom:14px">
+          <div class="field" style="margin-bottom:10px">
             <span class="field-label">Dirección</span>
             <input id="vis-dir" placeholder="Calle y número" style="font-size:16px;padding:12px">
           </div>
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-            <button class="btn btn-secondary" onclick="captureVisitaLoc()" style="font-size:14px;padding:10px 14px">📍 Capturar GPS</button>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="captureVisitaLoc()" style="font-size:14px;padding:10px 14px">📍 Mi GPS</button>
+            <button class="btn btn-secondary" onclick="buscarDireccion()" style="font-size:14px;padding:10px 14px">🔍 Buscar en mapa</button>
             <span id="vis-loc-status" style="font-size:13px;color:var(--dim)"></span>
           </div>
+          <!-- Mini mapa para ubicar la visita -->
+          <div id="vis-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px"></div>
+          <div style="font-size:12px;color:var(--dim);margin-bottom:14px">Tocá el mapa para ajustar la ubicación</div>
           <div class="field" style="margin-bottom:14px">
             <span class="field-label">Manzana (opcional)</span>
             <select id="vis-manzana" style="font-size:15px;padding:10px"><option value="">Sin especificar</option></select>
@@ -489,6 +494,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
               </label>
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
                 <input type="checkbox" id="vis-part-comedor" style="accent-color:var(--gold);width:18px;height:18px"> Comedor / Merendero
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-jubilados" style="accent-color:var(--gold);width:18px;height:18px"> Centro de jubilados
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-biblioteca" style="accent-color:var(--gold);width:18px;height:18px"> Biblioteca popular
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
+                <input type="checkbox" id="vis-part-salud" style="accent-color:var(--gold);width:18px;height:18px"> Centro de salud
               </label>
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px">
                 <input type="checkbox" id="vis-part-ninguno" style="accent-color:var(--dim);width:18px;height:18px"> No participa de nada
@@ -871,10 +885,87 @@ window.captureVisitaLoc = async () => {
   s.textContent = 'Buscando...';
   try {
     const loc = await getLoc();
-    document.getElementById('vis-lat').value = loc.lat;
-    document.getElementById('vis-lng').value = loc.lng;
-    s.textContent = `✓ ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (~${Math.round(loc.acc)}m)`;
+    setVisitaLocation(loc.lat, loc.lng);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
   } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+// ─── MINI MAPA DE VISITA ───
+let visMap = null;
+let visPin = null;
+
+function initVisMap() {
+  if (visMap) return;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  visMap = L.map('vis-map-container', {zoomControl: true, attributionControl: false})
+    .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(visMap);
+
+  // Click para ubicar
+  visMap.on('click', (e) => {
+    setVisitaLocation(e.latlng.lat, e.latlng.lng);
+    document.getElementById('vis-loc-status').textContent = '✓ Ubicación marcada en mapa';
+  });
+}
+
+function setVisitaLocation(lat, lng) {
+  document.getElementById('vis-lat').value = lat;
+  document.getElementById('vis-lng').value = lng;
+
+  if (!visMap) initVisMap();
+  setTimeout(() => visMap.invalidateSize(), 100);
+
+  if (visPin) {
+    visPin.setLatLng([lat, lng]);
+  } else {
+    visPin = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:var(--gold);border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        iconSize: [16, 16], iconAnchor: [8, 8]
+      })
+    }).addTo(visMap);
+  }
+  visMap.setView([lat, lng], 17);
+}
+
+function clearVisMap() {
+  if (visPin && visMap) { visMap.removeLayer(visPin); visPin = null; }
+  if (visMap) {
+    const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+    visMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  }
+}
+
+// Buscar dirección usando Nominatim (OpenStreetMap geocoder, gratis)
+window.buscarDireccion = async () => {
+  const dir = document.getElementById('vis-dir').value.trim();
+  if (!dir) return toast('Escribí la dirección primero', true);
+
+  const s = document.getElementById('vis-loc-status');
+  s.textContent = 'Buscando dirección...';
+
+  // Agregar contexto del nodo para mejor resultado
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  const query = `${dir}, ${nodo?.nombre || ''}, Buenos Aires, Argentina`;
+
+  try {
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+    const results = await resp.json();
+    if (results.length > 0) {
+      const r = results[0];
+      setVisitaLocation(parseFloat(r.lat), parseFloat(r.lon));
+      s.textContent = '✓ Dirección encontrada';
+    } else {
+      s.textContent = '✗ No se encontró. Tocá el mapa para ubicar manualmente.';
+      if (!visMap) initVisMap();
+      setTimeout(() => visMap.invalidateSize(), 100);
+    }
+  } catch(e) {
+    s.textContent = '✗ Error buscando. Tocá el mapa.';
+    if (!visMap) initVisMap();
+    setTimeout(() => visMap.invalidateSize(), 100);
+  }
 };
 
 window.captureInstLoc = async () => {
@@ -968,6 +1059,8 @@ window.nuevaVisita = () => {
   document.getElementById('vis-form-wrapper').style.gap = '14px';
   document.getElementById('btn-nueva-visita').style.display = 'none';
   document.getElementById('btn-guardar-visita').textContent = '✓ FINALIZAR ENCUESTA';
+  // Inicializar mini mapa
+  setTimeout(() => { initVisMap(); visMap.invalidateSize(); }, 150);
   document.getElementById('vis-dir').focus();
 };
 
@@ -992,6 +1085,7 @@ function resetVisitaForm() {
   document.getElementById('vis-lng').value = '';
   document.getElementById('vis-loc-status').textContent = '';
   document.getElementById('vis-manzana').selectedIndex = 0;
+  clearVisMap();
   // Participación barrial
   ['vis-part-club','vis-part-iglesia','vis-part-fomento','vis-part-comedor','vis-part-ninguno'].forEach(id => document.getElementById(id).checked = false);
   // Habitantes y edades
@@ -1009,7 +1103,10 @@ window.editarVisita = (id) => {
   document.getElementById('vis-dir').value = v.direccion || '';
   document.getElementById('vis-lat').value = v.lat || '';
   document.getElementById('vis-lng').value = v.lng || '';
-  if (v.lat) document.getElementById('vis-loc-status').textContent = `📍 ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}`;
+  if (v.lat && v.lng) {
+    setTimeout(() => { initVisMap(); visMap.invalidateSize(); setVisitaLocation(v.lat, v.lng); }, 200);
+    document.getElementById('vis-loc-status').textContent = '✓ Ubicación cargada';
+  }
   // Set selects
   document.getElementById('vis-ocup').value = v.ocupacion || '';
   document.getElementById('vis-viv').value = v.vivienda || '';
@@ -1079,6 +1176,9 @@ window.guardarVisita = async () => {
     participa_iglesia: document.getElementById('vis-part-iglesia').checked,
     participa_fomento: document.getElementById('vis-part-fomento').checked,
     participa_comedor: document.getElementById('vis-part-comedor').checked,
+    participa_jubilados: document.getElementById('vis-part-jubilados').checked,
+    participa_biblioteca: document.getElementById('vis-part-biblioteca').checked,
+    participa_salud: document.getElementById('vis-part-salud').checked,
     participa_ninguno: document.getElementById('vis-part-ninguno').checked,
     opinion_gobierno: document.getElementById('vis-opin').value,
     preocupacion: document.getElementById('vis-preocup').value.trim(),
