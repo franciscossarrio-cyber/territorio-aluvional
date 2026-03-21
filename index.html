@@ -370,6 +370,43 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             <span class="field-label">¿Va a comedor o necesitaría?</span>
             <select id="vis-comedor" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="asiste">Sí, asiste</option><option value="necesita">No, pero necesitaría</option><option value="no_necesita">No necesita</option></select>
           </div>
+
+          <!-- Habitantes y edades -->
+          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:15px;color:var(--text);margin-bottom:10px;font-weight:500">¿Cuántas personas viven en la casa?</div>
+            <div class="field" style="margin-bottom:12px">
+              <span class="field-label">Total de personas</span>
+              <input id="vis-habitantes" type="number" min="0" placeholder="0" style="font-size:18px;padding:12px;width:120px;text-align:center" oninput="calcularTotalEdades()">
+            </div>
+            <div style="font-size:14px;color:var(--muted);margin-bottom:10px">¿Cuántas en cada rango de edad?</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">0 a 5 años</span>
+                <input id="vis-edad-0-5" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">6 a 12 años</span>
+                <input id="vis-edad-6-12" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">13 a 17 años</span>
+                <input id="vis-edad-13-17" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">18 a 35 años</span>
+                <input id="vis-edad-18-35" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">36 a 59 años</span>
+                <input id="vis-edad-36-59" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px">
+                <span style="font-size:15px">60 años o más</span>
+                <input id="vis-edad-60" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()">
+              </div>
+            </div>
+            <div id="vis-edad-check" style="font-size:13px;margin-top:6px;min-height:18px"></div>
+          </div>
         </div>
 
         <!-- CAPA 2: Qué hacemos -->
@@ -879,6 +916,19 @@ function setSiNo(fieldId, val) {
   });
 }
 
+// Validación: suma de edades vs total habitantes
+window.calcularTotalEdades = () => {
+  const total = Number(document.getElementById('vis-habitantes').value) || 0;
+  const suma = ['vis-edad-0-5','vis-edad-6-12','vis-edad-13-17','vis-edad-18-35','vis-edad-36-59','vis-edad-60']
+    .reduce((s, id) => s + (Number(document.getElementById(id).value) || 0), 0);
+  const el = document.getElementById('vis-edad-check');
+  if (total > 0 && suma > 0) {
+    if (suma === total) { el.textContent = '✓ Los rangos suman bien'; el.style.color = 'var(--green)'; }
+    else if (suma < total) { el.textContent = `Faltan ${total - suma} persona${total-suma>1?'s':''} por asignar`; el.style.color = 'var(--orange)'; }
+    else { el.textContent = `Sobran ${suma - total} — revisá los rangos`; el.style.color = 'var(--red)'; }
+  } else { el.textContent = ''; }
+};
+
 // Nueva visita: mostrar formulario vacío
 window.nuevaVisita = () => {
   resetVisitaForm();
@@ -911,6 +961,10 @@ function resetVisitaForm() {
   document.getElementById('vis-lng').value = '';
   document.getElementById('vis-loc-status').textContent = '';
   document.getElementById('vis-manzana').selectedIndex = 0;
+  // Habitantes y edades
+  document.getElementById('vis-habitantes').value = '';
+  ['vis-edad-0-5','vis-edad-6-12','vis-edad-13-17','vis-edad-18-35','vis-edad-36-59','vis-edad-60'].forEach(id => document.getElementById(id).value = '0');
+  document.getElementById('vis-edad-check').textContent = '';
 }
 
 // Editar visita existente
@@ -948,6 +1002,15 @@ window.editarVisita = (id) => {
   setSiNo('vis-sinsec', v.sin_secundario);
   setSiNo('vis-disp-alf', v.dispuesto_alfabetizar);
   setSiNo('vis-disp-ret', v.dispuesto_retomar);
+  // Habitantes y edades
+  document.getElementById('vis-habitantes').value = v.habitantes || '';
+  document.getElementById('vis-edad-0-5').value = v.edad_0_5 || 0;
+  document.getElementById('vis-edad-6-12').value = v.edad_6_12 || 0;
+  document.getElementById('vis-edad-13-17').value = v.edad_13_17 || 0;
+  document.getElementById('vis-edad-18-35').value = v.edad_18_35 || 0;
+  document.getElementById('vis-edad-36-59').value = v.edad_36_59 || 0;
+  document.getElementById('vis-edad-60').value = v.edad_60_mas || 0;
+  calcularTotalEdades();
   document.getElementById('btn-guardar-visita').textContent = '✓ GUARDAR CAMBIOS';
   window.scrollTo({top: 0, behavior: 'smooth'});
 };
@@ -980,6 +1043,13 @@ window.guardarVisita = async () => {
     dispuesto_alfabetizar: document.getElementById('vis-disp-alf').value === 'si',
     dispuesto_retomar: document.getElementById('vis-disp-ret').value === 'si',
     observaciones: document.getElementById('vis-obs').value.trim(),
+    habitantes: Number(document.getElementById('vis-habitantes').value) || null,
+    edad_0_5: Number(document.getElementById('vis-edad-0-5').value) || 0,
+    edad_6_12: Number(document.getElementById('vis-edad-6-12').value) || 0,
+    edad_13_17: Number(document.getElementById('vis-edad-13-17').value) || 0,
+    edad_18_35: Number(document.getElementById('vis-edad-18-35').value) || 0,
+    edad_36_59: Number(document.getElementById('vis-edad-36-59').value) || 0,
+    edad_60_mas: Number(document.getElementById('vis-edad-60').value) || 0,
   };
 
   const editId = document.getElementById('vis-edit-id').value;
