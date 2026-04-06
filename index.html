@@ -290,6 +290,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
       <div id="vis-form-wrapper" style="display:none">
         <div class="card">
+          <div class="field" style="margin-bottom:10px">
+            <span class="field-label">Nombre del vecino/a (opcional)</span>
+            <input id="vis-nombre" placeholder="Nombre y apellido" style="font-size:16px;padding:12px">
+          </div>
           <div class="field autocomplete-wrap" style="margin-bottom:10px">
             <span class="field-label">Dirección</span>
             <input id="vis-dir" placeholder="Calle y número" style="font-size:16px;padding:12px" autocomplete="off" oninput="onDirInput()">
@@ -383,6 +387,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div class="field" style="margin-bottom:12px"><span class="field-label">Opinión sobre el gobierno</span><select id="vis-opin" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="apoyo">Apoya</option><option value="critico">Crítico</option><option value="indiferente">Indiferente</option><option value="no_opina">No opina</option></select></div>
           <div class="field" style="margin-bottom:12px"><span class="field-label">¿Qué es lo que más le preocupa?</span><input id="vis-preocup" placeholder="Trabajo, seguridad, salud..." style="font-size:15px;padding:10px"></div>
           <div class="field"><span class="field-label">¿Qué cambiaría del barrio?</span><input id="vis-cambio" style="font-size:15px;padding:10px"></div>
+        </div>
+
+        <div class="card">
+          <div class="field"><span class="field-label">Teléfono del vecino/a (opcional)</span><input id="vis-tel" placeholder="11-XXXX-XXXX" style="font-size:15px;padding:10px"></div>
         </div>
 
         <div class="card">
@@ -928,7 +936,7 @@ window.cancelarVisita = () => {
 
 function resetVisitaForm() {
   document.getElementById('vis-edit-id').value = '';
-  ['vis-dir','vis-participa','vis-preocup','vis-cambio','vis-obs'].forEach(id => document.getElementById(id).value = '');
+  ['vis-dir','vis-nombre','vis-tel','vis-participa','vis-preocup','vis-cambio','vis-obs'].forEach(id => document.getElementById(id).value = '');
   ['vis-ocup','vis-viv','vis-comedor','vis-opin'].forEach(id => document.getElementById(id).selectedIndex = 0);
   document.querySelectorAll('input[name="vis-pibes"]').forEach(r => r.checked = false);
   ['vis-analfabeto','vis-sinsec','vis-disp-alf','vis-disp-ret'].forEach(id => {
@@ -954,6 +962,8 @@ window.editarVisita = (id) => {
   nuevaVisita();
   document.getElementById('vis-edit-id').value = id;
   document.getElementById('vis-dir').value = v.direccion || '';
+  document.getElementById('vis-nombre').value = v.nombre_vecino || '';
+  document.getElementById('vis-tel').value = v.telefono_vecino || '';
   document.getElementById('vis-lat').value = v.lat || '';
   document.getElementById('vis-lng').value = v.lng || '';
   if (v.lat && v.lng) {
@@ -1005,6 +1015,8 @@ window.guardarVisita = async () => {
   const pibesRadio = document.querySelector('input[name="vis-pibes"]:checked');
   const datos = {
     nodo_id: currentUser.nodo_id,
+    nombre_vecino: document.getElementById('vis-nombre').value.trim(),
+    telefono_vecino: document.getElementById('vis-tel').value.trim(),
     manzana_numero: document.getElementById('vis-manzana').value,
     direccion: dir,
     lat: parseFloat(document.getElementById('vis-lat').value) || null,
@@ -1154,7 +1166,7 @@ function updateMap() {
   visitas.forEach(v => {
     if (!v.lat||!v.lng) return;
     let c = '#3878cc';
-    if (v.analfabeto) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (v.dispuesto_alfabetizar) c = '#2c8858';
+    if (v.analfabeto) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (v.dispuesto_alfabetizar === 'si' || v.dispuesto_alfabetizar === true) c = '#2c8858';
     const m = L.marker([v.lat,v.lng],{icon:mkIcon(c,12)}).addTo(map)
       .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>${v.direccion||'Sin dir.'}</b><br>Mz ${v.manzana_numero||'s/n'}<br>${v.analfabeto?'<span style="color:#b83a2e">● Analfabeto</span><br>':''}${v.sin_secundario?'<span style="color:#cc8a1a">● Sin sec.</span><br>':''}${v.dispuesto_alfabetizar?'<span style="color:#2c8858">● Quiere alfabetizar</span><br>':''}${v.observaciones?'<i>'+v.observaciones.slice(0,80)+'</i>':''}</div>`);
     markers.push(m);
@@ -1178,7 +1190,7 @@ function updateMap() {
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Visitas</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${geoV}</div><div class="stat-label">Con GPS</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. pot.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. pot.</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${instituciones.length}</div><div class="stat-label">Instituciones</div></div>`;
 }
 
@@ -1255,7 +1267,7 @@ function renderInicio() {
     document.getElementById('inicio-hallazgos-stats').innerHTML = `
       <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
       <div class="stat"><div class="stat-val" style="color:var(--orange)">${visitas.filter(v=>v.sin_secundario).length}</div><div class="stat-label">Sin secundario</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. potenciales</div></div>`;
+      <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. potenciales</div></div>`;
   } else h.style.display = 'none';
 }
 
@@ -1289,10 +1301,11 @@ function renderVisitas() {
     let badges = '';
     if (v.analfabeto) badges += '<span class="badge badge-red">Analfabeto</span> ';
     if (v.sin_secundario) badges += '<span class="badge badge-orange">Sin sec.</span> ';
-    if (v.dispuesto_alfabetizar) badges += '<span class="badge badge-green">Alfabetizador</span> ';
+    if (v.dispuesto_alfabetizar === 'si' || v.dispuesto_alfabetizar === true) badges += '<span class="badge badge-green">Alfabetizador</span> ';
     if (v.lat) badges += '<span class="badge badge-gold">📍</span> ';
     return `<div class="list-item" style="flex-wrap:wrap">
       <div class="list-item-body"><b style="font-size:15px">${v.direccion}</b> <span style="color:var(--muted)">Mz ${v.manzana_numero||'—'}</span>
+        ${v.nombre_vecino?`<div style="font-size:13px;color:var(--text);margin-top:2px">${v.nombre_vecino}${v.telefono_vecino?' · <span style="color:var(--muted)">'+v.telefono_vecino+'</span>':''}</div>`:''}
         <div style="margin-top:4px">${badges}</div>
         ${v.observaciones?`<div style="font-size:12px;color:var(--dim);margin-top:3px;font-style:italic">${v.observaciones.slice(0,60)}${v.observaciones.length>60?'...':''}</div>`:''}
       </div>
@@ -1350,7 +1363,7 @@ function renderDatos() {
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--orange)">${visitas.filter(v=>v.sin_secundario).length}</div><div class="stat-label">Sin sec.</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar).length}</div><div class="stat-label">Alfab. pot.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. pot.</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${alfabetizandos.filter(a=>a.activo).length}</div><div class="stat-label">En DALE!</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${alfabetizandos.reduce((s,a)=>s+(a.sesiones||0),0)}</div><div class="stat-label">Sesiones</div></div>`;
   if (visitas.length) {
