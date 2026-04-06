@@ -743,32 +743,36 @@ function clearVisMap() {
   }
 }
 
-// ═══ GEOCODIFICADOR LOCATIONIQ — AUTOCOMPLETADO PRECISO ═══
-const LIQ_KEY = 'pk.15c19256fb004891318697b0425a557e';
+// ═══ GEOCODIFICADOR API GEOREF ARGENTINA (catastro oficial) ═══
+const NODO_DEPTO = {
+  merlo:            'Merlo',
+  moron:            'Morón',
+  tres_de_febrero:  'Tres de Febrero',
+  san_martin:       'General San Martín',
+  lomas_de_zamora:  'Lomas de Zamora',
+  la_plata:         'La Plata',
+  dolores:          'Dolores',
+  mar_del_plata:    'General Pueyrredón',
+  general_alvarado: 'General Alvarado',
+};
+
 let autocompleteTimer = null;
 
 window.onDirInput = () => {
   clearTimeout(autocompleteTimer);
   const val = document.getElementById('vis-dir').value.trim();
   if (val.length < 3) { hideAutocomplete(); return; }
-  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 350);
+  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 400);
 };
 
 async function fetchAutocomplete(text) {
-  const bbox = NODO_BBOX[currentUser?.nodo_id];
-  const nodo = NODOS.find(n => n.id === currentUser?.nodo_id);
-  const q = `${text}, ${nodo?.nombre || ''}, Buenos Aires, Argentina`;
-  let url = `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&limit=6&countrycodes=ar&dedupe=1&lang=es`;
-  if (bbox) {
-    // viewbox: min_lon,max_lat,max_lon,min_lat  (LocationIQ format)
-    const [minLon, minLat, maxLon, maxLat] = bbox.split(',');
-    url += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
-  }
+  const depto = NODO_DEPTO[currentUser?.nodo_id] || '';
+  const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(text)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=6`;
   try {
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('API error');
-    const results = await resp.json();
-    showAutocomplete(Array.isArray(results) ? results : []);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    showAutocomplete(data.direcciones || []);
   } catch(e) { hideAutocomplete(); }
 }
 
@@ -776,17 +780,14 @@ function showAutocomplete(results) {
   const list = document.getElementById('autocomplete-list');
   if (!results.length) { hideAutocomplete(); return; }
   list.innerHTML = results.map(r => {
-    // Armar etiqueta legible: calle número, localidad
-    const parts = [];
-    if (r.address?.road) parts.push(r.address.road);
-    if (r.address?.house_number) parts.push(r.address.house_number);
-    if (r.address?.city || r.address?.town || r.address?.suburb) parts.push(r.address?.city || r.address?.town || r.address?.suburb);
-    const label = parts.length ? parts.join(' ') : (r.display_name || '').split(',').slice(0,3).join(',');
-    const safeLat = parseFloat(r.lat).toFixed(7);
-    const safeLon = parseFloat(r.lon).toFixed(7);
+    const label = r.nomenclatura || `${r.calle?.nombre} ${r.altura?.valor}`;
+    const lat = r.ubicacion?.lat;
+    const lon = r.ubicacion?.lon;
+    if (!lat || !lon) return '';
     const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return `<div class="autocomplete-item" onclick="selectAutocomplete(${safeLat}, ${safeLon}, '${safeLabel}')">📍 ${label}</div>`;
-  }).join('');
+    return `<div class="autocomplete-item" onclick="selectAutocomplete(${lat}, ${lon}, '${safeLabel}')">📍 ${label}</div>`;
+  }).filter(Boolean).join('');
+  if (!list.innerHTML) { hideAutocomplete(); return; }
   list.style.display = 'block';
 }
 
@@ -813,29 +814,17 @@ window.buscarDireccion = async () => {
   const s = document.getElementById('vis-loc-status');
   s.textContent = 'Buscando...';
 
-  const bbox = NODO_BBOX[currentUser.nodo_id];
-  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-  const q = `${dir}, ${nodo?.nombre || ''}, Buenos Aires, Argentina`;
+  const depto = NODO_DEPTO[currentUser.nodo_id] || '';
 
   try {
-    let url = `https://api.locationiq.com/v1/search?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=ar&addressdetails=1&lang=es`;
-    if (bbox) {
-      const [minLon, minLat, maxLon, maxLat] = bbox.split(',');
-      url += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
-    }
-    let resp = await fetch(url);
-    let results = resp.ok ? await resp.json() : [];
+    const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(dir)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=3`;
+    const resp = await fetch(url);
+    const data = resp.ok ? await resp.json() : {};
+    const results = data.direcciones || [];
 
-    // Si no encontró con bounded, intentar sin bounded
-    if (!Array.isArray(results) || !results.length) {
-      const url2 = `https://api.locationiq.com/v1/search?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=ar&addressdetails=1&lang=es`;
-      resp = await fetch(url2);
-      results = resp.ok ? await resp.json() : [];
-    }
-
-    if (Array.isArray(results) && results.length > 0) {
-      setVisitaLocation(parseFloat(results[0].lat), parseFloat(results[0].lon));
-      s.textContent = '✓ Dirección encontrada';
+    if (results.length > 0 && results[0].ubicacion?.lat) {
+      setVisitaLocation(results[0].ubicacion.lat, results[0].ubicacion.lon);
+      s.textContent = `✓ ${results[0].nomenclatura || 'Dirección encontrada'}`;
       if (!visMap) initVisMap();
       setTimeout(() => visMap.invalidateSize(), 100);
     } else {
