@@ -743,41 +743,56 @@ function clearVisMap() {
   }
 }
 
-// ═══ GEOCODIFICADOR MEJORADO CON AUTOCOMPLETADO ═══
+// ═══ GEOCODIFICADOR LOCATIONIQ — AUTOCOMPLETADO PRECISO ═══
+const LIQ_KEY = 'pk.15c19256fb004891318697b0425a557e';
 let autocompleteTimer = null;
 
 window.onDirInput = () => {
   clearTimeout(autocompleteTimer);
   const val = document.getElementById('vis-dir').value.trim();
-  if (val.length < 4) { hideAutocomplete(); return; }
-  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 500);
+  if (val.length < 3) { hideAutocomplete(); return; }
+  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 350);
 };
 
 async function fetchAutocomplete(text) {
   const bbox = NODO_BBOX[currentUser?.nodo_id];
   const nodo = NODOS.find(n => n.id === currentUser?.nodo_id);
-  const q = `${text}, ${nodo?.nombre || 'Buenos Aires'}, Buenos Aires, Argentina`;
-  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}&countrycodes=ar`;
-  if (bbox) url += `&viewbox=${bbox}&bounded=1`;
+  const q = `${text}, ${nodo?.nombre || ''}, Buenos Aires, Argentina`;
+  let url = `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&limit=6&countrycodes=ar&dedupe=1&lang=es`;
+  if (bbox) {
+    // viewbox: min_lon,max_lat,max_lon,min_lat  (LocationIQ format)
+    const [minLon, minLat, maxLon, maxLat] = bbox.split(',');
+    url += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
+  }
   try {
-    const resp = await fetch(url, { headers: { 'Accept-Language': 'es', 'User-Agent': 'TerritorioAluvional/1.0' } });
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('API error');
     const results = await resp.json();
-    showAutocomplete(results);
+    showAutocomplete(Array.isArray(results) ? results : []);
   } catch(e) { hideAutocomplete(); }
 }
 
 function showAutocomplete(results) {
   const list = document.getElementById('autocomplete-list');
   if (!results.length) { hideAutocomplete(); return; }
-  list.innerHTML = results.map((r, i) => {
-    const label = r.display_name.split(',').slice(0,3).join(',');
-    return `<div class="autocomplete-item" onclick="selectAutocomplete(${r.lat}, ${r.lon}, '${label.replace(/'/g,"\\'")}')">📍 ${label}</div>`;
+  list.innerHTML = results.map(r => {
+    // Armar etiqueta legible: calle número, localidad
+    const parts = [];
+    if (r.address?.road) parts.push(r.address.road);
+    if (r.address?.house_number) parts.push(r.address.house_number);
+    if (r.address?.city || r.address?.town || r.address?.suburb) parts.push(r.address?.city || r.address?.town || r.address?.suburb);
+    const label = parts.length ? parts.join(' ') : (r.display_name || '').split(',').slice(0,3).join(',');
+    const safeLat = parseFloat(r.lat).toFixed(7);
+    const safeLon = parseFloat(r.lon).toFixed(7);
+    const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="autocomplete-item" onclick="selectAutocomplete(${safeLat}, ${safeLon}, '${safeLabel}')">📍 ${label}</div>`;
   }).join('');
   list.style.display = 'block';
 }
 
 function hideAutocomplete() {
-  document.getElementById('autocomplete-list').style.display = 'none';
+  const list = document.getElementById('autocomplete-list');
+  if (list) list.style.display = 'none';
 }
 
 window.selectAutocomplete = (lat, lon, label) => {
@@ -796,36 +811,29 @@ window.buscarDireccion = async () => {
   const dir = document.getElementById('vis-dir').value.trim();
   if (!dir) return toast('Escribí la dirección primero', true);
   const s = document.getElementById('vis-loc-status');
-  s.textContent = 'Buscando dirección...';
+  s.textContent = 'Buscando...';
 
   const bbox = NODO_BBOX[currentUser.nodo_id];
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-  const searchQuery = `${dir}, ${nodo?.nombre || 'Buenos Aires'}, Buenos Aires, Argentina`;
-
-  const geocode = async (url) => {
-    const resp = await fetch(url, { headers: { 'Accept-Language': 'es', 'User-Agent': 'TerritorioAluvional/1.0' } });
-    return resp.json();
-  };
+  const q = `${dir}, ${nodo?.nombre || ''}, Buenos Aires, Argentina`;
 
   try {
-    let results = [];
-
-    // Intento 1: bounded dentro del nodo
+    let url = `https://api.locationiq.com/v1/search?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=ar&addressdetails=1&lang=es`;
     if (bbox) {
-      results = await geocode(`https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(searchQuery)}&viewbox=${bbox}&bounded=1&countrycodes=ar`);
+      const [minLon, minLat, maxLon, maxLat] = bbox.split(',');
+      url += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
+    }
+    let resp = await fetch(url);
+    let results = resp.ok ? await resp.json() : [];
+
+    // Si no encontró con bounded, intentar sin bounded
+    if (!Array.isArray(results) || !results.length) {
+      const url2 = `https://api.locationiq.com/v1/search?key=${LIQ_KEY}&q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=ar&addressdetails=1&lang=es`;
+      resp = await fetch(url2);
+      results = resp.ok ? await resp.json() : [];
     }
 
-    // Intento 2: viewbox sin bounded
-    if (!results.length && bbox) {
-      results = await geocode(`https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(searchQuery)}&viewbox=${bbox}&countrycodes=ar`);
-    }
-
-    // Intento 3: solo Argentina
-    if (!results.length) {
-      results = await geocode(`https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(searchQuery)}&countrycodes=ar`);
-    }
-
-    if (results.length > 0) {
+    if (Array.isArray(results) && results.length > 0) {
       setVisitaLocation(parseFloat(results[0].lat), parseFloat(results[0].lon));
       s.textContent = '✓ Dirección encontrada';
       if (!visMap) initVisMap();
