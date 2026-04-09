@@ -662,27 +662,35 @@ window.checkEmail = async () => {
   errEl.textContent = '';
 
   try {
-    // Buscar en colección 'invitados'
-    const snap = await getDoc(doc(db, 'invitados', email));
-    if (!snap.exists()) {
+    // Intentar login con contraseña vacía para detectar si existe la cuenta
+    // Si devuelve wrong-password → cuenta existe → pedir contraseña
+    // Si devuelve user-not-found → cuenta nueva → verificar invitación
+    try {
+      await signInWithEmailAndPassword(auth, email, '___detectar___');
+    } catch(authErr) {
+      if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential') {
+        // Cuenta existe — pedir contraseña
+        emailInvitado = email;
+        document.getElementById('auth-email-display').textContent = '📧 ' + email;
+        showAuthStep('pass');
+        document.getElementById('btn-check-email').disabled = false;
+        document.getElementById('btn-check-email').textContent = 'Continuar';
+        return;
+      }
+      // user-not-found u otro error → cuenta no existe → verificar invitación
+    }
+
+    // No tiene cuenta — verificar si está invitado
+    const invSnap = await getDoc(doc(db, 'invitados', email));
+    if (!invSnap.exists()) {
       errEl.textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
       document.getElementById('btn-check-email').disabled = false;
       document.getElementById('btn-check-email').textContent = 'Continuar';
       return;
     }
-    invitacionData = snap.data(); // { nodo_id, rol }
+    invitacionData = invSnap.data();
     emailInvitado = email;
-
-    // Ver si ya tiene cuenta creada
-    const usuarioSnap = await getDocs(query(collection(db, 'usuarios'), where('email', '==', email)));
-    if (!usuarioSnap.empty) {
-      // Ya tiene cuenta — pedir contraseña
-      document.getElementById('auth-email-display').textContent = '📧 ' + email;
-      showAuthStep('pass');
-    } else {
-      // Primera vez — elegir método
-      showAuthStep('nuevo');
-    }
+    showAuthStep('nuevo');
   } catch(e) {
     errEl.textContent = 'Error: ' + e.message;
   }
