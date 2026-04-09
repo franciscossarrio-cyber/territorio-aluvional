@@ -662,36 +662,37 @@ window.checkEmail = async () => {
   errEl.textContent = '';
 
   try {
-    // Detectar si ya tiene cuenta en Firebase Auth
-    const methods = await fetchSignInMethodsForEmail(auth, email);
+    // Estrategia: verificar en paralelo en invitados Y en usuarios
+    // Si está en invitados → tiene acceso (nuevo o existente)
+    // Si NO está en invitados → intentar login de todas formas (puede ser usuario viejo sin invitación)
 
-    if (methods && methods.length > 0) {
-      // Cuenta existente — pedir contraseña o mostrar Google
-      emailInvitado = email;
-      if (methods.includes('google.com') && !methods.includes('password')) {
-        // Solo Google — ir directo a login con Google
-        showAuthStep('nuevo');
-        document.getElementById('auth-error-nuevo').textContent = 'Tu cuenta usa Google. Usá el botón de abajo.';
-      } else {
-        // Tiene contraseña
-        document.getElementById('auth-email-display').textContent = '📧 ' + email;
-        showAuthStep('pass');
-      }
-    } else {
-      // No tiene cuenta — verificar invitación
-      const invSnap = await getDoc(doc(db, 'invitados', email));
-      if (!invSnap.exists()) {
-        errEl.textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
-        document.getElementById('btn-check-email').disabled = false;
-        document.getElementById('btn-check-email').textContent = 'Continuar';
-        return;
-      }
+    const invSnap = await getDoc(doc(db, 'invitados', email));
+
+    if (invSnap.exists()) {
+      // Está invitado — puede ser primera vez o ya tiene cuenta
       invitacionData = invSnap.data();
       emailInvitado = email;
-      showAuthStep('nuevo');
+      // Mostrar paso con ambas opciones (Google + contraseña)
+      // Si ya tiene cuenta, el login con contraseña funcionará; si no, se registra
+      document.getElementById('auth-email-display').textContent = '📧 ' + email;
+      showAuthStep('pass');
+      // Agregar opción de "primera vez" debajo
+      const errPass = document.getElementById('auth-error-pass');
+      errPass.style.color = 'var(--muted)';
+      errPass.textContent = '¿Primera vez? Dejá la contraseña vacía y tocá "Entrar" para elegir método.';
+    } else {
+      // No está en invitados — intentar igual (usuarios viejos sin invitación)
+      emailInvitado = email;
+      invitacionData = null;
+      document.getElementById('auth-email-display').textContent = '📧 ' + email;
+      showAuthStep('pass');
     }
   } catch(e) {
-    errEl.textContent = 'Error al verificar: ' + e.message;
+    // Si falla la lectura de invitados (por reglas), ir directo a contraseña
+    emailInvitado = email;
+    invitacionData = null;
+    document.getElementById('auth-email-display').textContent = '📧 ' + email;
+    showAuthStep('pass');
   }
   document.getElementById('btn-check-email').disabled = false;
   document.getElementById('btn-check-email').textContent = 'Continuar';
@@ -702,14 +703,28 @@ window.doLoginPass = async () => {
   const pass = document.getElementById('auth-pass').value;
   const errEl = document.getElementById('auth-error-pass');
   const btn = document.getElementById('btn-login-pass');
+  errEl.style.color = 'var(--red)';
+
+  // Si no puso contraseña y está invitado → mostrar paso de registro
+  if (!pass && invitacionData) {
+    showAuthStep('nuevo');
+    return;
+  }
   if (!pass) { errEl.textContent = 'Ingresá tu contraseña'; return; }
+
   btn.disabled = true; btn.textContent = 'Entrando...'; errEl.textContent = '';
   try {
     await signInWithEmailAndPassword(auth, emailInvitado, pass);
   } catch(e) {
-    errEl.textContent = e.code === 'auth/invalid-credential' ? 'Contraseña incorrecta' : e.message;
-    btn.disabled = false; btn.textContent = 'Entrar';
+    if ((e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found') && invitacionData) {
+      // No tiene cuenta aún — ir a registro
+      showAuthStep('nuevo');
+    } else {
+      errEl.textContent = e.code === 'auth/invalid-credential' ? 'Contraseña incorrecta' : e.message;
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
   }
+  btn.disabled = false; btn.textContent = 'Entrar';
 };
 
 // Registro con contraseña (primer acceso)
