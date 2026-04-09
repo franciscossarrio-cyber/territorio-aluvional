@@ -705,21 +705,18 @@ window.checkEmail = async () => {
     const invSnap = await getDoc(doc(db, 'invitados', email));
 
     if (invSnap.exists()) {
+      // Está en la lista de invitados → primera vez → mostrar crear contraseña
       invitacionData = invSnap.data();
-      // Mostrar paso de contraseña (con opción Google abajo)
-      // Si falla el login → derivar a registro
-      document.getElementById('auth-email-display').textContent = email;
       document.getElementById('auth-email-display2').textContent = email;
-      showAuthStep('pass');
+      showAuthStep('nuevo');
     } else {
-      // No está invitado — igual mostrar contraseña (puede ser usuario existente)
+      // No está en invitados → puede ser usuario existente → pedir contraseña
       invitacionData = null;
       document.getElementById('auth-email-display').textContent = email;
-      document.getElementById('auth-email-display2').textContent = email;
       showAuthStep('pass');
     }
   } catch(e) {
-    // Error de permisos u otro — mostrar contraseña igual
+    // Error de permisos → mostrar contraseña (usuario existente sin invitación)
     emailInvitado = email;
     invitacionData = null;
     document.getElementById('auth-email-display').textContent = email;
