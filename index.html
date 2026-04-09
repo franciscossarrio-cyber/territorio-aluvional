@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -662,37 +662,36 @@ window.checkEmail = async () => {
   errEl.textContent = '';
 
   try {
-    // Intentar login con contraseña vacía para detectar si existe la cuenta
-    // Si devuelve wrong-password → cuenta existe → pedir contraseña
-    // Si devuelve user-not-found → cuenta nueva → verificar invitación
-    try {
-      await signInWithEmailAndPassword(auth, email, '___detectar___');
-    } catch(authErr) {
-      if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential') {
-        // Cuenta existe — pedir contraseña
-        emailInvitado = email;
+    // Detectar si ya tiene cuenta en Firebase Auth
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+
+    if (methods && methods.length > 0) {
+      // Cuenta existente — pedir contraseña o mostrar Google
+      emailInvitado = email;
+      if (methods.includes('google.com') && !methods.includes('password')) {
+        // Solo Google — ir directo a login con Google
+        showAuthStep('nuevo');
+        document.getElementById('auth-error-nuevo').textContent = 'Tu cuenta usa Google. Usá el botón de abajo.';
+      } else {
+        // Tiene contraseña
         document.getElementById('auth-email-display').textContent = '📧 ' + email;
         showAuthStep('pass');
+      }
+    } else {
+      // No tiene cuenta — verificar invitación
+      const invSnap = await getDoc(doc(db, 'invitados', email));
+      if (!invSnap.exists()) {
+        errEl.textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
         document.getElementById('btn-check-email').disabled = false;
         document.getElementById('btn-check-email').textContent = 'Continuar';
         return;
       }
-      // user-not-found u otro error → cuenta no existe → verificar invitación
+      invitacionData = invSnap.data();
+      emailInvitado = email;
+      showAuthStep('nuevo');
     }
-
-    // No tiene cuenta — verificar si está invitado
-    const invSnap = await getDoc(doc(db, 'invitados', email));
-    if (!invSnap.exists()) {
-      errEl.textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
-      document.getElementById('btn-check-email').disabled = false;
-      document.getElementById('btn-check-email').textContent = 'Continuar';
-      return;
-    }
-    invitacionData = invSnap.data();
-    emailInvitado = email;
-    showAuthStep('nuevo');
   } catch(e) {
-    errEl.textContent = 'Error: ' + e.message;
+    errEl.textContent = 'Error al verificar: ' + e.message;
   }
   document.getElementById('btn-check-email').disabled = false;
   document.getElementById('btn-check-email').textContent = 'Continuar';
@@ -1682,7 +1681,15 @@ async function loadEquipo() {
     const nodoField = document.getElementById('eq-nodo-field');
     // Inicializar selector de nodo en invitaciones
     const invNodo = document.getElementById('inv-nodo');
-    if (invNodo) invNodo.innerHTML = NODOS.map(n => `<option value="${n.id}"${n.id===currentUser.nodo_id?' selected':''}>${n.nombre}</option>`).join('');
+    if (invNodo) {
+      if (esGeneral) {
+        invNodo.innerHTML = NODOS.map(n => `<option value="${n.id}">${n.nombre}</option>`).join('');
+      } else {
+        // Coordinador de nodo: solo su nodo, no puede cambiarlo
+        invNodo.innerHTML = NODOS.filter(n => n.id === currentUser.nodo_id).map(n => `<option value="${n.id}">${n.nombre}</option>`).join('');
+        invNodo.disabled = true;
+      }
+    }
     if (esGeneral) {
       if(nodoField) nodoField.style.display = 'flex';
       document.getElementById('eq-nodo').innerHTML = NODOS.map(n => `<option value="${n.id}">${n.nombre}</option>`).join('');
