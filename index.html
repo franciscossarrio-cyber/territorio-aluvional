@@ -564,7 +564,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, browserLocalPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -578,37 +578,53 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-await setPersistence(auth, browserSessionPersistence);
 
-// Manejar resultado del redirect de Google
+// Manejar resultado del redirect de Google ANTES de setear persistencia
+let redirectHandled = false;
 try {
   const redirectResult = await getRedirectResult(auth);
   if (redirectResult?.user) {
+    redirectHandled = true;
     const user = redirectResult.user;
-    const emailGuardado = sessionStorage.getItem('ta_email_invitado');
     const invDataGuardado = sessionStorage.getItem('ta_inv_data');
     const invData = invDataGuardado ? JSON.parse(invDataGuardado) : null;
     sessionStorage.removeItem('ta_email_invitado');
     sessionStorage.removeItem('ta_inv_data');
 
-    // Si hay datos de invitación y no tiene perfil aún, crearlo
+    // Crear perfil si no existe y hay datos de invitación
     const snap = await getDoc(doc(db, 'usuarios', user.uid));
-    if (!snap.exists() && invData) {
-      await setDoc(doc(db, 'usuarios', user.uid), {
-        nombre: user.displayName || user.email.split('@')[0],
-        email: user.email.toLowerCase(),
-        nodo_id: invData.nodo_id,
-        rol: invData.rol || 'coordinador_nodo',
-        activo: true,
-        fecha_alta: serverTimestamp(),
-        ultimo_acceso: null,
-        creado_por: 'google'
-      });
+    if (!snap.exists()) {
+      if (invData) {
+        // Tiene invitación → crear perfil
+        await setDoc(doc(db, 'usuarios', user.uid), {
+          nombre: user.displayName || user.email.split('@')[0],
+          email: user.email.toLowerCase(),
+          nodo_id: invData.nodo_id,
+          rol: invData.rol || 'coordinador_nodo',
+          activo: true,
+          fecha_alta: serverTimestamp(),
+          ultimo_acceso: null,
+          creado_por: 'google'
+        });
+      } else {
+        // No tiene invitación ni perfil → bloquear
+        await signOut(auth);
+        await setPersistence(auth, browserSessionPersistence);
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('auth-error-email').textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
+        showAuthStep('email');
+        return;
+      }
     }
+    // Cambiar a sessionPersistence después del redirect
+    await setPersistence(auth, browserSessionPersistence);
     // onAuthStateChanged se encarga del resto
+  } else {
+    await setPersistence(auth, browserSessionPersistence);
   }
 } catch(e) {
   console.warn('Redirect result error:', e);
+  await setPersistence(auth, browserSessionPersistence);
 }
 
 const secondaryApp = initializeApp({
@@ -780,9 +796,11 @@ window.doRegistro = async () => {
 // Login con Google — usa redirect (más confiable que popup)
 window.doLoginGoogle = async () => {
   try {
-    // Guardar el email invitado en sessionStorage para recuperarlo tras el redirect
+    // Guardar datos en sessionStorage para recuperarlos tras el redirect
     if (emailInvitado) sessionStorage.setItem('ta_email_invitado', emailInvitado);
     if (invitacionData) sessionStorage.setItem('ta_inv_data', JSON.stringify(invitacionData));
+    // Usar LOCAL persistence para que la sesión de Google sobreviva el redirect
+    await setPersistence(auth, browserLocalPersistence);
     const provider = new GoogleAuthProvider();
     if (emailInvitado) provider.setCustomParameters({ login_hint: emailInvitado });
     await signInWithRedirect(auth, provider);
