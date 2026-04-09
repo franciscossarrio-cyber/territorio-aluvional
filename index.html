@@ -187,13 +187,41 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div class="auth-logo">A</div>
     <div class="auth-title">TERRITORIO ALUVIONAL</div>
     <div class="auth-sub">Sistema de Relevamiento Territorial</div>
-    <div id="auth-form-login">
-      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com"></div>
-      <div class="auth-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"></div>
-      <button class="auth-btn" id="btn-login" onclick="doLogin()">Entrar</button>
-      <div class="auth-error" id="login-error"></div>
-      <div style="font-size:12px;color:var(--dim);margin-top:14px">Tu coordinador te asigna el acceso.</div>
+
+    <!-- Paso 1: ingresar email -->
+    <div id="auth-step-email">
+      <div class="auth-field"><label>Email</label><input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')checkEmail()"></div>
+      <button class="auth-btn" id="btn-check-email" onclick="checkEmail()">Continuar</button>
+      <div class="auth-error" id="auth-error-email"></div>
     </div>
+
+    <!-- Paso 2a: email con contraseña -->
+    <div id="auth-step-pass" style="display:none">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px;background:var(--surface2);border-radius:3px;text-align:left" id="auth-email-display"></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLoginPass()"></div>
+      <button class="auth-btn" id="btn-login-pass" onclick="doLoginPass()">Entrar</button>
+      <div class="auth-error" id="auth-error-pass"></div>
+      <button onclick="backToEmail()" style="background:none;border:none;color:var(--dim);font-size:12px;margin-top:12px;cursor:pointer;font-family:var(--mono)">← Cambiar email</button>
+    </div>
+
+    <!-- Paso 2b: primer acceso — elegir método -->
+    <div id="auth-step-nuevo" style="display:none">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px;background:var(--surface2);border-radius:3px;text-align:left">
+        Primera vez en el sistema. Elegí cómo querés acceder:
+      </div>
+      <button class="auth-btn" onclick="doLoginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.7-2.9-11.9-7.1l-6.6 5.1C9.5 39.4 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 35.5 44 30.1 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+        Entrar con Google
+      </button>
+      <div style="font-size:12px;color:var(--dim);margin:10px 0;text-align:center">— o elegí una contraseña —</div>
+      <div class="auth-field"><label>Nueva contraseña</label><input type="password" id="auth-newpass" placeholder="Mín. 6 caracteres"></div>
+      <div class="auth-field"><label>Repetir contraseña</label><input type="password" id="auth-newpass2" placeholder="Repetir contraseña" onkeydown="if(event.key==='Enter')doRegistro()"></div>
+      <button class="auth-btn" onclick="doRegistro()">Crear cuenta y entrar</button>
+      <div class="auth-error" id="auth-error-nuevo"></div>
+      <button onclick="backToEmail()" style="background:none;border:none;color:var(--dim);font-size:12px;margin-top:12px;cursor:pointer;font-family:var(--mono)">← Cambiar email</button>
+    </div>
+
+    <div id="auth-loading" style="display:none;padding:20px;color:var(--muted);font-size:14px">Verificando...</div>
   </div>
 </div>
 
@@ -451,6 +479,53 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <!-- EQUIPO -->
     <div class="section" id="sec-equipo">
       <div><div class="section-title">Equipo del Nodo</div><div class="section-sub">Gestión de compañeros. Solo coordinadores pueden crear y administrar usuarios.</div></div>
+
+      <!-- INVITACIONES -->
+      <div class="card" id="equipo-invitar-card">
+        <div class="card-title" style="color:var(--gold)">Invitar compañeros/as</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Cargá los emails de las personas que van a acceder. Cuando entren al sitio por primera vez, se les asignará automáticamente su nodo.</div>
+        <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div class="field"><span class="field-label">Email</span><input id="inv-email" type="email" placeholder="persona@email.com" style="font-size:14px"></div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <div class="field"><span class="field-label">Nodo</span><select id="inv-nodo" style="font-size:14px"></select></div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <div class="field"><span class="field-label">Rol</span>
+              <select id="inv-rol" style="font-size:14px">
+                <option value="coordinador_nodo">Coordinador de nodo</option>
+                <option value="alfabetizador">Alfabetizador</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="agregarInvitado()">＋ Agregar invitación</button>
+          <button class="btn btn-secondary btn-sm" onclick="importarMailsMasivo()">📋 Pegar lista</button>
+        </div>
+        <div id="inv-error" style="color:var(--red);font-size:13px;margin-top:8px;min-height:18px"></div>
+
+        <!-- Lista de invitados -->
+        <div id="inv-list-wrap" style="margin-top:14px;display:none">
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Invitaciones cargadas (<span id="inv-count">0</span>)</div>
+          <div id="inv-list"></div>
+        </div>
+      </div>
+
+      <!-- MODAL PEGAR LISTA -->
+      <div id="inv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:24px;width:100%;max-width:480px">
+          <div style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:8px">Pegar lista de emails</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Un email por línea. Se asignará el nodo y rol seleccionados arriba.</div>
+          <textarea id="inv-bulk-text" style="width:100%;height:160px;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:10px;color:var(--text);font-family:var(--mono);font-size:13px;resize:vertical" placeholder="email1@ejemplo.com&#10;email2@ejemplo.com&#10;email3@ejemplo.com"></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-primary" onclick="procesarBulk()">Importar</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('inv-modal').style.display='none'">Cancelar</button>
+          </div>
+          <div id="inv-bulk-result" style="font-size:13px;color:var(--green);margin-top:8px;min-height:18px"></div>
+        </div>
+      </div>
       <div class="card" id="equipo-crear-card">
         <div class="card-title" style="color:var(--gold)">Agregar compañero/a al nodo</div>
         <div class="form-grid">
@@ -481,7 +556,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -554,18 +629,153 @@ window.toast = toast;
 window.addEventListener('online', () => { document.getElementById('offline-badge').style.display = 'none'; toast('Conexión restaurada'); });
 window.addEventListener('offline', () => { document.getElementById('offline-badge').style.display = 'inline'; });
 
-window.doLogin = async () => {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.getElementById('btn-login');
-  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+window.doLogin = async () => {}; // legacy stub
+
+// ═══ AUTH — SISTEMA DE INVITACIONES ═══
+let emailInvitado = null; // email verificado en paso 1
+let invitacionData = null; // { nodo_id, rol } del invitado
+
+function showAuthStep(step) {
+  ['auth-step-email','auth-step-pass','auth-step-nuevo','auth-loading'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById('auth-step-' + step);
+  if (target) target.style.display = 'block';
+  const loading = document.getElementById('auth-loading');
+  if (step === 'loading' && loading) loading.style.display = 'block';
+}
+
+function backToEmail() {
+  emailInvitado = null; invitacionData = null;
+  showAuthStep('email');
+  document.getElementById('auth-error-email').textContent = '';
+}
+
+// Paso 1: verificar si el email está invitado
+window.checkEmail = async () => {
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const errEl = document.getElementById('auth-error-email');
+  if (!email) { errEl.textContent = 'Ingresá tu email'; return; }
+  document.getElementById('btn-check-email').disabled = true;
+  document.getElementById('btn-check-email').textContent = 'Verificando...';
+  errEl.textContent = '';
+
+  try {
+    // Buscar en colección 'invitados'
+    const snap = await getDoc(doc(db, 'invitados', email));
+    if (!snap.exists()) {
+      errEl.textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
+      document.getElementById('btn-check-email').disabled = false;
+      document.getElementById('btn-check-email').textContent = 'Continuar';
+      return;
+    }
+    invitacionData = snap.data(); // { nodo_id, rol }
+    emailInvitado = email;
+
+    // Ver si ya tiene cuenta creada
+    const usuarioSnap = await getDocs(query(collection(db, 'usuarios'), where('email', '==', email)));
+    if (!usuarioSnap.empty) {
+      // Ya tiene cuenta — pedir contraseña
+      document.getElementById('auth-email-display').textContent = '📧 ' + email;
+      showAuthStep('pass');
+    } else {
+      // Primera vez — elegir método
+      showAuthStep('nuevo');
+    }
+  } catch(e) {
+    errEl.textContent = 'Error: ' + e.message;
+  }
+  document.getElementById('btn-check-email').disabled = false;
+  document.getElementById('btn-check-email').textContent = 'Continuar';
+};
+
+// Login con contraseña (usuario ya existente)
+window.doLoginPass = async () => {
+  const pass = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-error-pass');
+  const btn = document.getElementById('btn-login-pass');
+  if (!pass) { errEl.textContent = 'Ingresá tu contraseña'; return; }
   btn.disabled = true; btn.textContent = 'Entrando...'; errEl.textContent = '';
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    await signInWithEmailAndPassword(auth, emailInvitado, pass);
   } catch(e) {
-    errEl.textContent = e.code === 'auth/invalid-credential' ? 'Email o contraseña incorrectos' : e.message;
+    errEl.textContent = e.code === 'auth/invalid-credential' ? 'Contraseña incorrecta' : e.message;
     btn.disabled = false; btn.textContent = 'Entrar';
+  }
+};
+
+// Registro con contraseña (primer acceso)
+window.doRegistro = async () => {
+  const pass = document.getElementById('auth-newpass').value;
+  const pass2 = document.getElementById('auth-newpass2').value;
+  const errEl = document.getElementById('auth-error-nuevo');
+  if (pass.length < 6) { errEl.textContent = 'La contraseña necesita al menos 6 caracteres'; return; }
+  if (pass !== pass2) { errEl.textContent = 'Las contraseñas no coinciden'; return; }
+  errEl.textContent = '';
+  isRegistering = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, emailInvitado, pass);
+    await setDoc(doc(db, 'usuarios', cred.user.uid), {
+      nombre: emailInvitado.split('@')[0],
+      email: emailInvitado,
+      nodo_id: invitacionData.nodo_id,
+      rol: invitacionData.rol || 'coordinador_nodo',
+      activo: true,
+      fecha_alta: serverTimestamp(),
+      ultimo_acceso: null,
+      creado_por: 'invitacion'
+    });
+    isRegistering = false;
+    currentUser = { uid: cred.user.uid, nombre: emailInvitado.split('@')[0], email: emailInvitado, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
+    showApp();
+  } catch(e) {
+    isRegistering = false;
+    errEl.textContent = e.message;
+  }
+};
+
+// Login con Google
+window.doLoginGoogle = async () => {
+  const errEl = document.getElementById('auth-error-nuevo');
+  errEl.textContent = '';
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ login_hint: emailInvitado });
+    isRegistering = true;
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Verificar que el email coincide con el invitado
+    if (user.email.toLowerCase() !== emailInvitado) {
+      await signOut(auth);
+      isRegistering = false;
+      errEl.textContent = `Usá la cuenta de Google de ${emailInvitado}`;
+      return;
+    }
+
+    // Ver si ya tiene perfil
+    const snap = await getDoc(doc(db, 'usuarios', user.uid));
+    if (!snap.exists()) {
+      // Crear perfil
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        nombre: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        nodo_id: invitacionData.nodo_id,
+        rol: invitacionData.rol || 'coordinador_nodo',
+        activo: true,
+        fecha_alta: serverTimestamp(),
+        ultimo_acceso: null,
+        creado_por: 'google'
+      });
+    }
+    isRegistering = false;
+    const userData = snap.exists() ? snap.data() : { nombre: user.displayName, email: user.email, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
+    currentUser = { uid: user.uid, ...userData };
+    showApp();
+  } catch(e) {
+    isRegistering = false;
+    if (e.code !== 'auth/popup-closed-by-user') errEl.textContent = e.message;
   }
 };
 
@@ -1383,22 +1593,101 @@ window.exportCSV = () => {
   a.click(); toast('CSV exportado');
 };
 
+// ═══ GESTIÓN DE INVITADOS ═══
+window.agregarInvitado = async () => {
+  const email = document.getElementById('inv-email').value.trim().toLowerCase();
+  const nodoId = document.getElementById('inv-nodo').value;
+  const rol = document.getElementById('inv-rol').value;
+  const errEl = document.getElementById('inv-error');
+  if (!email || !email.includes('@')) { errEl.textContent = 'Ingresá un email válido'; return; }
+  errEl.textContent = '';
+  try {
+    await setDoc(doc(db, 'invitados', email), { nodo_id: nodoId, rol, creado_por: currentUser.uid, fecha: serverTimestamp() });
+    document.getElementById('inv-email').value = '';
+    toast('Invitación agregada ✓');
+    loadInvitados();
+  } catch(e) { errEl.textContent = 'Error: ' + e.message; }
+};
+
+window.importarMailsMasivo = () => {
+  const modal = document.getElementById('inv-modal');
+  modal.style.display = 'flex';
+  document.getElementById('inv-bulk-text').value = '';
+  document.getElementById('inv-bulk-result').textContent = '';
+};
+
+window.procesarBulk = async () => {
+  const text = document.getElementById('inv-bulk-text').value;
+  const nodoId = document.getElementById('inv-nodo').value;
+  const rol = document.getElementById('inv-rol').value;
+  const emails = text.split('\n').map(e => e.trim().toLowerCase()).filter(e => e.includes('@'));
+  if (!emails.length) { document.getElementById('inv-bulk-result').textContent = 'No se encontraron emails válidos'; return; }
+  document.getElementById('inv-bulk-result').textContent = 'Importando...';
+  let ok = 0;
+  for (const email of emails) {
+    try { await setDoc(doc(db, 'invitados', email), { nodo_id: nodoId, rol, creado_por: currentUser.uid, fecha: serverTimestamp() }); ok++; }
+    catch(e) {}
+  }
+  document.getElementById('inv-bulk-result').textContent = `✓ ${ok} invitaciones agregadas`;
+  loadInvitados();
+  setTimeout(() => { document.getElementById('inv-modal').style.display = 'none'; }, 1500);
+};
+
+window.eliminarInvitado = async (email) => {
+  if (!confirm(`¿Eliminar invitación de ${email}?`)) return;
+  try { await deleteDoc(doc(db, 'invitados', email)); toast('Invitación eliminada'); loadInvitados(); }
+  catch(e) { toast('Error: ' + e.message, true); }
+};
+
+async function loadInvitados() {
+  try {
+    const esGeneral = currentUser.rol === 'coordinador_general';
+    let snap;
+    if (esGeneral) { snap = await getDocs(collection(db, 'invitados')); }
+    else { snap = await getDocs(query(collection(db, 'invitados'), where('nodo_id', '==', currentUser.nodo_id))); }
+    const invitados = snap.docs.map(d => ({ email: d.id, ...d.data() }));
+    invitados.sort((a, b) => a.email.localeCompare(b.email));
+    const wrap = document.getElementById('inv-list-wrap');
+    const list = document.getElementById('inv-list');
+    const count = document.getElementById('inv-count');
+    if (!invitados.length) { if(wrap) wrap.style.display = 'none'; return; }
+    if(wrap) wrap.style.display = 'block';
+    if(count) count.textContent = invitados.length;
+    if(list) list.innerHTML = invitados.map(inv => {
+      const nodoName = NODOS.find(n => n.id === inv.nodo_id)?.nombre || inv.nodo_id;
+      const rolLabel = inv.rol === 'coordinador_nodo' ? 'Coord. Nodo' : 'Alfabetizador';
+      return `<div class="list-item">
+        <div class="list-item-body"><span style="font-family:var(--mono);font-size:13px">${inv.email}</span>
+          <div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap"><span class="badge badge-gold">${nodoName}</span><span class="badge badge-blue">${rolLabel}</span></div>
+        </div>
+        <div class="list-item-actions"><button onclick="eliminarInvitado('${inv.email}')" title="Eliminar">🗑</button></div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('Error cargando invitados:', e); }
+}
+
 let equipoUsers = [];
 
 async function loadEquipo() {
   try {
     const esGeneral = currentUser.rol === 'coordinador_general';
     const nodoField = document.getElementById('eq-nodo-field');
+    // Inicializar selector de nodo en invitaciones
+    const invNodo = document.getElementById('inv-nodo');
+    if (invNodo) invNodo.innerHTML = NODOS.map(n => `<option value="${n.id}"${n.id===currentUser.nodo_id?' selected':''}>${n.nombre}</option>`).join('');
     if (esGeneral) {
-      nodoField.style.display = 'flex';
+      if(nodoField) nodoField.style.display = 'flex';
       document.getElementById('eq-nodo').innerHTML = NODOS.map(n => `<option value="${n.id}">${n.nombre}</option>`).join('');
-    } else { nodoField.style.display = 'none'; }
+    } else {
+      if(nodoField) nodoField.style.display = 'none';
+    }
     let snap;
     if (esGeneral) { snap = await getDocs(collection(db, 'usuarios')); }
     else { snap = await getDocs(query(collection(db, 'usuarios'), where('nodo_id', '==', currentUser.nodo_id))); }
     equipoUsers = snap.docs.map(d => ({id:d.id,...d.data()}));
     equipoUsers.sort((a,b) => (a.nodo_id||'').localeCompare(b.nodo_id||'') || (a.nombre||'').localeCompare(b.nombre||''));
     renderEquipo();
+    loadInvitados();
   } catch(e) { console.error('Error cargando equipo:', e); }
 }
 
