@@ -806,6 +806,14 @@ onAuthStateChanged(auth, async (user) => {
       }
       if (!snap || !snap.exists()) { toast('Usuario no registrado en el sistema', true); await signOut(auth); return; }
       currentUser = { uid: user.uid, ...snap.data() };
+
+      // Si hay sesión guardada, mostrar banner "¿Seguís siendo vos?"
+      // en lugar de entrar directo
+      if (!isRegistering && document.getElementById('auth-screen').style.display !== 'none') {
+        showSesionGuardada(currentUser.nombre, currentUser.email);
+        return;
+      }
+
       await updateDoc(doc(db, 'usuarios', user.uid), { ultimo_acceso: serverTimestamp() });
       showApp();
     } catch(e) { toast('Error al cargar perfil: ' + e.message, true); }
@@ -813,8 +821,52 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = null;
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
+    hideSesionGuardada();
   }
 });
+
+function showSesionGuardada(nombre, email) {
+  // Ocultar el form de email y mostrar banner de sesión guardada
+  const steps = ['auth-step-email','auth-step-pass','auth-step-nuevo','auth-loading'];
+  steps.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+
+  let banner = document.getElementById('auth-sesion-guardada');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'auth-sesion-guardada';
+    document.querySelector('.auth-box').appendChild(banner);
+  }
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:14px;margin-bottom:12px;text-align:left">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Sesión guardada</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">${nombre}</div>
+      <div style="font-size:12px;color:var(--dim)">${email}</div>
+    </div>
+    <button class="auth-btn" onclick="continuarSesion()" style="margin-bottom:8px">Continuar como ${nombre.split(' ')[0]}</button>
+    <button onclick="cerrarYCambiar()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">No soy yo — Cambiar cuenta</button>
+  `;
+}
+
+function hideSesionGuardada() {
+  const banner = document.getElementById('auth-sesion-guardada');
+  if (banner) banner.style.display = 'none';
+  showAuthStep('email');
+}
+
+window.continuarSesion = async () => {
+  if (!currentUser) return;
+  await updateDoc(doc(db, 'usuarios', currentUser.uid), { ultimo_acceso: serverTimestamp() });
+  showApp();
+};
+
+window.cerrarYCambiar = async () => {
+  currentUser = null;
+  await signOut(auth);
+  hideSesionGuardada();
+  showAuthStep('email');
+  document.getElementById('auth-email').value = '';
+};
 
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
