@@ -189,7 +189,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div class="auth-sub">Sistema de Relevamiento Territorial</div>
 
     <!-- Paso 1: ingresar email -->
-    <div id="auth-step-email">
+    <div id="auth-step-email" style="display:block">
       <div class="auth-field"><label>Email</label><input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')checkEmail()"></div>
       <button class="auth-btn" id="btn-check-email" onclick="checkEmail()">Continuar</button>
       <div class="auth-error" id="auth-error-email"></div>
@@ -697,8 +697,6 @@ function showAuthStep(step) {
   });
   const target = document.getElementById('auth-step-' + step);
   if (target) target.style.display = 'block';
-  const loading = document.getElementById('auth-loading');
-  if (step === 'loading' && loading) loading.style.display = 'block';
 }
 
 function backToEmail() {
