@@ -564,7 +564,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -579,6 +579,37 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 await setPersistence(auth, browserSessionPersistence);
+
+// Manejar resultado del redirect de Google
+try {
+  const redirectResult = await getRedirectResult(auth);
+  if (redirectResult?.user) {
+    const user = redirectResult.user;
+    const emailGuardado = sessionStorage.getItem('ta_email_invitado');
+    const invDataGuardado = sessionStorage.getItem('ta_inv_data');
+    const invData = invDataGuardado ? JSON.parse(invDataGuardado) : null;
+    sessionStorage.removeItem('ta_email_invitado');
+    sessionStorage.removeItem('ta_inv_data');
+
+    // Si hay datos de invitación y no tiene perfil aún, crearlo
+    const snap = await getDoc(doc(db, 'usuarios', user.uid));
+    if (!snap.exists() && invData) {
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        nombre: user.displayName || user.email.split('@')[0],
+        email: user.email.toLowerCase(),
+        nodo_id: invData.nodo_id,
+        rol: invData.rol || 'coordinador_nodo',
+        activo: true,
+        fecha_alta: serverTimestamp(),
+        ultimo_acceso: null,
+        creado_por: 'google'
+      });
+    }
+    // onAuthStateChanged se encarga del resto
+  }
+} catch(e) {
+  console.warn('Redirect result error:', e);
+}
 
 const secondaryApp = initializeApp({
   apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
@@ -749,47 +780,18 @@ window.doRegistro = async () => {
   }
 };
 
-// Login con Google
+// Login con Google — usa redirect (más confiable que popup)
 window.doLoginGoogle = async () => {
-  const errEl = document.getElementById('auth-error-nuevo');
-  errEl.textContent = '';
   try {
+    // Guardar el email invitado en sessionStorage para recuperarlo tras el redirect
+    if (emailInvitado) sessionStorage.setItem('ta_email_invitado', emailInvitado);
+    if (invitacionData) sessionStorage.setItem('ta_inv_data', JSON.stringify(invitacionData));
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ login_hint: emailInvitado });
-    isRegistering = true;
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    // Verificar que el email coincide con el invitado
-    if (user.email.toLowerCase() !== emailInvitado) {
-      await signOut(auth);
-      isRegistering = false;
-      errEl.textContent = `Usá la cuenta de Google de ${emailInvitado}`;
-      return;
-    }
-
-    // Ver si ya tiene perfil
-    const snap = await getDoc(doc(db, 'usuarios', user.uid));
-    if (!snap.exists()) {
-      // Crear perfil
-      await setDoc(doc(db, 'usuarios', user.uid), {
-        nombre: user.displayName || user.email.split('@')[0],
-        email: user.email,
-        nodo_id: invitacionData.nodo_id,
-        rol: invitacionData.rol || 'coordinador_nodo',
-        activo: true,
-        fecha_alta: serverTimestamp(),
-        ultimo_acceso: null,
-        creado_por: 'google'
-      });
-    }
-    isRegistering = false;
-    const userData = snap.exists() ? snap.data() : { nombre: user.displayName, email: user.email, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
-    currentUser = { uid: user.uid, ...userData };
-    showApp();
+    if (emailInvitado) provider.setCustomParameters({ login_hint: emailInvitado });
+    await signInWithRedirect(auth, provider);
   } catch(e) {
-    isRegistering = false;
-    if (e.code !== 'auth/popup-closed-by-user') errEl.textContent = e.message;
+    const errEl = document.getElementById('auth-error-nuevo') || document.getElementById('auth-error-pass');
+    if (errEl) errEl.textContent = e.message;
   }
 };
 
