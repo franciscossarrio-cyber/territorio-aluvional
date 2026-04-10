@@ -698,10 +698,42 @@ window.checkEmail = async () => {
   const email = document.getElementById('auth-email').value.trim().toLowerCase();
   const errEl = document.getElementById('auth-error-email');
   if (!email) { errEl.textContent = 'Ingresá tu email'; return; }
+  document.getElementById('btn-check-email').disabled = true;
+  document.getElementById('btn-check-email').textContent = 'Verificando...';
+  errEl.textContent = '';
+
   emailInvitado = email;
   invitacionData = null;
-  document.getElementById('auth-email-display').textContent = email;
-  showAuthStep('pass');
+
+  try {
+    const invSnap = await getDoc(doc(db, 'invitados', email));
+    if (invSnap.exists()) {
+      // Está invitado — verificar si ya completó el registro consultando 'usuarios' por email
+      let yaRegistrado = false;
+      try {
+        const usuariosSnap = await getDocs(query(collection(db, 'usuarios'), where('email', '==', email)));
+        yaRegistrado = !usuariosSnap.empty;
+      } catch(e) {}
+
+      if (yaRegistrado) {
+        document.getElementById('auth-email-display').textContent = email;
+        showAuthStep('pass');
+      } else {
+        invitacionData = invSnap.data();
+        document.getElementById('auth-email-display2').textContent = email;
+        showAuthStep('nuevo');
+      }
+    } else {
+      document.getElementById('auth-email-display').textContent = email;
+      showAuthStep('pass');
+    }
+  } catch(e) {
+    document.getElementById('auth-email-display').textContent = email;
+    showAuthStep('pass');
+  }
+
+  document.getElementById('btn-check-email').disabled = false;
+  document.getElementById('btn-check-email').textContent = 'Continuar';
 };
 
 // Login con contraseña
@@ -715,20 +747,11 @@ window.doLoginPass = async () => {
   try {
     await signInWithEmailAndPassword(auth, emailInvitado, pass);
   } catch(e) {
-    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
-      // Puede ser primera vez → verificar si está invitado
-      try {
-        const invSnap = await getDoc(doc(db, 'invitados', emailInvitado));
-        if (invSnap.exists()) {
-          invitacionData = invSnap.data();
-          document.getElementById('auth-email-display2').textContent = emailInvitado;
-          showAuthStep('nuevo');
-          btn.disabled = false; btn.textContent = 'Entrar';
-          return;
-        }
-      } catch(e2) {}
+    if ((e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') && invitacionData) {
+      showAuthStep('nuevo');
+    } else {
+      errEl.textContent = 'Contraseña incorrecta o cuenta no encontrada';
     }
-    errEl.textContent = 'Contraseña incorrecta o cuenta no encontrada';
     btn.disabled = false; btn.textContent = 'Entrar';
   }
 };
