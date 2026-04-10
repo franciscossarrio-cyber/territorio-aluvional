@@ -786,7 +786,15 @@ window.doRegistro = async () => {
     showApp();
   } catch(e) {
     isRegistering = false;
-    errEl.textContent = e.message;
+    if (e.code === 'auth/email-already-in-use') {
+      // Ya tiene cuenta → redirigir al paso de contraseña
+      invitacionData = null;
+      document.getElementById('auth-email-display').textContent = emailInvitado;
+      showAuthStep('pass');
+      document.getElementById('auth-error-pass').textContent = 'Ya tenés una cuenta. Ingresá tu contraseña.';
+    } else {
+      errEl.textContent = e.message;
+    }
   }
 };
 
