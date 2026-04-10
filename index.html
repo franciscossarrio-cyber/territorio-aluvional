@@ -707,10 +707,20 @@ window.checkEmail = async () => {
     const invSnap = await getDoc(doc(db, 'invitados', email));
 
     if (invSnap.exists()) {
-      // Está en la lista de invitados → primera vez → mostrar crear contraseña
       invitacionData = invSnap.data();
-      document.getElementById('auth-email-display2').textContent = email;
-      showAuthStep('nuevo');
+      // Verificar si ya tiene cuenta aunque siga en invitados (deleteDoc puede haber fallado)
+      let methods = [];
+      try { methods = await fetchSignInMethodsForEmail(auth, email); } catch(e) {}
+      if (methods.length > 0) {
+        // Ya tiene cuenta → pedir contraseña normal
+        invitacionData = null;
+        document.getElementById('auth-email-display').textContent = email;
+        showAuthStep('pass');
+      } else {
+        // Primera vez → crear contraseña
+        document.getElementById('auth-email-display2').textContent = email;
+        showAuthStep('nuevo');
+      }
     } else {
       // No está en invitados → puede ser usuario existente → pedir contraseña
       invitacionData = null;
