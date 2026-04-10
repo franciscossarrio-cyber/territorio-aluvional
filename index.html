@@ -714,21 +714,33 @@ window.checkEmail = async () => {
 
   try {
     emailInvitado = email;
-    const invSnap = await getDoc(doc(db, 'invitados', email));
 
+    // 1) Verificar si ya es un usuario registrado (tiene perfil en 'usuarios')
+    const usersSnap = await getDocs(query(collection(db, 'usuarios'), where('email', '==', email)));
+    if (!usersSnap.empty) {
+      // Ya tiene cuenta → pedir contraseña
+      invitacionData = null;
+      document.getElementById('auth-email-display').textContent = email;
+      showAuthStep('pass');
+      document.getElementById('btn-check-email').disabled = false;
+      document.getElementById('btn-check-email').textContent = 'Continuar';
+      return;
+    }
+
+    // 2) No tiene cuenta → verificar si está invitado
+    const invSnap = await getDoc(doc(db, 'invitados', email));
     if (invSnap.exists()) {
-      // Está en la lista de invitados → primera vez → mostrar crear contraseña
       invitacionData = invSnap.data();
       document.getElementById('auth-email-display2').textContent = email;
       showAuthStep('nuevo');
     } else {
-      // No está en invitados → puede ser usuario existente → pedir contraseña
+      // No está invitado ni registrado → mostrar contraseña por si acaso
+      // (podría ser un usuario creado por coordinador sin perfil aún)
       invitacionData = null;
       document.getElementById('auth-email-display').textContent = email;
       showAuthStep('pass');
     }
   } catch(e) {
-    // Error de permisos → mostrar contraseña (usuario existente sin invitación)
     emailInvitado = email;
     invitacionData = null;
     document.getElementById('auth-email-display').textContent = email;
@@ -780,6 +792,8 @@ window.doRegistro = async () => {
       ultimo_acceso: null,
       creado_por: 'invitacion'
     });
+    // Borrar de invitados para que no vuelva a pedir registro
+    try { await deleteDoc(doc(db, 'invitados', emailInvitado)); } catch(e) {}
     isRegistering = false;
     currentUser = { uid: cred.user.uid, nombre: emailInvitado.split('@')[0], email: emailInvitado, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
     showApp();
