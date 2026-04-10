@@ -780,6 +780,7 @@ window.doRegistro = async () => {
       ultimo_acceso: null,
       creado_por: 'invitacion'
     });
+    await deleteDoc(doc(db, 'invitados', emailInvitado));
     isRegistering = false;
     currentUser = { uid: cred.user.uid, nombre: emailInvitado.split('@')[0], email: emailInvitado, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
     showApp();
