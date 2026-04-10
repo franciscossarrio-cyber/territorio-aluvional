@@ -217,6 +217,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <div class="auth-field"><label>Repetir nueva contraseña</label><input type="password" id="auth-newpass2" placeholder="Repetir" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegistro()"></div>
       <button class="auth-btn" onclick="doRegistro()">Crear cuenta y entrar</button>
       <div class="auth-error" id="auth-error-nuevo"></div>
+      <div style="margin-top:14px;text-align:center;font-size:13px;color:var(--muted)">¿Ya creaste tu contraseña? <button onclick="irAPass()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-family:var(--font);font-size:13px;text-decoration:underline;padding:0">Ingresá acá</button></div>
     </div>
 
     <div id="auth-loading" style="display:none;padding:20px;color:var(--muted);font-size:14px">Verificando...</div>
@@ -693,6 +694,12 @@ function backToEmail() {
   document.getElementById('auth-error-email').textContent = '';
 }
 
+window.irAPass = () => {
+  invitacionData = null;
+  document.getElementById('auth-email-display').textContent = emailInvitado;
+  showAuthStep('pass');
+};
+
 // Paso 1: verificar si el email está invitado
 window.checkEmail = async () => {
   const email = document.getElementById('auth-email').value.trim().toLowerCase();
@@ -765,6 +772,22 @@ window.doRegistro = async () => {
   if (pass !== pass2) { errEl.textContent = 'Las contraseñas no coinciden'; return; }
   errEl.textContent = '';
   isRegistering = true;
+
+  // Intentar login primero: si ya tiene cuenta y puso su contraseña correcta, entra directo
+  try {
+    await signInWithEmailAndPassword(auth, emailInvitado, pass);
+    isRegistering = false;
+    return; // onAuthStateChanged toma el control
+  } catch(loginErr) {
+    if (loginErr.code !== 'auth/user-not-found' && loginErr.code !== 'auth/invalid-credential') {
+      // Error inesperado en login
+      isRegistering = false;
+      errEl.textContent = loginErr.message;
+      return;
+    }
+    // auth/user-not-found o invalid-credential → puede no tener cuenta, intentar crear
+  }
+
   try {
     const cred = await createUserWithEmailAndPassword(auth, emailInvitado, pass);
     await setDoc(doc(db, 'usuarios', cred.user.uid), {
@@ -777,14 +800,14 @@ window.doRegistro = async () => {
       ultimo_acceso: null,
       creado_por: 'invitacion'
     });
-    await deleteDoc(doc(db, 'invitados', emailInvitado));
+    try { await deleteDoc(doc(db, 'invitados', emailInvitado)); } catch(e) {}
     isRegistering = false;
     currentUser = { uid: cred.user.uid, nombre: emailInvitado.split('@')[0], email: emailInvitado, ...invitacionData, rol: invitacionData.rol || 'coordinador_nodo' };
     showApp();
   } catch(e) {
     isRegistering = false;
     if (e.code === 'auth/email-already-in-use') {
-      // Ya tiene cuenta → redirigir al paso de contraseña
+      // Tiene cuenta pero la contraseña que puso no es la correcta
       invitacionData = null;
       document.getElementById('auth-email-display').textContent = emailInvitado;
       showAuthStep('pass');
