@@ -715,32 +715,21 @@ window.checkEmail = async () => {
   try {
     emailInvitado = email;
 
-    // 1) Verificar si ya es un usuario registrado (tiene perfil en 'usuarios')
-    const usersSnap = await getDocs(query(collection(db, 'usuarios'), where('email', '==', email)));
-    if (!usersSnap.empty) {
-      // Ya tiene cuenta → pedir contraseña
-      invitacionData = null;
-      document.getElementById('auth-email-display').textContent = email;
-      showAuthStep('pass');
-      document.getElementById('btn-check-email').disabled = false;
-      document.getElementById('btn-check-email').textContent = 'Continuar';
-      return;
-    }
-
-    // 2) No tiene cuenta → verificar si está invitado
+    // 1) Verificar si está en la lista de invitados (aún no se registró)
     const invSnap = await getDoc(doc(db, 'invitados', email));
     if (invSnap.exists()) {
+      // Está invitado y aún no se registró → crear contraseña
       invitacionData = invSnap.data();
       document.getElementById('auth-email-display2').textContent = email;
       showAuthStep('nuevo');
     } else {
-      // No está invitado ni registrado → mostrar contraseña por si acaso
-      // (podría ser un usuario creado por coordinador sin perfil aún)
+      // No está en invitados → ya se registró o fue creado por coordinador → pedir contraseña
       invitacionData = null;
       document.getElementById('auth-email-display').textContent = email;
       showAuthStep('pass');
     }
   } catch(e) {
+    // Error de permisos u otro → asumir usuario existente
     emailInvitado = email;
     invitacionData = null;
     document.getElementById('auth-email-display').textContent = email;
@@ -749,7 +738,6 @@ window.checkEmail = async () => {
   document.getElementById('btn-check-email').disabled = false;
   document.getElementById('btn-check-email').textContent = 'Continuar';
 };
-
 // Login con contraseña
 window.doLoginPass = async () => {
   const pass = document.getElementById('auth-pass').value;
