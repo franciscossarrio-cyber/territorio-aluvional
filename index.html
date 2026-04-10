@@ -445,12 +445,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div class="field"><span class="field-label">Contacto</span><input id="inst-contacto" placeholder="Nombre del referente"></div>
           <div class="field"><span class="field-label">Teléfono</span><input id="inst-tel" placeholder="11-XXXX-XXXX"></div>
         </div>
-        <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><textarea id="inst-notas" placeholder="Horarios, disposición..."></textarea></div>
+        <div class="field autocomplete-wrap" style="margin-top:10px">
+          <span class="field-label">Dirección</span>
+          <input id="inst-dir" placeholder="Calle y número" style="font-size:16px;padding:12px" autocomplete="off" oninput="onInstDirInput()">
+          <div class="autocomplete-list" id="inst-autocomplete-list" style="display:none"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="captureInstLoc()" style="font-size:14px;padding:10px 14px">📍 Mi GPS</button>
+          <button class="btn btn-secondary" onclick="buscarDireccionInst()" style="font-size:14px;padding:10px 14px">🔍 Buscar en mapa</button>
+          <span id="inst-loc-status" style="font-size:13px;color:var(--dim)"></span>
+        </div>
+        <div id="inst-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-top:8px;margin-bottom:4px"></div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:14px">Tocá el mapa para ajustar la ubicación</div>
+        <div class="field"><span class="field-label">Notas</span><textarea id="inst-notas" placeholder="Horarios, disposición..."></textarea></div>
         <div class="checkbox-row"><label><input type="checkbox" id="inst-colabora"> Colabora con alfabetización</label></div>
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <div style="margin-top:12px">
           <button class="btn btn-primary" onclick="guardarInstitucion()">＋ Agregar</button>
-          <button class="btn btn-secondary btn-sm" onclick="captureInstLoc()">📍 Ubicación</button>
-          <span id="inst-loc-status" style="font-size:12px;color:var(--dim)"></span>
         </div>
         <input type="hidden" id="inst-lat"><input type="hidden" id="inst-lng">
       </div>
@@ -1146,10 +1156,124 @@ window.captureInstLoc = async () => {
   s.textContent = 'Buscando...';
   try {
     const loc = await getLoc();
-    document.getElementById('inst-lat').value = loc.lat;
-    document.getElementById('inst-lng').value = loc.lng;
-    s.textContent = `✓ ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+    setInstLocation(loc.lat, loc.lng);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
   } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+let instMap = null, instPin = null;
+
+function initInstMap() {
+  if (instMap) return;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  instMap = L.map('inst-map-container', {zoomControl: true, attributionControl: false})
+    .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(instMap);
+  instMap.on('click', (e) => {
+    setInstLocation(e.latlng.lat, e.latlng.lng);
+    document.getElementById('inst-loc-status').textContent = '✓ Ubicación marcada en mapa';
+  });
+}
+
+function setInstLocation(lat, lng) {
+  document.getElementById('inst-lat').value = lat;
+  document.getElementById('inst-lng').value = lng;
+  if (!instMap) initInstMap();
+  setTimeout(() => instMap.invalidateSize(), 100);
+  if (instPin) {
+    instPin.setLatLng([lat, lng]);
+  } else {
+    instPin = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        iconSize: [16, 16], iconAnchor: [8, 8]
+      })
+    }).addTo(instMap);
+  }
+  instMap.setView([lat, lng], 17);
+}
+
+function clearInstMap() {
+  if (instPin && instMap) { instMap.removeLayer(instPin); instPin = null; }
+  if (instMap) {
+    const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+    instMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  }
+}
+
+let instAutocompleteTimer = null;
+
+window.onInstDirInput = () => {
+  clearTimeout(instAutocompleteTimer);
+  const val = document.getElementById('inst-dir').value.trim();
+  if (val.length < 3) { hideInstAutocomplete(); return; }
+  instAutocompleteTimer = setTimeout(() => fetchInstAutocomplete(val), 400);
+};
+
+async function fetchInstAutocomplete(text) {
+  const depto = NODO_DEPTO[currentUser?.nodo_id] || '';
+  const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(text)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=6`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    showInstAutocomplete(data.direcciones || []);
+  } catch(e) { hideInstAutocomplete(); }
+}
+
+function showInstAutocomplete(results) {
+  const list = document.getElementById('inst-autocomplete-list');
+  if (!results.length) { hideInstAutocomplete(); return; }
+  list.innerHTML = results.map(r => {
+    const label = r.nomenclatura || `${r.calle?.nombre} ${r.altura?.valor}`;
+    const lat = r.ubicacion?.lat;
+    const lon = r.ubicacion?.lon;
+    if (!lat || !lon) return '';
+    const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="autocomplete-item" onclick="selectInstAutocomplete(${lat}, ${lon}, '${safeLabel}')">📍 ${label}</div>`;
+  }).filter(Boolean).join('');
+  if (!list.innerHTML) { hideInstAutocomplete(); return; }
+  list.style.display = 'block';
+}
+
+function hideInstAutocomplete() {
+  const list = document.getElementById('inst-autocomplete-list');
+  if (list) list.style.display = 'none';
+}
+
+window.selectInstAutocomplete = (lat, lon, label) => {
+  setInstLocation(parseFloat(lat), parseFloat(lon));
+  document.getElementById('inst-dir').value = label;
+  document.getElementById('inst-loc-status').textContent = '✓ Dirección encontrada';
+  hideInstAutocomplete();
+  setTimeout(() => instMap && instMap.invalidateSize(), 100);
+};
+
+window.buscarDireccionInst = async () => {
+  const dir = document.getElementById('inst-dir').value.trim();
+  if (!dir) return toast('Escribí la dirección primero', true);
+  const s = document.getElementById('inst-loc-status');
+  s.textContent = 'Buscando...';
+  const depto = NODO_DEPTO[currentUser.nodo_id] || '';
+  try {
+    const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(dir)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=3`;
+    const resp = await fetch(url);
+    const data = resp.ok ? await resp.json() : {};
+    const results = data.direcciones || [];
+    if (results.length > 0 && results[0].ubicacion?.lat) {
+      setInstLocation(results[0].ubicacion.lat, results[0].ubicacion.lon);
+      s.textContent = `✓ ${results[0].nomenclatura || 'Dirección encontrada'}`;
+    } else {
+      s.textContent = '✗ No se encontró. Tocá el mapa para ubicar manualmente.';
+      if (!instMap) initInstMap();
+      setTimeout(() => instMap.invalidateSize(), 100);
+    }
+  } catch(e) {
+    s.textContent = '✗ Error buscando. Tocá el mapa.';
+    if (!instMap) initInstMap();
+    setTimeout(() => instMap.invalidateSize(), 100);
+  }
 };
 
 window.captureMzLoc = async () => {
@@ -1409,16 +1533,19 @@ window.guardarInstitucion = async () => {
       tipo: document.getElementById('inst-tipo').value,
       contacto: document.getElementById('inst-contacto').value.trim(),
       telefono: document.getElementById('inst-tel').value.trim(),
+      direccion: document.getElementById('inst-dir').value.trim(),
       notas: document.getElementById('inst-notas').value.trim(),
       colabora_alfabetizacion: document.getElementById('inst-colabora').checked,
       lat: parseFloat(document.getElementById('inst-lat').value) || null,
       lng: parseFloat(document.getElementById('inst-lng').value) || null,
       creado_por: currentUser.uid, fecha_creacion: serverTimestamp()
     });
-    ['inst-nombre','inst-contacto','inst-tel','inst-notas'].forEach(id => document.getElementById(id).value = '');
+    ['inst-nombre','inst-contacto','inst-tel','inst-notas','inst-dir'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('inst-colabora').checked = false;
     document.getElementById('inst-lat').value = ''; document.getElementById('inst-lng').value = '';
     document.getElementById('inst-loc-status').textContent = '';
+    clearInstMap();
+    hideInstAutocomplete();
     toast('Institución agregada ✓');
   } catch(e) { toast('Error: '+e.message, true); }
 };
@@ -1613,6 +1740,30 @@ function renderVisitas() {
   }).join('');
 }
 
+const instListaMaps = {};
+window.toggleInstMapLista = (id, lat, lng) => {
+  const container = document.getElementById(`inst-map-lista-${id}`);
+  if (!container) return;
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    if (!instListaMaps[id]) {
+      const m = L.map(container, {zoomControl: false, attributionControl: false}).setView([lat, lng], 16);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(m);
+      L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+          iconSize: [16, 16], iconAnchor: [8, 8]
+        })
+      }).addTo(m);
+      instListaMaps[id] = m;
+    }
+    setTimeout(() => instListaMaps[id].invalidateSize(), 100);
+  } else {
+    container.style.display = 'none';
+  }
+};
+
 function renderInstituciones() {
   const card = document.getElementById('inst-list-card');
   if (!instituciones.length) { card.style.display='none'; return; }
@@ -1621,9 +1772,15 @@ function renderInstituciones() {
   document.getElementById('inst-list').innerHTML = instituciones.map(i => `
     <div style="padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid ${i.colabora_alfabetizacion?'rgba(44,136,88,.35)':'var(--border)'};margin-bottom:8px">
       <div style="font-weight:600;font-size:15px">${i.nombre}</div>
-      <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap"><span class="badge badge-blue">${i.tipo}</span>${i.colabora_alfabetizacion?'<span class="badge badge-green">Colabora</span>':''}${i.lat?'<span class="badge badge-gold">📍</span>':''}</div>
-      ${i.contacto?`<div style="font-size:13px;color:var(--muted);margin-top:5px">Ref: ${i.contacto}${i.telefono?' · '+i.telefono:''}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+        <span class="badge badge-blue">${i.tipo}</span>
+        ${i.colabora_alfabetizacion?'<span class="badge badge-green">Colabora</span>':''}
+        ${i.lat?`<span class="badge badge-gold" style="cursor:pointer" onclick="toggleInstMapLista('${i.id}',${i.lat},${i.lng})">📍 Ver mapa</span>`:''}
+      </div>
+      ${i.direccion?`<div style="font-size:13px;color:var(--muted);margin-top:5px">📍 ${i.direccion}</div>`:''}
+      ${i.contacto?`<div style="font-size:13px;color:var(--muted);margin-top:3px">Ref: ${i.contacto}${i.telefono?' · '+i.telefono:''}</div>`:''}
       ${i.notas?`<div style="font-size:12px;color:var(--dim);margin-top:3px;font-style:italic">${i.notas}</div>`:''}
+      ${i.lat?`<div id="inst-map-lista-${i.id}" style="display:none;width:100%;height:200px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-top:10px"></div>`:''}
     </div>`).join('');
 }
 
