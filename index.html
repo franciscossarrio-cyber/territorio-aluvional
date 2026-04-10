@@ -698,44 +698,10 @@ window.checkEmail = async () => {
   const email = document.getElementById('auth-email').value.trim().toLowerCase();
   const errEl = document.getElementById('auth-error-email');
   if (!email) { errEl.textContent = 'Ingresá tu email'; return; }
-  document.getElementById('btn-check-email').disabled = true;
-  document.getElementById('btn-check-email').textContent = 'Verificando...';
-  errEl.textContent = '';
-
-  try {
-    emailInvitado = email;
-    const invSnap = await getDoc(doc(db, 'invitados', email));
-
-    if (invSnap.exists()) {
-      invitacionData = invSnap.data();
-      // Verificar si ya tiene cuenta aunque siga en invitados (deleteDoc puede haber fallado)
-      let methods = [];
-      try { methods = await fetchSignInMethodsForEmail(auth, email); } catch(e) {}
-      if (methods.length > 0) {
-        // Ya tiene cuenta → pedir contraseña normal
-        invitacionData = null;
-        document.getElementById('auth-email-display').textContent = email;
-        showAuthStep('pass');
-      } else {
-        // Primera vez → crear contraseña
-        document.getElementById('auth-email-display2').textContent = email;
-        showAuthStep('nuevo');
-      }
-    } else {
-      // No está en invitados → puede ser usuario existente → pedir contraseña
-      invitacionData = null;
-      document.getElementById('auth-email-display').textContent = email;
-      showAuthStep('pass');
-    }
-  } catch(e) {
-    // Error de permisos → mostrar contraseña (usuario existente sin invitación)
-    emailInvitado = email;
-    invitacionData = null;
-    document.getElementById('auth-email-display').textContent = email;
-    showAuthStep('pass');
-  }
-  document.getElementById('btn-check-email').disabled = false;
-  document.getElementById('btn-check-email').textContent = 'Continuar';
+  emailInvitado = email;
+  invitacionData = null;
+  document.getElementById('auth-email-display').textContent = email;
+  showAuthStep('pass');
 };
 
 // Login con contraseña
@@ -749,12 +715,20 @@ window.doLoginPass = async () => {
   try {
     await signInWithEmailAndPassword(auth, emailInvitado, pass);
   } catch(e) {
-    if ((e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') && invitacionData) {
-      // No tiene cuenta aún pero está invitado → ir a registro
-      showAuthStep('nuevo');
-    } else {
-      errEl.textContent = 'Contraseña incorrecta o cuenta no encontrada';
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+      // Puede ser primera vez → verificar si está invitado
+      try {
+        const invSnap = await getDoc(doc(db, 'invitados', emailInvitado));
+        if (invSnap.exists()) {
+          invitacionData = invSnap.data();
+          document.getElementById('auth-email-display2').textContent = emailInvitado;
+          showAuthStep('nuevo');
+          btn.disabled = false; btn.textContent = 'Entrar';
+          return;
+        }
+      } catch(e2) {}
     }
+    errEl.textContent = 'Contraseña incorrecta o cuenta no encontrada';
     btn.disabled = false; btn.textContent = 'Entrar';
   }
 };
