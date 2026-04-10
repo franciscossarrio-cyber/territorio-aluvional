@@ -579,55 +579,7 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Manejar resultado del redirect de Google ANTES de setear persistencia
-let redirectHandled = false;
-try {
-  const redirectResult = await getRedirectResult(auth);
-  if (redirectResult?.user) {
-    redirectHandled = true;
-    const user = redirectResult.user;
-    const invDataGuardado = sessionStorage.getItem('ta_inv_data');
-    const invData = invDataGuardado ? JSON.parse(invDataGuardado) : null;
-    sessionStorage.removeItem('ta_email_invitado');
-    sessionStorage.removeItem('ta_inv_data');
-
-    // Crear perfil si no existe y hay datos de invitación
-    const snap = await getDoc(doc(db, 'usuarios', user.uid));
-    if (!snap.exists()) {
-      if (invData) {
-        // Tiene invitación → crear perfil
-        await setDoc(doc(db, 'usuarios', user.uid), {
-          nombre: user.displayName || user.email.split('@')[0],
-          email: user.email.toLowerCase(),
-          nodo_id: invData.nodo_id,
-          rol: invData.rol || 'coordinador_nodo',
-          activo: true,
-          fecha_alta: serverTimestamp(),
-          ultimo_acceso: null,
-          creado_por: 'google'
-        });
-      } else {
-        // No tiene invitación ni perfil → bloquear
-        await signOut(auth);
-        await setPersistence(auth, browserSessionPersistence);
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('auth-error-email').textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
-        showAuthStep('email');
-        return;
-      }
-    }
-    // Cambiar a sessionPersistence después del redirect
-    await setPersistence(auth, browserSessionPersistence);
-    // onAuthStateChanged se encarga del resto
-  } else {
-    await setPersistence(auth, browserSessionPersistence);
-  }
-} catch(e) {
-  console.warn('Redirect result error:', e);
-  await setPersistence(auth, browserSessionPersistence);
-}
-
-const secondaryApp = initializeApp({
+  const secondaryApp = initializeApp({
   apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
   authDomain: "aluviondb.firebaseapp.com",
   projectId: "aluviondb",
@@ -638,6 +590,52 @@ const secondaryApp = initializeApp({
 const secondaryAuth = getAuth(secondaryApp);
 
 try { await enableIndexedDbPersistence(db); } catch(e) { console.warn('Offline mode limited:', e.code); }
+// Manejar resultado del redirect — en IIFE para no bloquear registro de funciones
+(async () => {
+  let redirectHandled = false;
+  try {
+    const redirectResult = await getRedirectResult(auth);
+    if (redirectResult?.user) {
+      redirectHandled = true;
+      const user = redirectResult.user;
+      const invDataGuardado = sessionStorage.getItem('ta_inv_data');
+      const invData = invDataGuardado ? JSON.parse(invDataGuardado) : null;
+      sessionStorage.removeItem('ta_email_invitado');
+      sessionStorage.removeItem('ta_inv_data');
+
+      const snap = await getDoc(doc(db, 'usuarios', user.uid));
+      if (!snap.exists()) {
+        if (invData) {
+          await setDoc(doc(db, 'usuarios', user.uid), {
+            nombre: user.displayName || user.email.split('@')[0],
+            email: user.email.toLowerCase(),
+            nodo_id: invData.nodo_id,
+            rol: invData.rol || 'coordinador_nodo',
+            activo: true,
+            fecha_alta: serverTimestamp(),
+            ultimo_acceso: null,
+            creado_por: 'google'
+          });
+        } else {
+          await signOut(auth);
+          await setPersistence(auth, browserSessionPersistence);
+          document.getElementById('auth-screen').style.display = 'flex';
+          document.getElementById('auth-error-email').textContent = 'Este email no tiene acceso. Contactá a tu coordinador.';
+          showAuthStep('email');
+          return;
+        }
+      }
+      await setPersistence(auth, browserSessionPersistence);
+    } else {
+      await setPersistence(auth, browserSessionPersistence);
+    }
+  } catch(e) {
+    console.warn('Redirect result error:', e);
+    await setPersistence(auth, browserSessionPersistence);
+  }
+})();
+
+
 
 let currentUser = null;
 let currentTab = 'inicio';
