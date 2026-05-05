@@ -554,7 +554,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
     <!-- DATOS -->
     <div class="section" id="sec-datos">
-      <div><div class="section-title">Panel de Datos</div><div class="section-sub">Análisis del relevamiento de tu nodo.</div></div>
+      <div><div class="section-title">Panel de Datos</div><div class="section-sub" id="datos-sub">Análisis del relevamiento de tu nodo.</div></div>
       <div style="margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button></div>
       <div class="stats" id="data-stats"></div>
       <div id="data-charts" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
@@ -963,24 +963,29 @@ function initSelects() {
 }
 
 function subscribeToData() {
+  const esGeneral = currentUser.rol === 'coordinador_general';
   const nid = currentUser.nodo_id;
+  const qVisitas = esGeneral ? collection(db, 'visitas') : query(collection(db, 'visitas'), where('nodo_id', '==', nid));
+  const qManzanas = esGeneral ? collection(db, 'manzanas') : query(collection(db, 'manzanas'), where('nodo_id', '==', nid));
+  const qInst = esGeneral ? collection(db, 'instituciones') : query(collection(db, 'instituciones'), where('nodo_id', '==', nid));
+  const qAlf = esGeneral ? collection(db, 'alfabetizandos') : query(collection(db, 'alfabetizandos'), where('nodo_id', '==', nid));
   unsubVisitas = onSnapshot(
-    query(collection(db, 'visitas'), where('nodo_id', '==', nid)),
+    qVisitas,
     snap => { visitas = snap.docs.map(d => ({id:d.id,...d.data()})); visitas.sort((a,b) => ((b.fecha?.seconds||0) - (a.fecha?.seconds||0))); renderAll(); },
     err => { console.error('Error visitas:', err); toast('Error cargando visitas.', true); }
   );
   unsubMz = onSnapshot(
-    query(collection(db, 'manzanas'), where('nodo_id', '==', nid)),
+    qManzanas,
     snap => { manzanas = snap.docs.map(d => ({id:d.id,...d.data()})); updateManzanaSelect(); renderAll(); },
     err => { console.error('Error manzanas:', err); }
   );
   unsubInst = onSnapshot(
-    query(collection(db, 'instituciones'), where('nodo_id', '==', nid)),
+    qInst,
     snap => { instituciones = snap.docs.map(d => ({id:d.id,...d.data()})); renderAll(); },
     err => { console.error('Error instituciones:', err); }
   );
   unsubAlf = onSnapshot(
-    query(collection(db, 'alfabetizandos'), where('nodo_id', '==', nid)),
+    qAlf,
     snap => { alfabetizandos = snap.docs.map(d => ({id:d.id,...d.data()})); alfabetizandos.sort((a,b) => ((b.fecha_inicio?.seconds||0) - (a.fecha_inicio?.seconds||0))); renderAll(); },
     err => { console.error('Error alfabetizandos:', err); }
   );
@@ -1681,7 +1686,10 @@ function renderAll() {
 }
 
 function renderInicio() {
-  document.getElementById('inicio-welcome').textContent = `Bienvenido/a, ${currentUser.nombre}. Estás relevando en ${getNodoName()}. Los datos se sincronizan en tiempo real con tu nodo.`;
+  const esGeneral = currentUser.rol === 'coordinador_general';
+  document.getElementById('inicio-welcome').textContent = esGeneral
+    ? `Bienvenido/a, ${currentUser.nombre}. Estás viendo los datos de todos los nodos en tiempo real.`
+    : `Bienvenido/a, ${currentUser.nombre}. Estás relevando en ${getNodoName()}. Los datos se sincronizan en tiempo real con tu nodo.`;
   document.getElementById('inicio-stats').innerHTML = `
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares Relevados</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${manzanas.length}</div><div class="stat-label">Manzanas</div></div>
@@ -1815,6 +1823,9 @@ function renderAlfabetizandos() {
 }
 
 function renderDatos() {
+  const esGeneral = currentUser.rol === 'coordinador_general';
+  const sub = document.getElementById('datos-sub');
+  if (sub) sub.textContent = esGeneral ? 'Análisis del relevamiento de todos los nodos.' : 'Análisis del relevamiento de tu nodo.';
   document.getElementById('data-stats').innerHTML = `
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
@@ -1838,7 +1849,8 @@ window.exportCSV = () => {
   const csv = [h,...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `relevamiento_${currentUser.nodo_id}_${new Date().toISOString().slice(0,10)}.csv`;
+  const csvNodo = currentUser.rol === 'coordinador_general' ? 'todos_los_nodos' : currentUser.nodo_id;
+  a.download = `relevamiento_${csvNodo}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click(); toast('CSV exportado');
 };
 
