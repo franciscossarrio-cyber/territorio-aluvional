@@ -143,6 +143,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(26,24,20,.92);border:1px solid var(--border);border-radius:2px;padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);color:var(--text)}
 .map-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.map-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
+.map-filter-btn{background:var(--surface2);color:var(--dim);border:1px solid var(--border);border-radius:2px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+.map-filter-btn.active{background:rgba(158,124,46,.18);color:var(--gold);border-color:var(--gold)}
+.map-filter-btn:hover{border-color:var(--gold);color:var(--text)}
+.map-filter-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:2px;padding:5px 8px;font-size:11px;font-family:var(--mono);cursor:pointer}
 
 /* Autocomplete dropdown */
 .autocomplete-list{position:absolute;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:3px;width:100%;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.3)}
@@ -253,7 +258,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
     <!-- MAPA -->
     <div class="section" id="sec-mapa">
-      <div><div class="section-title">Mapa del Territorio</div><div class="section-sub">Visualización georreferenciada del relevamiento de tu nodo.</div></div>
+      <div><div class="section-title">Mapa del Territorio</div><div class="section-sub" id="mapa-sub">Visualización georreferenciada del relevamiento de tu nodo.</div></div>
+      <div class="map-filters" id="map-filters">
+        <div id="map-filter-nodo" style="display:none">
+          <select class="map-filter-select" id="map-nodo-select" onchange="setMapNodo(this.value)">
+            <option value="todos">Todos los nodos</option>
+          </select>
+        </div>
+        <button id="mfl-visitas" class="map-filter-btn active" onclick="toggleMapLayer('visitas')">Visitas</button>
+        <button id="mfl-manzanas" class="map-filter-btn active" onclick="toggleMapLayer('manzanas')">Manzanas</button>
+        <button id="mfl-instituciones" class="map-filter-btn active" onclick="toggleMapLayer('instituciones')">Instituciones</button>
+        <button id="mfl-analfabetos" class="map-filter-btn" onclick="toggleMapLayer('analfabetos')">Analfabetos</button>
+        <button id="mfl-alfabetizadores" class="map-filter-btn" onclick="toggleMapLayer('alfabetizadores')">Alfab. pot.</button>
+      </div>
       <div style="position:relative">
         <div id="map-container"></div>
         <div class="map-controls">
@@ -643,6 +660,8 @@ let currentTab = 'inicio';
 let isRegistering = false;
 let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [];
 let map = null, markers = [], userMarker = null;
+let mapFilterNodo = 'todos';
+let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false };
 let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null;
 
 const NODOS = [
@@ -1578,7 +1597,35 @@ window.sumarSesion = async (id) => { const a = alfabetizandos.find(x => x.id ===
 window.restarSesion = async (id) => { const a = alfabetizandos.find(x => x.id === id); if (!a || (a.sesiones||0) <= 0) return; await updateDoc(doc(db, 'alfabetizandos', id), { sesiones: a.sesiones - 1 }); };
 window.cambiarNivel = async (id, nivel) => { await updateDoc(doc(db, 'alfabetizandos', id), { nivel_dale: Number(nivel) }); };
 
+window.toggleMapLayer = (layer) => {
+  mapActiveLayers[layer] = !mapActiveLayers[layer];
+  document.getElementById('mfl-' + layer).classList.toggle('active', mapActiveLayers[layer]);
+  updateMap();
+};
+
+window.setMapNodo = (nodo) => {
+  mapFilterNodo = nodo;
+  updateMap();
+};
+
 function initMap() {
+  const esGeneral = currentUser.rol === 'coordinador_general';
+  const sub = document.getElementById('mapa-sub');
+  if (sub) sub.textContent = esGeneral
+    ? 'Visualización georreferenciada del relevamiento de todos los nodos.'
+    : 'Visualización georreferenciada del relevamiento de tu nodo.';
+  const nodoFilter = document.getElementById('map-filter-nodo');
+  if (nodoFilter) {
+    if (esGeneral) {
+      nodoFilter.style.display = 'block';
+      const sel = document.getElementById('map-nodo-select');
+      if (sel.options.length === 1) {
+        NODOS.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = n.nombre; sel.appendChild(o); });
+      }
+    } else {
+      nodoFilter.style.display = 'none';
+    }
+  }
   if (map) { updateMap(); return; }
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   map = L.map('map-container',{zoomControl:false}).setView([nodo?.lat||-34.6,nodo?.lng||-58.5],13);
@@ -1594,35 +1641,56 @@ function mkIcon(color, sz) {
 function updateMap() {
   if (!map) return;
   markers.forEach(m => map.removeLayer(m)); markers = [];
-  visitas.forEach(v => {
+
+  const byNodo = arr => mapFilterNodo === 'todos' ? arr : arr.filter(i => i.nodo_id === mapFilterNodo);
+  const fVisitas = byNodo(visitas);
+  const fInst = byNodo(instituciones);
+  const fManzanas = byNodo(manzanas);
+
+  fVisitas.forEach(v => {
     if (!v.lat||!v.lng) return;
+    const esAnalf = v.analfabeto;
+    const esAlfab = v.dispuesto_alfabetizar === 'si' || v.dispuesto_alfabetizar === true;
+    const mostrar = mapActiveLayers.visitas ||
+      (mapActiveLayers.analfabetos && esAnalf) ||
+      (mapActiveLayers.alfabetizadores && esAlfab);
+    if (!mostrar) return;
     let c = '#3878cc';
-    if (v.analfabeto) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (v.dispuesto_alfabetizar === 'si' || v.dispuesto_alfabetizar === true) c = '#2c8858';
+    if (esAnalf) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (esAlfab) c = '#2c8858';
+    const nodoName = NODOS.find(n => n.id === v.nodo_id)?.nombre || '';
     const m = L.marker([v.lat,v.lng],{icon:mkIcon(c,12)}).addTo(map)
-      .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>${v.direccion||'Sin dir.'}</b><br>Mz ${v.manzana_numero||'s/n'}<br>${v.analfabeto?'<span style="color:#b83a2e">● Analfabeto</span><br>':''}${v.sin_secundario?'<span style="color:#cc8a1a">● Sin sec.</span><br>':''}${v.dispuesto_alfabetizar?'<span style="color:#2c8858">● Quiere alfabetizar</span><br>':''}${v.observaciones?'<i>'+v.observaciones.slice(0,80)+'</i>':''}</div>`);
+      .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>${v.direccion||'Sin dir.'}</b><br>Mz ${v.manzana_numero||'s/n'}${nodoName?' · '+nodoName:''}<br>${esAnalf?'<span style="color:#b83a2e">● Analfabeto</span><br>':''}${v.sin_secundario?'<span style="color:#cc8a1a">● Sin sec.</span><br>':''}${esAlfab?'<span style="color:#2c8858">● Quiere alfabetizar</span><br>':''}${v.observaciones?'<i>'+v.observaciones.slice(0,80)+'</i>':''}</div>`);
     markers.push(m);
   });
-  instituciones.forEach(inst => {
-    if (!inst.lat||!inst.lng) return;
-    const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#c9a54a',14)}).addTo(map)
-      .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🏛 ${inst.nombre}</b><br>${inst.tipo}<br>${inst.colabora_alfabetizacion?'<span style="color:#2c8858">Colabora</span>':''}</div>`);
-    markers.push(m);
-  });
-  manzanas.forEach(mz => {
-    if (!mz.lat||!mz.lng) return;
-    const m = L.marker([mz.lat,mz.lng],{
-      icon: L.divIcon({className:'',html:`<div style="width:22px;height:22px;border-radius:4px;background:${mz.relevada?'rgba(44,136,88,.6)':'rgba(78,94,120,.5)'};border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;color:#fff;font-weight:600">${mz.numero}</div>`,iconSize:[22,22],iconAnchor:[11,11]})
-    }).addTo(map).bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>Manzana ${mz.numero}</b>${mz.cuadricula?' ('+mz.cuadricula+')':''}<br>${mz.casas} casas · ${mz.relevada?'✓ Relevada':'Pendiente'}</div>`);
-    markers.push(m);
-  });
+
+  if (mapActiveLayers.instituciones) {
+    fInst.forEach(inst => {
+      if (!inst.lat||!inst.lng) return;
+      const nodoName = NODOS.find(n => n.id === inst.nodo_id)?.nombre || '';
+      const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#c9a54a',14)}).addTo(map)
+        .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🏛 ${inst.nombre}</b><br>${inst.tipo}${nodoName?' · '+nodoName:''}<br>${inst.colabora_alfabetizacion?'<span style="color:#2c8858">Colabora</span>':''}</div>`);
+      markers.push(m);
+    });
+  }
+
+  if (mapActiveLayers.manzanas) {
+    fManzanas.forEach(mz => {
+      if (!mz.lat||!mz.lng) return;
+      const m = L.marker([mz.lat,mz.lng],{
+        icon: L.divIcon({className:'',html:`<div style="width:22px;height:22px;border-radius:4px;background:${mz.relevada?'rgba(44,136,88,.6)':'rgba(78,94,120,.5)'};border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;color:#fff;font-weight:600">${mz.numero}</div>`,iconSize:[22,22],iconAnchor:[11,11]})
+      }).addTo(map).bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>Manzana ${mz.numero}</b>${mz.cuadricula?' ('+mz.cuadricula+')':''}<br>${mz.casas} casas · ${mz.relevada?'✓ Relevada':'Pendiente'}</div>`);
+      markers.push(m);
+    });
+  }
+
   if (markers.length) fitMapToMarkers();
-  const geoV = visitas.filter(v=>v.lat&&v.lng).length;
+  const geoV = fVisitas.filter(v=>v.lat&&v.lng).length;
   document.getElementById('map-stats').innerHTML = `
-    <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Visitas</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${fVisitas.length}</div><div class="stat-label">Visitas</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${geoV}</div><div class="stat-label">Con GPS</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--red)">${visitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--green)">${visitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. pot.</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--gold)">${instituciones.length}</div><div class="stat-label">Instituciones</div></div>`;
+    <div class="stat"><div class="stat-val" style="color:var(--red)">${fVisitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${fVisitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. pot.</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${fInst.length}</div><div class="stat-label">Instituciones</div></div>`;
 }
 
 window.fitMapToMarkers = () => { if (!map||!markers.length) return; map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1)); };
