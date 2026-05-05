@@ -481,7 +481,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         </div>
         <input type="hidden" id="inst-lat"><input type="hidden" id="inst-lng">
       </div>
-      <div class="card" id="inst-list-card" style="display:none"><div class="card-title">Instituciones (<span id="inst-count">0</span>)</div><div id="inst-list"></div></div>
+      <div class="card" id="inst-list-card" style="display:none">
+        <div class="card-title">Instituciones (<span id="inst-count">0</span>)</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <input id="inst-filter-nombre" placeholder="Buscar por nombre..." oninput="renderInstituciones()" style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font)">
+          <select id="inst-filter-tipo" onchange="renderInstituciones()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font)"><option value="">Todos los tipos</option></select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="inst-filter-colabora" onchange="renderInstituciones()"> Solo colaboran</label>
+        </div>
+        <div id="inst-list"></div>
+      </div>
     </div>
 
     <!-- ALFABETIZACIÓN -->
@@ -536,6 +544,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <div id="inv-list-wrap" style="margin-top:14px;display:none">
           <div style="font-size:12px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Invitaciones cargadas (<span id="inv-count">0</span>)</div>
           <div id="inv-list"></div>
+        </div>
+      </div>
+
+      <!-- MODAL EDITAR INSTITUCIÓN -->
+      <div id="inst-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;width:100%;max-width:560px;margin:auto;margin-top:40px">
+          <div style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:16px">Editar institución</div>
+          <input type="hidden" id="inst-edit-id">
+          <div class="form-grid">
+            <div class="field"><span class="field-label">Nombre</span><input id="inst-edit-nombre" placeholder="Club Atlético San José"></div>
+            <div class="field"><span class="field-label">Tipo</span><select id="inst-edit-tipo"></select></div>
+            <div class="field"><span class="field-label">Contacto</span><input id="inst-edit-contacto" placeholder="Nombre del referente"></div>
+            <div class="field"><span class="field-label">Teléfono</span><input id="inst-edit-tel" placeholder="11-XXXX-XXXX"></div>
+          </div>
+          <div class="field" style="margin-top:10px"><span class="field-label">Dirección</span><input id="inst-edit-dir" placeholder="Calle y número" style="font-size:16px;padding:12px"></div>
+          <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><textarea id="inst-edit-notas" placeholder="Horarios, disposición..."></textarea></div>
+          <div class="checkbox-row"><label><input type="checkbox" id="inst-edit-colabora"> Colabora con alfabetización</label></div>
+          <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary" onclick="guardarEdicionInstitucion()">Guardar cambios</button>
+            <button class="btn btn-secondary" onclick="cerrarEditInstModal()">Cancelar</button>
+            <button class="btn" style="margin-left:auto;background:rgba(220,50,50,.12);color:var(--red);border:1px solid rgba(220,50,50,.3)" onclick="eliminarInstitucion()">Eliminar</button>
+          </div>
         </div>
       </div>
 
@@ -978,7 +1008,10 @@ window.switchTab = (id) => {
 };
 
 function initSelects() {
-  document.getElementById('inst-tipo').innerHTML = TIPOS_INST.map(t => `<option value="${t}">${t}</option>`).join('');
+  const tipoOpts = TIPOS_INST.map(t => `<option value="${t}">${t}</option>`).join('');
+  document.getElementById('inst-tipo').innerHTML = tipoOpts;
+  document.getElementById('inst-edit-tipo').innerHTML = tipoOpts;
+  document.getElementById('inst-filter-tipo').innerHTML = '<option value="">Todos los tipos</option>' + tipoOpts;
 }
 
 function subscribeToData() {
@@ -1574,6 +1607,54 @@ window.guardarInstitucion = async () => {
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
+window.abrirEditInstitucion = (id) => {
+  const i = instituciones.find(x => x.id === id);
+  if (!i) return;
+  document.getElementById('inst-edit-id').value = id;
+  document.getElementById('inst-edit-nombre').value = i.nombre || '';
+  document.getElementById('inst-edit-tipo').value = i.tipo || '';
+  document.getElementById('inst-edit-contacto').value = i.contacto || '';
+  document.getElementById('inst-edit-tel').value = i.telefono || '';
+  document.getElementById('inst-edit-dir').value = i.direccion || '';
+  document.getElementById('inst-edit-notas').value = i.notas || '';
+  document.getElementById('inst-edit-colabora').checked = !!i.colabora_alfabetizacion;
+  const modal = document.getElementById('inst-edit-modal');
+  modal.style.display = 'flex';
+};
+
+window.cerrarEditInstModal = () => {
+  document.getElementById('inst-edit-modal').style.display = 'none';
+};
+
+window.guardarEdicionInstitucion = async () => {
+  const id = document.getElementById('inst-edit-id').value;
+  const nombre = document.getElementById('inst-edit-nombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre', true);
+  try {
+    await updateDoc(doc(db, 'instituciones', id), {
+      nombre,
+      tipo: document.getElementById('inst-edit-tipo').value,
+      contacto: document.getElementById('inst-edit-contacto').value.trim(),
+      telefono: document.getElementById('inst-edit-tel').value.trim(),
+      direccion: document.getElementById('inst-edit-dir').value.trim(),
+      notas: document.getElementById('inst-edit-notas').value.trim(),
+      colabora_alfabetizacion: document.getElementById('inst-edit-colabora').checked,
+    });
+    cerrarEditInstModal();
+    toast('Institución actualizada ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.eliminarInstitucion = async () => {
+  const id = document.getElementById('inst-edit-id').value;
+  if (!confirm('¿Eliminar esta institución? Esta acción no se puede deshacer.')) return;
+  try {
+    await deleteDoc(doc(db, 'instituciones', id));
+    cerrarEditInstModal();
+    toast('Institución eliminada');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
 window.guardarAlfabetizando = async () => {
   const nombre = document.getElementById('alf-nombre').value.trim();
   if (!nombre) return toast('Ingresá el nombre', true);
@@ -1844,10 +1925,28 @@ function renderInstituciones() {
   const card = document.getElementById('inst-list-card');
   if (!instituciones.length) { card.style.display='none'; return; }
   card.style.display = 'block';
-  document.getElementById('inst-count').textContent = instituciones.length;
-  document.getElementById('inst-list').innerHTML = instituciones.map(i => `
+
+  const filterNombre = (document.getElementById('inst-filter-nombre')?.value || '').toLowerCase();
+  const filterTipo = document.getElementById('inst-filter-tipo')?.value || '';
+  const filterColabora = document.getElementById('inst-filter-colabora')?.checked || false;
+
+  const filtered = instituciones.filter(i => {
+    if (filterNombre && !(i.nombre||'').toLowerCase().includes(filterNombre)) return false;
+    if (filterTipo && i.tipo !== filterTipo) return false;
+    if (filterColabora && !i.colabora_alfabetizacion) return false;
+    return true;
+  });
+
+  document.getElementById('inst-count').textContent = filtered.length === instituciones.length
+    ? instituciones.length
+    : `${filtered.length} de ${instituciones.length}`;
+
+  document.getElementById('inst-list').innerHTML = filtered.map(i => `
     <div style="padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid ${i.colabora_alfabetizacion?'rgba(44,136,88,.35)':'var(--border)'};margin-bottom:8px">
-      <div style="font-weight:600;font-size:15px">${i.nombre}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="font-weight:600;font-size:15px">${i.nombre}</div>
+        <button class="btn btn-secondary btn-sm" onclick="abrirEditInstitucion('${i.id}')" style="flex-shrink:0;font-size:12px;padding:4px 10px">Editar</button>
+      </div>
       <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
         <span class="badge badge-blue">${i.tipo}</span>
         ${i.colabora_alfabetizacion?'<span class="badge badge-green">Colabora</span>':''}
