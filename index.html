@@ -331,12 +331,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <button class="btn btn-primary" onclick="nuevaVisita()" id="btn-nueva-visita" style="width:100%;padding:16px;font-size:18px;text-align:center;border-radius:4px;letter-spacing:.5px">
         ＋ NUEVA VISITA
       </button>
+      <button id="btn-personalizar-form" onclick="abrirPersonalizar()" style="display:none;width:100%;padding:10px;font-size:14px;text-align:center;border-radius:4px;margin-top:8px" class="btn btn-secondary">✏ Personalizar formulario</button>
+      <div id="panel-personalizar" style="display:none"></div>
       <div id="vis-form-wrapper" style="display:none">
         <div class="card">
-          <div class="field" style="margin-bottom:10px">
+          <div id="campo-nombre"><div class="field" style="margin-bottom:10px">
             <span class="field-label">Nombre del vecino/a (opcional)</span>
             <input id="vis-nombre" placeholder="Nombre y apellido" style="font-size:16px;padding:12px">
-          </div>
+          </div></div>
           <div class="field autocomplete-wrap" style="margin-bottom:10px">
             <span class="field-label">Dirección</span>
             <input id="vis-dir" placeholder="Calle y número" style="font-size:16px;padding:12px" autocomplete="off" oninput="onDirInput()">
@@ -349,29 +351,29 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           </div>
           <div id="vis-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px"></div>
           <div style="font-size:12px;color:var(--dim);margin-bottom:14px">Tocá el mapa para ajustar la ubicación</div>
-          <div class="field" style="margin-bottom:14px">
+          <div id="campo-manzana"><div class="field" style="margin-bottom:14px">
             <span class="field-label">Manzana (opcional)</span>
             <select id="vis-manzana" style="font-size:15px;padding:10px"><option value="">Sin especificar</option></select>
-          </div>
+          </div></div>
           <input type="hidden" id="vis-lat"><input type="hidden" id="vis-lng">
           <input type="hidden" id="vis-edit-id">
         </div>
 
         <div class="card">
           <div style="font-size:17px;font-weight:600;color:var(--gold);margin-bottom:14px;border-bottom:2px solid var(--gold);padding-bottom:8px">Cómo y de qué vivimos</div>
-          <div class="field" style="margin-bottom:12px">
+          <div id="campo-ocupacion"><div class="field" style="margin-bottom:12px">
             <span class="field-label">Ocupación principal</span>
             <select id="vis-ocup" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="empleo_formal">Empleo formal</option><option value="changa">Changa / Informal</option><option value="plan">Plan social</option><option value="jubilacion">Jubilación</option><option value="desempleo">Desempleo</option><option value="otro">Otro</option></select>
-          </div>
-          <div class="field" style="margin-bottom:12px">
+          </div></div>
+          <div id="campo-vivienda"><div class="field" style="margin-bottom:12px">
             <span class="field-label">Vivienda</span>
             <select id="vis-viv" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="propia">Propia</option><option value="alquiler">Alquiler</option><option value="prestada">Prestada</option><option value="ocupada">Ocupada</option><option value="otro">Otro</option></select>
-          </div>
-          <div class="field">
+          </div></div>
+          <div id="campo-comedor"><div class="field">
             <span class="field-label">¿Va a comedor o necesitaría?</span>
             <select id="vis-comedor" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="asiste">Sí, asiste</option><option value="necesita">No, pero necesitaría</option><option value="no_necesita">No necesita</option></select>
-          </div>
-          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+          </div></div>
+          <div id="campo-habitantes"><div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
             <div style="font-size:15px;color:var(--text);margin-bottom:10px;font-weight:500">¿Cuántas personas viven en la casa?</div>
             <div class="field" style="margin-bottom:12px">
               <span class="field-label">Total de personas</span>
@@ -387,12 +389,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
               <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px"><span style="font-size:15px">60 años o más</span><input id="vis-edad-60" type="number" min="0" value="0" style="font-size:16px;padding:8px;width:60px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font)" oninput="calcularTotalEdades()"></div>
             </div>
             <div id="vis-edad-check" style="font-size:13px;margin-top:6px;min-height:18px"></div>
-          </div>
+          </div></div>
         </div>
 
         <div class="card">
           <div style="font-size:17px;font-weight:600;color:var(--blue);margin-bottom:14px;border-bottom:2px solid var(--blue);padding-bottom:8px">Educación y barrio</div>
-          <div style="margin-bottom:16px">
+          <div id="campo-pibes"><div style="margin-bottom:16px">
             <div style="font-size:15px;color:var(--text);margin-bottom:8px;font-weight:500">¿Los pibes van a la escuela?</div>
             <div style="display:flex;flex-direction:column;gap:6px" id="vis-pibes-group">
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px"><input type="radio" name="vis-pibes" value="van_bien" style="accent-color:var(--green);width:18px;height:18px"> Van y les va bien</label>
@@ -401,15 +403,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px"><input type="radio" name="vis-pibes" value="no_van" style="accent-color:var(--red);width:18px;height:18px"> No van</label>
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px"><input type="radio" name="vis-pibes" value="no_hay_pibes" style="accent-color:var(--dim);width:18px;height:18px"> No hay pibes en edad escolar</label>
             </div>
-          </div>
-          <div style="font-size:15px;color:var(--text);margin-bottom:8px;font-weight:500">Alertas educativas</div>
+          </div></div>
+          <div id="campo-alertas"><div style="font-size:15px;color:var(--text);margin-bottom:8px;font-weight:500">Alertas educativas</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px"><span style="font-size:15px;flex:1">¿Hay alguien que no sabe leer o escribir?</span><div style="display:flex;gap:6px;flex-shrink:0"><button type="button" class="btn-sino" data-field="vis-analfabeto" data-val="si" onclick="toggleSiNo(this)">Sí</button><button type="button" class="btn-sino" data-field="vis-analfabeto" data-val="no" onclick="toggleSiNo(this)">No</button></div><input type="hidden" id="vis-analfabeto" value=""></div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px"><span style="font-size:15px;flex:1">¿Hay adultos sin secundario completo?</span><div style="display:flex;gap:6px;flex-shrink:0"><button type="button" class="btn-sino" data-field="vis-sinsec" data-val="si" onclick="toggleSiNo(this)">Sí</button><button type="button" class="btn-sino" data-field="vis-sinsec" data-val="no" onclick="toggleSiNo(this)">No</button></div><input type="hidden" id="vis-sinsec" value=""></div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px"><span style="font-size:15px;flex:1">¿Alguien quiere ser alfabetizador?</span><div style="display:flex;gap:6px;flex-shrink:0"><button type="button" class="btn-sino" data-field="vis-disp-alf" data-val="si" onclick="toggleSiNo(this)">Sí</button><button type="button" class="btn-sino btn-quizas" data-field="vis-disp-alf" data-val="quizas" onclick="toggleSiNo(this)">Quizás</button><button type="button" class="btn-sino" data-field="vis-disp-alf" data-val="no" onclick="toggleSiNo(this)">No</button></div><input type="hidden" id="vis-disp-alf" value=""></div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px"><span style="font-size:15px;flex:1">¿Alguien quiere retomar estudios?</span><div style="display:flex;gap:6px;flex-shrink:0"><button type="button" class="btn-sino" data-field="vis-disp-ret" data-val="si" onclick="toggleSiNo(this)">Sí</button><button type="button" class="btn-sino" data-field="vis-disp-ret" data-val="no" onclick="toggleSiNo(this)">No</button></div><input type="hidden" id="vis-disp-ret" value=""></div>
-          </div>
-          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+          </div></div>
+          <div id="campo-participa"><div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
             <div style="font-size:15px;color:var(--text);margin-bottom:8px;font-weight:500">¿Participa de algo en el barrio?</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px"><input type="checkbox" id="vis-part-club" style="accent-color:var(--gold);width:18px;height:18px"> Club de barrio</label>
@@ -422,21 +424,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
               <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:15px"><input type="checkbox" id="vis-part-ninguno" style="accent-color:var(--dim);width:18px;height:18px"> No participa de nada</label>
             </div>
             <div class="field" style="margin-top:8px"><span class="field-label">Otro (especificar)</span><input id="vis-participa" placeholder="Biblioteca, centro de jubilados..." style="font-size:15px;padding:10px"></div>
-          </div>
+          </div></div></div>
         </div>
 
         <div class="card">
           <div style="font-size:17px;font-weight:600;color:var(--green);margin-bottom:14px;border-bottom:2px solid var(--green);padding-bottom:8px">Cómo pensamos y sentimos</div>
-          <div class="field" style="margin-bottom:12px"><span class="field-label">Opinión sobre el gobierno</span><select id="vis-opin" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="apoyo">Apoya</option><option value="critico">Crítico</option><option value="indiferente">Indiferente</option><option value="no_opina">No opina</option></select></div>
-          <div class="field" style="margin-bottom:12px"><span class="field-label">¿Qué es lo que más le preocupa?</span><input id="vis-preocup" placeholder="Trabajo, seguridad, salud..." style="font-size:15px;padding:10px"></div>
-          <div class="field"><span class="field-label">¿Qué cambiaría del barrio?</span><input id="vis-cambio" style="font-size:15px;padding:10px"></div>
+          <div id="campo-opinion"><div class="field" style="margin-bottom:12px"><span class="field-label">Opinión sobre el gobierno</span><select id="vis-opin" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option><option value="apoyo">Apoya</option><option value="critico">Crítico</option><option value="indiferente">Indiferente</option><option value="no_opina">No opina</option></select></div></div>
+          <div id="campo-preocupacion"><div class="field" style="margin-bottom:12px"><span class="field-label">¿Qué es lo que más le preocupa?</span><input id="vis-preocup" placeholder="Trabajo, seguridad, salud..." style="font-size:15px;padding:10px"></div></div>
+          <div id="campo-cambio"><div class="field"><span class="field-label">¿Qué cambiaría del barrio?</span><input id="vis-cambio" style="font-size:15px;padding:10px"></div></div>
         </div>
 
-        <div class="card">
+        <div class="card" id="campo-telefono">
           <div class="field"><span class="field-label">Teléfono del vecino/a (opcional)</span><input id="vis-tel" placeholder="11-XXXX-XXXX" style="font-size:15px;padding:10px"></div>
         </div>
 
-        <div class="card">
+        <div class="card" id="campo-observaciones">
           <div class="field"><span class="field-label">Observaciones (lo que se ve y no se pregunta)</span><textarea id="vis-obs" placeholder="Estado de la casa, tono de la conversación, si hablan con esperanza o bronca..." style="font-size:15px;padding:10px;min-height:80px"></textarea></div>
         </div>
 
@@ -444,16 +446,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div class="card">
             <div style="font-size:17px;font-weight:600;color:var(--gold);margin-bottom:14px;border-bottom:2px solid var(--gold);padding-bottom:8px">Preguntas del nodo</div>
             <div id="vis-custom-fields"></div>
-            <div id="vis-nueva-preg-form" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:10px">
-              <div class="field" style="margin-bottom:8px"><span class="field-label">Pregunta</span><input id="nueva-preg-texto" placeholder="Escribí la pregunta..." style="font-size:14px;padding:10px"></div>
-              <div class="field" style="margin-bottom:8px"><span class="field-label">Tipo</span><select id="nueva-preg-tipo" onchange="onTipoPreguntaChange()" style="font-size:14px;padding:10px"><option value="sino">Sí / No</option><option value="texto">Texto libre</option><option value="select">Opciones (lista)</option></select></div>
-              <div id="nueva-preg-opciones-wrap" style="display:none"><div class="field" style="margin-bottom:8px"><span class="field-label">Opciones (separadas por coma)</span><input id="nueva-preg-opciones" placeholder="Opción 1, Opción 2, Opción 3" style="font-size:14px;padding:10px"></div></div>
-              <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="agregarPreguntaCustom()" style="font-size:14px">✓ Agregar</button><button class="btn btn-secondary" onclick="cancelarNuevaPregunta()" style="font-size:14px">Cancelar</button></div>
-              <div id="config-preg-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
-            </div>
-            <div id="vis-nueva-preg-btn-wrap" style="display:none;margin-top:12px">
-              <button class="btn btn-secondary" onclick="mostrarFormNuevaPregunta()" style="font-size:13px;padding:8px 14px">＋ Agregar pregunta</button>
-            </div>
           </div>
         </div>
 
@@ -711,6 +703,7 @@ let mapFilterNodo = 'todos';
 let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false };
 let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null;
 let preguntasCustom = [];
+let camposOcultos = [];
 
 const NODOS = [
   {id:'merlo',nombre:'Merlo',lat:-34.6717,lng:-58.7275},
@@ -988,6 +981,8 @@ function showApp() {
   initSelects();
   subscribeToData();
   switchTab('relevamiento');
+  const btnP = document.getElementById('btn-personalizar-form');
+  if (btnP) btnP.style.display = currentUser.rol === 'coordinador_nodo' ? 'block' : 'none';
 }
 
 const TABS = [
@@ -1059,10 +1054,15 @@ function subscribeToData() {
     snap => { alfabetizandos = snap.docs.map(d => ({id:d.id,...d.data()})); alfabetizandos.sort((a,b) => ((b.fecha_inicio?.seconds||0) - (a.fecha_inicio?.seconds||0))); renderAll(); },
     err => { console.error('Error alfabetizandos:', err); }
   );
-  if (currentUser.rol === 'coordinador_nodo') {
+  if (nid) {
     unsubConfig = onSnapshot(
       doc(db, 'configuracion', nid),
-      snap => { preguntasCustom = (snap.exists() && snap.data().preguntas_custom) ? snap.data().preguntas_custom : []; },
+      snap => {
+        const data = snap.exists() ? snap.data() : {};
+        preguntasCustom = data.preguntas_custom || [];
+        camposOcultos = data.campos_ocultos || [];
+        applyFormConfig();
+      },
       err => { console.error('Error config nodo:', err); }
     );
   }
@@ -1578,39 +1578,124 @@ window.guardarVisita = async () => {
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+const CAMPOS_FORM = [
+  { id: 'campo-nombre', label: 'Nombre del vecino/a' },
+  { id: 'campo-manzana', label: 'Manzana' },
+  { id: 'campo-ocupacion', label: 'Ocupación principal' },
+  { id: 'campo-vivienda', label: 'Vivienda' },
+  { id: 'campo-comedor', label: '¿Va a comedor o necesitaría?' },
+  { id: 'campo-habitantes', label: 'Cantidad de personas y rangos de edad' },
+  { id: 'campo-pibes', label: '¿Los pibes van a la escuela?' },
+  { id: 'campo-alertas', label: 'Alertas educativas (analfabeto, sin sec., etc.)' },
+  { id: 'campo-participa', label: '¿Participa de algo en el barrio?' },
+  { id: 'campo-opinion', label: 'Opinión sobre el gobierno' },
+  { id: 'campo-preocupacion', label: '¿Qué le preocupa?' },
+  { id: 'campo-cambio', label: '¿Qué cambiaría del barrio?' },
+  { id: 'campo-telefono', label: 'Teléfono del vecino/a' },
+  { id: 'campo-observaciones', label: 'Observaciones' },
+];
+
+function applyFormConfig() {
+  CAMPOS_FORM.forEach(c => {
+    const el = document.getElementById(c.id);
+    if (el) el.style.display = camposOcultos.includes(c.id) ? 'none' : '';
+  });
+}
+
+window.abrirPersonalizar = () => {
+  document.getElementById('btn-nueva-visita').style.display = 'none';
+  document.getElementById('btn-personalizar-form').style.display = 'none';
+  document.getElementById('vis-list-card').style.display = 'none';
+  renderPanelPersonalizar();
+  document.getElementById('panel-personalizar').style.display = 'block';
+};
+
+window.cerrarPersonalizar = () => {
+  document.getElementById('panel-personalizar').style.display = 'none';
+  document.getElementById('btn-nueva-visita').style.display = 'block';
+  document.getElementById('btn-personalizar-form').style.display = 'block';
+  document.getElementById('vis-list-card').style.display = visitas.length ? 'block' : 'none';
+};
+
+function renderPanelPersonalizar() {
+  const panel = document.getElementById('panel-personalizar');
+  const camposHtml = CAMPOS_FORM.map(c => {
+    const activo = !camposOcultos.includes(c.id);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;margin-bottom:6px">
+      <span style="font-size:14px;color:${activo?'var(--text)':'var(--muted)'}">${escHtml(c.label)}</span>
+      <button type="button" onclick="toggleCampoOculto('${c.id}')" style="padding:5px 14px;border-radius:3px;border:1px solid ${activo?'var(--green)':'var(--border)'};background:${activo?'rgba(74,222,128,.15)':'var(--surface)'};color:${activo?'var(--green)':'var(--muted)'};font-size:13px;cursor:pointer;font-family:var(--font)">${activo?'✓ Activa':'Desactivada'}</button>
+    </div>`;
+  }).join('');
+
+  const customHtml = preguntasCustom.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;margin-bottom:6px">
+      <div style="flex:1"><div style="font-size:14px;color:var(--text)">${escHtml(p.texto)}</div><div style="font-size:12px;color:var(--muted)">${p.tipo==='sino'?'Sí/No':p.tipo==='texto'?'Texto libre':'Opciones: '+(p.opciones||[]).join(', ')}</div></div>
+      <button onclick="eliminarPreguntaCustom('${p.id}')" style="background:none;border:1px solid var(--red);color:var(--red);border-radius:3px;padding:4px 10px;font-size:13px;cursor:pointer">✕ Quitar</button>
+    </div>`).join('');
+
+  panel.innerHTML = `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="cerrarPersonalizar()" style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:0;line-height:1">←</button>
+        <div style="font-size:17px;font-weight:600;color:var(--gold)">Personalizar formulario</div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Activá o desactivá las preguntas para tu nodo. Los cambios se aplican a todos los relevadores.</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Preguntas del formulario</div>
+      ${camposHtml}
+    </div>
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;color:var(--gold);margin-bottom:12px">Preguntas propias del nodo</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Preguntas que agregaste vos. Aparecen al final del formulario.</div>
+      ${customHtml || '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Todavía no hay preguntas propias.</div>'}
+      <div id="vis-nueva-preg-form" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:10px">
+        <div class="field" style="margin-bottom:8px"><span class="field-label">Pregunta</span><input id="nueva-preg-texto" placeholder="Escribí la pregunta..." style="font-size:14px;padding:10px"></div>
+        <div class="field" style="margin-bottom:8px"><span class="field-label">Tipo</span><select id="nueva-preg-tipo" onchange="onTipoPreguntaChange()" style="font-size:14px;padding:10px"><option value="sino">Sí / No</option><option value="texto">Texto libre</option><option value="select">Opciones (lista)</option></select></div>
+        <div id="nueva-preg-opciones-wrap" style="display:none"><div class="field" style="margin-bottom:8px"><span class="field-label">Opciones (separadas por coma)</span><input id="nueva-preg-opciones" placeholder="Opción 1, Opción 2, Opción 3" style="font-size:14px;padding:10px"></div></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="agregarPreguntaCustom()" style="font-size:14px">✓ Agregar</button><button class="btn btn-secondary" onclick="cancelarNuevaPregunta()" style="font-size:14px">Cancelar</button></div>
+        <div id="config-preg-msg" style="font-size:13px;margin-top:8px;min-height:16px"></div>
+      </div>
+      <div id="vis-nueva-preg-btn-wrap" style="margin-top:4px">
+        <button class="btn btn-secondary" onclick="mostrarFormNuevaPregunta()" style="font-size:13px;padding:8px 14px">＋ Agregar pregunta propia</button>
+      </div>
+    </div>`;
+}
+
+window.toggleCampoOculto = async (id) => {
+  const nuevos = camposOcultos.includes(id) ? camposOcultos.filter(x => x !== id) : [...camposOcultos, id];
+  try {
+    await setDoc(doc(db, 'configuracion', currentUser.nodo_id), { campos_ocultos: nuevos }, { merge: true });
+    renderPanelPersonalizar();
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
 const esCoordNodo = () => currentUser && currentUser.rol === 'coordinador_nodo';
 
 function renderCustomQuestionsForm(existingAnswers) {
   const card = document.getElementById('vis-custom-card');
   const fields = document.getElementById('vis-custom-fields');
-  const btnWrap = document.getElementById('vis-nueva-preg-btn-wrap');
-  const esCoord = esCoordNodo();
-  if (!preguntasCustom.length && !esCoord) { card.style.display = 'none'; return; }
+  if (!preguntasCustom.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   fields.innerHTML = preguntasCustom.map(p => {
     const val = existingAnswers && existingAnswers[p.id] !== undefined ? existingAnswers[p.id] : '';
-    const delBtn = esCoord ? `<button type="button" onclick="eliminarPreguntaCustom('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:0 4px;line-height:1;flex-shrink:0" title="Eliminar pregunta">✕</button>` : '';
     if (p.tipo === 'sino') {
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;margin-bottom:8px">
         <span style="font-size:15px;flex:1">${escHtml(p.texto)}</span>
-        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+        <div style="display:flex;gap:6px;flex-shrink:0">
           <button type="button" class="btn-sino" data-field="custom_${p.id}" data-val="si" onclick="toggleSiNo(this)">Sí</button>
           <button type="button" class="btn-sino" data-field="custom_${p.id}" data-val="no" onclick="toggleSiNo(this)">No</button>
-          ${delBtn}
         </div>
         <input type="hidden" id="custom_${p.id}" value="${escHtml(val)}">
       </div>`;
     } else if (p.tipo === 'select') {
       const opts = (p.opciones || []).map(o => `<option value="${escHtml(o)}"${val===o?' selected':''}>${escHtml(o)}</option>`).join('');
-      return `<div class="field" style="margin-bottom:10px;display:flex;align-items:flex-end;gap:8px"><div style="flex:1"><span class="field-label">${escHtml(p.texto)}</span><select id="custom_${p.id}" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option>${opts}</select></div>${delBtn}</div>`;
+      return `<div class="field" style="margin-bottom:10px"><span class="field-label">${escHtml(p.texto)}</span><select id="custom_${p.id}" style="font-size:15px;padding:10px"><option value="">Seleccionar...</option>${opts}</select></div>`;
     } else {
-      return `<div class="field" style="margin-bottom:10px;display:flex;align-items:flex-end;gap:8px"><div style="flex:1"><span class="field-label">${escHtml(p.texto)}</span><input id="custom_${p.id}" value="${escHtml(val)}" style="font-size:15px;padding:10px"></div>${delBtn}</div>`;
+      return `<div class="field" style="margin-bottom:10px"><span class="field-label">${escHtml(p.texto)}</span><input id="custom_${p.id}" value="${escHtml(val)}" style="font-size:15px;padding:10px"></div>`;
     }
   }).join('');
   if (existingAnswers) {
     preguntasCustom.filter(p => p.tipo === 'sino').forEach(p => { if (existingAnswers[p.id]) setSiNo('custom_' + p.id, existingAnswers[p.id]); });
   }
-  if (btnWrap) btnWrap.style.display = esCoord ? 'block' : 'none';
 }
 
 function fillCustomAnswers(answers) {
@@ -1659,15 +1744,14 @@ window.agregarPreguntaCustom = async () => {
   if (opciones) nueva.opciones = opciones;
   try {
     await setDoc(doc(db, 'configuracion', currentUser.nodo_id), { preguntas_custom: [...preguntasCustom, nueva] }, { merge: true });
-    cancelarNuevaPregunta();
-    renderCustomQuestionsForm(null);
+    renderPanelPersonalizar();
   } catch(e) { msg.style.color='var(--red)'; msg.textContent='Error: '+e.message; }
 };
 
 window.eliminarPreguntaCustom = async (id) => {
   try {
     await setDoc(doc(db, 'configuracion', currentUser.nodo_id), { preguntas_custom: preguntasCustom.filter(p=>p.id!==id) }, { merge: true });
-    renderCustomQuestionsForm(null);
+    renderPanelPersonalizar();
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
@@ -2002,7 +2086,8 @@ function renderManzanas() {
 
 function renderVisitas() {
   const card = document.getElementById('vis-list-card');
-  if (!visitas.length) { card.style.display='none'; return; }
+  const panelAbierto = document.getElementById('panel-personalizar')?.style.display === 'block';
+  if (!visitas.length || panelAbierto) { card.style.display='none'; return; }
   card.style.display = 'block';
   document.getElementById('vis-count').textContent = visitas.length;
   document.getElementById('vis-list').innerHTML = visitas.slice(0,40).map(v => {
