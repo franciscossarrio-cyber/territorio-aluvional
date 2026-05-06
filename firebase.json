@@ -5,5 +5,8 @@
       "firebase.json",
       ".github/**"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
