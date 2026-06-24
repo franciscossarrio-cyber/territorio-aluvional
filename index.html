@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#c9a54a">
+<meta name="theme-color" content="#00ADC3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Aluvional">
+<meta name="apple-mobile-web-app-title" content="Bonaerenses Solidarios">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>Territorio Aluvional — Sistema de Relevamiento</title>
+<title>Bonaerenses Solidarios</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0e0d0a;--surface:#1a1814;--surface2:#221f1a;--surface3:#2a2620;
-  --border:#302b23;--border2:#3d362a;
-  --gold:#c4993d;--gold-dark:#a07a2a;--gold-light:#ddb558;--gold-bg:rgba(196,153,61,.08);
-  --text:#d8cfc0;--muted:#8a7e6e;--dim:#5e564a;
+  --bg:#F0F1F1;--surface:#FFFFFF;--surface2:#F3F3F2;--surface3:#E7E7E6;
+  --border:#E1E1E1;--border2:#C5C5C5;
+  --gold:#00ADC3;--gold-dark:#0089A0;--gold-light:#33C2D8;--gold-bg:rgba(0,173,195,.08);
+  --text:#1D1D1B;--muted:#565655;--dim:#969695;
   --blue:#5a8ec4;--green:#4a9060;--red:#c45040;--orange:#c89030;
-  --font:'EB Garamond',Georgia,serif;--mono:'DM Mono',monospace;
+  --gradient:linear-gradient(90deg,#E62175,#00ADC3);
+  --font:'Montserrat',Arial,sans-serif;--mono:'DM Mono',monospace;
 }
+.brand-bar{height:5px;background:var(--gradient)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -31,39 +33,42 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;
   background:var(--bg);
   background-image:
-    radial-gradient(ellipse at 30% 60%, rgba(196,153,61,.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 30%, rgba(196,153,61,.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 30% 60%, rgba(230,33,117,.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(0,173,195,.05) 0%, transparent 50%);
 }
 .auth-box{
+  position:relative;overflow:hidden;
   background:var(--surface);border:1px solid var(--border);
   border-radius:3px;padding:40px 32px;width:100%;max-width:360px;text-align:center;
-  box-shadow:0 1px 0 rgba(196,153,61,.1);
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
 }
-.auth-logo{width:48px;height:48px;margin:0 auto 20px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:var(--gold);letter-spacing:1px;}
+.auth-logo{width:48px;height:48px;margin:16px auto 20px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#fff;letter-spacing:.5px;}
 .auth-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:2px;letter-spacing:1.5px;text-transform:uppercase}
 .auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px;font-style:italic}
 .auth-field{text-align:left;margin-bottom:16px}
 .auth-field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;font-family:var(--mono)}
 .auth-field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:11px 13px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;transition:border-color .2s}
 .auth-field input:focus{border-color:var(--gold)}
-.auth-btn{width:100%;padding:12px;background:var(--gold);color:var(--bg);border:none;border-radius:2px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
+.auth-btn{width:100%;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:2px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
 .auth-btn:hover{background:var(--gold-light)}
 .auth-btn:disabled{opacity:.4;cursor:not-allowed}
 .auth-error{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
 
 #app-screen{display:none}
 
-.header{background:var(--surface);border-bottom:2px solid var(--gold-dark);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;}
 .header-brand{display:flex;align-items:center;gap:10px}
-.header-logo{width:32px;height:32px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--gold);}
-.header-title{font-size:15px;font-weight:700;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
+.header-logo{width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;}
+.header-back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:2px 6px;display:none;align-items:center}
+.header-back:hover{color:var(--gold)}
+.header-title{font-size:15px;font-weight:700;letter-spacing:1.5px;color:var(--text);text-transform:uppercase}
 .header-sub{font-size:10px;color:var(--dim);font-family:var(--mono);letter-spacing:.5px}
 .header-right{display:flex;align-items:center;gap:10px}
 .header-user{font-size:12px;color:var(--muted);text-align:right}
 .header-user b{color:var(--text);display:block;font-size:13px}
 .header-logout{background:none;border:1px solid var(--border);border-radius:2px;padding:4px 10px;color:var(--muted);font-size:10px;cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
 .header-logout:hover{border-color:var(--red);color:var(--red)}
-.offline-badge{background:var(--orange);color:var(--bg);font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:2px;font-weight:600;display:none;text-transform:uppercase;letter-spacing:.5px}
+.offline-badge{background:var(--orange);color:#fff;font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:2px;font-weight:600;display:none;text-transform:uppercase;letter-spacing:.5px}
 
 .nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
@@ -100,7 +105,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .checkbox-row input[type="checkbox"]{accent-color:var(--gold)}
 
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:2px;border:none;font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s}
-.btn-primary{background:var(--gold);color:var(--bg);font-weight:600;letter-spacing:.3px}
+.btn-primary{background:var(--gold);color:#fff;font-weight:600;letter-spacing:.3px}
 .btn-primary:hover{background:var(--gold-light)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
 .btn-secondary:hover{border-color:var(--gold);background:var(--surface3)}
@@ -108,7 +113,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
 .badge{display:inline-block;padding:1px 8px;border-radius:2px;font-size:10px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.3px}
-.badge-gold{background:rgba(196,153,61,.12);color:var(--gold);border:1px solid rgba(196,153,61,.25)}
+.badge-gold{background:rgba(0,173,195,.12);color:var(--gold);border:1px solid rgba(0,173,195,.25)}
 .badge-blue{background:rgba(90,142,196,.1);color:var(--blue);border:1px solid rgba(90,142,196,.25)}
 .badge-green{background:rgba(74,144,96,.1);color:var(--green);border:1px solid rgba(74,144,96,.25)}
 .badge-red{background:rgba(196,80,64,.1);color:var(--red);border:1px solid rgba(196,80,64,.25)}
@@ -145,7 +150,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .map-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
 .map-filter-btn{background:var(--surface2);color:var(--dim);border:1px solid var(--border);border-radius:2px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all .15s}
-.map-filter-btn.active{background:rgba(158,124,46,.18);color:var(--gold);border-color:var(--gold)}
+.map-filter-btn.active{background:rgba(0,173,195,.18);color:var(--gold);border-color:var(--gold)}
 .map-filter-btn:hover{border-color:var(--gold);color:var(--text)}
 .map-filter-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:2px;padding:5px 8px;font-size:11px;font-family:var(--mono);cursor:pointer}
 
@@ -182,6 +187,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 }
 
 .section-title::after{content:'';display:block;width:40px;height:2px;background:var(--gold);margin-top:6px}
+
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.menu-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:28px 14px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;color:var(--text);text-align:center;transition:all .2s}
+.menu-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-2px)}
+.menu-card-icon{font-size:38px;line-height:1}
+@media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -189,9 +200,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 <!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-box">
-    <div class="auth-logo">A</div>
-    <div class="auth-title">TERRITORIO ALUVIONAL</div>
-    <div class="auth-sub">Sistema de Relevamiento Territorial</div>
+    <div class="brand-bar" style="position:absolute;top:0;left:0;right:0;border-radius:3px 3px 0 0"></div>
+    <div class="auth-logo">BS</div>
+    <div class="auth-title">BONAERENSES SOLIDARIOS</div>
+    <div class="auth-sub">Plataforma de programas solidarios</div>
 
     <!-- Paso 1: ingresar email -->
     <div id="auth-step-email" style="display:block">
@@ -231,10 +243,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 <!-- APP SCREEN -->
 <div id="app-screen">
+  <div class="brand-bar"></div>
   <header class="header">
     <div class="header-brand">
-      <div class="header-logo">A</div>
-      <div><div class="header-title">TERRITORIO ALUVIONAL</div><div class="header-sub">RELEVAMIENTO</div></div>
+      <button class="header-back" id="header-back" onclick="mostrarMenu()">←</button>
+      <div class="header-logo">BS</div>
+      <div><div class="header-title">BONAERENSES SOLIDARIOS</div><div class="header-sub" id="header-sub">MENÚ PRINCIPAL</div></div>
     </div>
     <div class="header-right">
       <span class="offline-badge" id="offline-badge">SIN CONEXIÓN</span>
@@ -245,6 +259,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   <nav class="nav" id="nav"></nav>
   <div class="toast" id="toast"></div>
   <div class="main">
+    <!-- MENU PRINCIPAL -->
+    <div class="section" id="sec-menu">
+      <div><div class="section-title">Bonaerenses Solidarios</div><div class="section-sub">Elegí un programa para empezar.</div></div>
+      <div class="menu-grid">
+        <button class="menu-card" onclick="abrirPrograma('ollas')"><span class="menu-card-icon">🍲</span><span>Ollas Populares</span></button>
+        <button class="menu-card" onclick="abrirPrograma('alfabetizacion')"><span class="menu-card-icon">📚</span><span>Alfabetización</span></button>
+        <button class="menu-card" onclick="abrirPrograma('espacios')"><span class="menu-card-icon">🏞️</span><span>Recuperación de Espacios Públicos</span></button>
+        <button class="menu-card" onclick="abrirPrograma('mapa')"><span class="menu-card-icon">🗺️</span><span>Mapa</span></button>
+      </div>
+    </div>
+
+    <!-- PROXIMAMENTE (placeholder de programas sin desarrollar) -->
+    <div class="section" id="sec-proximamente">
+      <div class="card" style="text-align:center;padding:48px 20px">
+        <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Próximamente</div>
+        <div id="proximamente-titulo" style="font-size:24px;font-weight:700;margin-bottom:20px"></div>
+        <button class="btn btn-secondary" onclick="mostrarMenu()">← Volver al menú</button>
+      </div>
+    </div>
+
     <!-- INICIO -->
     <div class="section" id="sec-inicio">
       <div class="card card-gold" style="position:relative;overflow:hidden">
@@ -721,6 +755,7 @@ let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsu
 let preguntasCustom = [];
 let camposOcultos = [];
 let zonaInfluencia = null;
+let programaActual = null;
 let modoEdicionZona = false;
 let zonaPrevia = null;
 
@@ -999,7 +1034,7 @@ function showApp() {
   initNav();
   initSelects();
   subscribeToData();
-  switchTab('relevamiento');
+  mostrarMenu();
   const btnP = document.getElementById('btn-personalizar-form');
   if (btnP) btnP.style.display = currentUser.rol === 'coordinador_nodo' ? 'block' : 'none';
 }
@@ -1007,7 +1042,6 @@ function showApp() {
 const TABS = [
   {id:'relevamiento',label:'Relevar',svg:'<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>'},
   {id:'inicio',label:'Resumen',svg:'<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>'},
-  {id:'mapa',label:'Mapa',svg:'<path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>'},
   {id:'territorio',label:'Manzanas',svg:'<path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>'},
   {id:'instituciones',label:'Instit.',svg:'<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'},
   {id:'alfabetizacion',label:'DALE!',svg:'<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>'},
@@ -1026,6 +1060,37 @@ function initNav() {
     `<button class="nav-btn${t.id===currentTab?' active':''}" onclick="switchTab('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.svg}</svg>${t.label}</button>`
   ).join('');
 }
+
+window.mostrarMenu = function() {
+  programaActual = null;
+  document.getElementById('nav').style.display = 'none';
+  document.getElementById('header-back').style.display = 'none';
+  document.getElementById('header-sub').textContent = 'MENÚ PRINCIPAL';
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-menu').classList.add('active');
+}
+
+window.abrirPrograma = (id) => {
+  programaActual = id;
+  document.getElementById('header-back').style.display = 'inline-flex';
+  if (id === 'alfabetizacion') {
+    document.getElementById('header-sub').textContent = 'ALFABETIZACIÓN';
+    document.getElementById('nav').style.display = 'flex';
+    initNav();
+    switchTab('relevamiento');
+  } else if (id === 'mapa') {
+    document.getElementById('header-sub').textContent = 'MAPA';
+    document.getElementById('nav').style.display = 'none';
+    switchTab('mapa');
+  } else {
+    const titulos = { ollas: 'Ollas Populares', espacios: 'Recuperación de Espacios Públicos' };
+    document.getElementById('header-sub').textContent = titulos[id].toUpperCase();
+    document.getElementById('nav').style.display = 'none';
+    document.getElementById('proximamente-titulo').textContent = titulos[id];
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-proximamente').classList.add('active');
+  }
+};
 
 window.switchTab = (id) => {
   currentTab = id;
@@ -1143,7 +1208,7 @@ function setVisitaLocation(lat, lng) {
     visPin = L.marker([lat, lng], {
       icon: L.divIcon({
         className: '',
-        html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
         iconSize: [16, 16], iconAnchor: [8, 8]
       })
     }).addTo(visMap);
@@ -1290,7 +1355,7 @@ function setInstLocation(lat, lng) {
     instPin = L.marker([lat, lng], {
       icon: L.divIcon({
         className: '',
-        html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
         iconSize: [16, 16], iconAnchor: [8, 8]
       })
     }).addTo(instMap);
@@ -1331,7 +1396,7 @@ function setInstEditLocation(lat, lng) {
     instEditPin = L.marker([lat, lng], {
       icon: L.divIcon({
         className: '',
-        html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
         iconSize: [16, 16], iconAnchor: [8, 8]
       })
     }).addTo(instEditMap);
@@ -2087,7 +2152,7 @@ function updateMap() {
     fInst.forEach(inst => {
       if (!inst.lat||!inst.lng) return;
       const nodoName = NODOS.find(n => n.id === inst.nodo_id)?.nombre || '';
-      const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#c9a54a',14)}).addTo(map)
+      const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#00ADC3',14)}).addTo(map)
         .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🏛 ${inst.nombre}</b><br>${inst.tipo}${nodoName?' · '+nodoName:''}<br>${inst.colabora_alfabetizacion?'<span style="color:#2c8858">Colabora</span>':''}</div>`);
       markers.push(m);
     });
@@ -2179,7 +2244,7 @@ function placeMzPin(lat, lng) {
   if (mzPinMarker) { mzPinMarker.setLatLng([lat, lng]); }
   else {
     mzPinMarker = L.marker([lat, lng], {
-      icon: L.divIcon({className:'',html:`<div style="width:28px;height:28px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 12px rgba(201,165,74,.8);display:flex;align-items:center;justify-content:center;font-size:14px">＋</div>`,iconSize:[28,28],iconAnchor:[14,14]})
+      icon: L.divIcon({className:'',html:`<div style="width:28px;height:28px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 12px rgba(0,173,195,.8);display:flex;align-items:center;justify-content:center;font-size:14px">＋</div>`,iconSize:[28,28],iconAnchor:[14,14]})
     }).addTo(mzMap).bindPopup('<b>Nueva manzana</b><br>Completá los datos y guardá.').openPopup();
   }
 }
@@ -2288,7 +2353,7 @@ window.toggleInstMapLista = (id, lat, lng) => {
       L.marker([lat, lng], {
         icon: L.divIcon({
           className: '',
-          html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+          html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
           iconSize: [16, 16], iconAnchor: [8, 8]
         })
       }).addTo(m);

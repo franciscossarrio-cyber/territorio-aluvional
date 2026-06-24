@@ -1,12 +1,12 @@
 {
-  "name": "Territorio Aluvional - Relevamiento",
-  "short_name": "Aluvional",
-  "description": "Sistema de relevamiento territorial para los nodos del Territorio Aluvional",
+  "name": "Bonaerenses Solidarios",
+  "short_name": "Bs. Solidarios",
+  "description": "Plataforma de programas solidarios de la Provincia de Buenos Aires",
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#080c14",
-  "theme_color": "#c9a54a",
+  "background_color": "#FFFFFF",
+  "theme_color": "#00ADC3",
   "icons": [
     {
       "src": "icons/icon-192.png",
