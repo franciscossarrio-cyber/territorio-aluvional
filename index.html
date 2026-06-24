@@ -599,7 +599,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <div class="field"><span class="field-label">Teléfono</span><input id="inst-edit-tel" placeholder="11-XXXX-XXXX"></div>
     </div>
     <div class="field" style="margin-top:10px"><span class="field-label">Dirección</span><input id="inst-edit-dir" placeholder="Calle y número" style="font-size:16px;padding:12px"></div>
-    <div class="field" style="margin-top:10px"><span class="field-label">Notas</span><textarea id="inst-edit-notas" placeholder="Horarios, disposición..."></textarea></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="captureInstEditLoc()" style="font-size:14px;padding:10px 14px">📍 Mi GPS</button>
+      <button class="btn btn-secondary" onclick="quitarUbicacionEdit()" style="font-size:14px;padding:10px 14px">✕ Quitar ubicación</button>
+      <span id="inst-edit-loc-status" style="font-size:13px;color:var(--dim)"></span>
+    </div>
+    <div id="inst-edit-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-top:8px;margin-bottom:4px"></div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Tocá el mapa para ajustar la ubicación</div>
+    <input type="hidden" id="inst-edit-lat"><input type="hidden" id="inst-edit-lng">
+    <div class="field" style="margin-top:4px"><span class="field-label">Notas</span><textarea id="inst-edit-notas" placeholder="Horarios, disposición..."></textarea></div>
     <div class="checkbox-row"><label><input type="checkbox" id="inst-edit-colabora"> Colabora con alfabetización</label></div>
     <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary" onclick="guardarEdicionInstitucion()">Guardar cambios</button>
@@ -1259,6 +1267,56 @@ function clearInstMap() {
   }
 }
 
+let instEditMap = null, instEditPin = null;
+
+function initInstEditMap() {
+  if (instEditMap) return;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  instEditMap = L.map('inst-edit-map-container', {zoomControl: true, attributionControl: false})
+    .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(instEditMap);
+  instEditMap.on('click', (e) => {
+    setInstEditLocation(e.latlng.lat, e.latlng.lng);
+    document.getElementById('inst-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
+  });
+}
+
+function setInstEditLocation(lat, lng) {
+  document.getElementById('inst-edit-lat').value = lat;
+  document.getElementById('inst-edit-lng').value = lng;
+  if (!instEditMap) initInstEditMap();
+  setTimeout(() => instEditMap.invalidateSize(), 100);
+  if (instEditPin) {
+    instEditPin.setLatLng([lat, lng]);
+  } else {
+    instEditPin = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#c4993d;border:3px solid #fff;box-shadow:0 0 10px rgba(196,153,61,.7)"></div>',
+        iconSize: [16, 16], iconAnchor: [8, 8]
+      })
+    }).addTo(instEditMap);
+  }
+  instEditMap.setView([lat, lng], 17);
+}
+
+window.captureInstEditLoc = async () => {
+  const s = document.getElementById('inst-edit-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    setInstEditLocation(loc.lat, loc.lng);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.quitarUbicacionEdit = () => {
+  document.getElementById('inst-edit-lat').value = '';
+  document.getElementById('inst-edit-lng').value = '';
+  if (instEditPin && instEditMap) { instEditMap.removeLayer(instEditPin); instEditPin = null; }
+  document.getElementById('inst-edit-loc-status').textContent = 'Sin ubicación';
+};
+
 let instAutocompleteTimer = null;
 
 window.onInstDirInput = () => {
@@ -1618,8 +1676,22 @@ window.abrirEditInstitucion = (id) => {
   document.getElementById('inst-edit-dir').value = i.direccion || '';
   document.getElementById('inst-edit-notas').value = i.notas || '';
   document.getElementById('inst-edit-colabora').checked = !!i.colabora_alfabetizacion;
-  const modal = document.getElementById('inst-edit-modal');
-  modal.style.display = 'flex';
+  document.getElementById('inst-edit-lat').value = i.lat || '';
+  document.getElementById('inst-edit-lng').value = i.lng || '';
+  document.getElementById('inst-edit-modal').style.display = 'flex';
+  setTimeout(() => {
+    initInstEditMap();
+    instEditMap.invalidateSize();
+    if (i.lat && i.lng) {
+      setInstEditLocation(i.lat, i.lng);
+      document.getElementById('inst-edit-loc-status').textContent = '✓ Ubicación existente';
+    } else {
+      if (instEditPin) { instEditMap.removeLayer(instEditPin); instEditPin = null; }
+      const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+      instEditMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+      document.getElementById('inst-edit-loc-status').textContent = '';
+    }
+  }, 120);
 };
 
 window.cerrarEditInstModal = () => {
@@ -1639,6 +1711,8 @@ window.guardarEdicionInstitucion = async () => {
       direccion: document.getElementById('inst-edit-dir').value.trim(),
       notas: document.getElementById('inst-edit-notas').value.trim(),
       colabora_alfabetizacion: document.getElementById('inst-edit-colabora').checked,
+      lat: parseFloat(document.getElementById('inst-edit-lat').value) || null,
+      lng: parseFloat(document.getElementById('inst-edit-lng').value) || null,
     });
     cerrarEditInstModal();
     toast('Institución actualizada ✓');
