@@ -270,9 +270,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <button id="mfl-instituciones" class="map-filter-btn active" onclick="toggleMapLayer('instituciones')">Instituciones</button>
         <button id="mfl-analfabetos" class="map-filter-btn" onclick="toggleMapLayer('analfabetos')">Analfabetos</button>
         <button id="mfl-alfabetizadores" class="map-filter-btn" onclick="toggleMapLayer('alfabetizadores')">Alfab. pot.</button>
+        <button id="btn-editar-zona" class="map-filter-btn" onclick="iniciarEdicionZona()" style="display:none;margin-left:auto">📍 Configurar zona de influencia</button>
       </div>
       <div style="position:relative">
         <div id="map-container"></div>
+        <div id="zona-edit-bar" style="display:none;position:absolute;top:10px;left:10px;right:10px;z-index:1000;background:rgba(26,24,20,.95);border:1px solid var(--gold);border-radius:3px;padding:10px 14px;backdrop-filter:blur(8px)">
+          <div style="font-size:13px;color:var(--text);margin-bottom:8px">Moví y hacé zoom hasta encuadrar tu zona de influencia. Después tocá "Guardar zona".</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="guardarZonaEdicion()" style="font-size:13px;padding:8px 14px">✓ Guardar zona</button>
+            <button class="btn btn-secondary" onclick="cancelarEdicionZona()" style="font-size:13px;padding:8px 14px">Cancelar</button>
+          </div>
+        </div>
         <div class="map-controls">
           <button class="map-control-btn" onclick="captureMyLocation()">📍 Mi ubicación</button>
           <button class="map-control-btn" onclick="fitMapToMarkers()">🔍 Ver todo</button>
@@ -712,6 +720,9 @@ let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, anal
 let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null;
 let preguntasCustom = [];
 let camposOcultos = [];
+let zonaInfluencia = null;
+let modoEdicionZona = false;
+let zonaPrevia = null;
 
 const NODOS = [
   {id:'merlo',nombre:'Merlo',lat:-34.6717,lng:-58.7275},
@@ -1069,7 +1080,10 @@ function subscribeToData() {
         const data = snap.exists() ? snap.data() : {};
         preguntasCustom = data.preguntas_custom || [];
         camposOcultos = data.campos_ocultos || [];
+        zonaInfluencia = data.zona_influencia || null;
         applyFormConfig();
+        aplicarRestriccionMapa();
+        actualizarBotonZona();
       },
       err => { console.error('Error config nodo:', err); }
     );
@@ -1972,7 +1986,38 @@ window.setMapNodo = (nodo) => {
   updateMap();
 };
 
+function validarZona(zona) {
+  if (!zona || !Array.isArray(zona.bounds) || zona.bounds.length !== 2) return false;
+  const [sw, ne] = zona.bounds;
+  if (!Array.isArray(sw) || !Array.isArray(ne) || sw.length !== 2 || ne.length !== 2) return false;
+  const [swLat, swLng] = sw, [neLat, neLng] = ne;
+  if (![swLat, swLng, neLat, neLng].every(n => typeof n === 'number' && isFinite(n))) return false;
+  if (swLat < -90 || neLat > 90 || swLng < -180 || neLng > 180) return false;
+  if (swLat >= neLat || swLng >= neLng) return false;
+  return true;
+}
+
+function aplicarRestriccionMapa() {
+  if (!map) return;
+  if (modoEdicionZona || !esCoordNodo() || !validarZona(zonaInfluencia)) {
+    map.setMaxBounds(null);
+    map.setMinZoom(0);
+    return;
+  }
+  const b = L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]);
+  map.setMaxBounds(b.pad(0.05));
+  map.setMinZoom(map.getBoundsZoom(b, false));
+}
+
+function actualizarBotonZona() {
+  const btnZona = document.getElementById('btn-editar-zona');
+  if (!btnZona) return;
+  btnZona.style.display = esCoordNodo() ? 'inline-block' : 'none';
+  btnZona.textContent = validarZona(zonaInfluencia) ? '📍 Editar zona de influencia' : '📍 Configurar zona de influencia';
+}
+
 function initMap() {
+  if (modoEdicionZona) cancelarEdicionZona();
   const esGeneral = currentUser.rol === 'coordinador_general';
   const sub = document.getElementById('mapa-sub');
   if (sub) sub.textContent = esGeneral
@@ -1990,12 +2035,21 @@ function initMap() {
       nodoFilter.style.display = 'none';
     }
   }
-  if (map) { updateMap(); return; }
+  actualizarBotonZona();
+  if (map) { updateMap(); aplicarRestriccionMapa(); return; }
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   map = L.map('map-container',{zoomControl:false}).setView([nodo?.lat||-34.6,nodo?.lng||-58.5],13);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',maxZoom:19}).addTo(map);
   L.control.zoom({position:'bottomright'}).addTo(map);
-  setTimeout(() => { map.invalidateSize(); updateMap(); }, 200);
+  map.on('resize', aplicarRestriccionMapa);
+  setTimeout(() => {
+    map.invalidateSize();
+    if (esCoordNodo() && validarZona(zonaInfluencia)) {
+      map.fitBounds(L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]));
+    }
+    aplicarRestriccionMapa();
+    updateMap();
+  }, 200);
 }
 
 function mkIcon(color, sz) {
@@ -2047,7 +2101,8 @@ function updateMap() {
     });
   }
 
-  if (markers.length) fitMapToMarkers();
+  const zonaFrizada = esCoordNodo() && validarZona(zonaInfluencia) && !modoEdicionZona;
+  if (markers.length && !zonaFrizada) fitMapToMarkers();
   const geoV = fVisitas.filter(v=>v.lat&&v.lng).length;
   document.getElementById('map-stats').innerHTML = `
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${fVisitas.length}</div><div class="stat-label">Visitas</div></div>
@@ -2058,6 +2113,43 @@ function updateMap() {
 }
 
 window.fitMapToMarkers = () => { if (!map||!markers.length) return; map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1)); };
+
+window.iniciarEdicionZona = () => {
+  if (!esCoordNodo() || !map) return;
+  modoEdicionZona = true;
+  zonaPrevia = zonaInfluencia;
+  aplicarRestriccionMapa();
+  document.getElementById('zona-edit-bar').style.display = 'block';
+  document.getElementById('btn-editar-zona').style.display = 'none';
+  if (validarZona(zonaInfluencia)) {
+    map.fitBounds(L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]));
+  }
+};
+
+window.guardarZonaEdicion = async () => {
+  const b = map.getBounds();
+  const nueva = { bounds: [[b.getSouthWest().lat, b.getSouthWest().lng], [b.getNorthEast().lat, b.getNorthEast().lng]] };
+  try {
+    await setDoc(doc(db, 'configuracion', currentUser.nodo_id), { zona_influencia: nueva }, { merge: true });
+    zonaInfluencia = nueva;
+    finalizarEdicionZona();
+    toast('Zona de influencia guardada ✓');
+  } catch (e) {
+    toast('No se pudo guardar la zona. Revisá tu conexión e intentá de nuevo.', true);
+  }
+};
+
+window.cancelarEdicionZona = () => {
+  zonaInfluencia = zonaPrevia;
+  finalizarEdicionZona();
+};
+
+function finalizarEdicionZona() {
+  modoEdicionZona = false;
+  document.getElementById('zona-edit-bar').style.display = 'none';
+  aplicarRestriccionMapa();
+  actualizarBotonZona();
+}
 
 let mzMap = null;
 let mzPinMarker = null;
@@ -2465,6 +2557,7 @@ window.toggleUsuarioActivo = async (uid, nuevoEstado) => {
   try { await updateDoc(doc(db, 'usuarios', uid), { activo: nuevoEstado }); toast(nuevoEstado ? 'Usuario activado' : 'Usuario desactivado'); loadEquipo(); }
   catch(e) { toast('Error: ' + e.message, true); }
 };
+
 </script>
 <script>
 if ('serviceWorker' in navigator) {
