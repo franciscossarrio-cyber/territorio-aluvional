@@ -1987,14 +1987,16 @@ window.setMapNodo = (nodo) => {
 };
 
 function validarZona(zona) {
-  if (!zona || !Array.isArray(zona.bounds) || zona.bounds.length !== 2) return false;
-  const [sw, ne] = zona.bounds;
-  if (!Array.isArray(sw) || !Array.isArray(ne) || sw.length !== 2 || ne.length !== 2) return false;
-  const [swLat, swLng] = sw, [neLat, neLng] = ne;
+  if (!zona || !zona.sw || !zona.ne) return false;
+  const { lat: swLat, lng: swLng } = zona.sw, { lat: neLat, lng: neLng } = zona.ne;
   if (![swLat, swLng, neLat, neLng].every(n => typeof n === 'number' && isFinite(n))) return false;
   if (swLat < -90 || neLat > 90 || swLng < -180 || neLng > 180) return false;
   if (swLat >= neLat || swLng >= neLng) return false;
   return true;
+}
+
+function zonaToLatLngBounds(zona) {
+  return L.latLngBounds([zona.sw.lat, zona.sw.lng], [zona.ne.lat, zona.ne.lng]);
 }
 
 function aplicarRestriccionMapa() {
@@ -2004,7 +2006,7 @@ function aplicarRestriccionMapa() {
     map.setMinZoom(0);
     return;
   }
-  const b = L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]);
+  const b = zonaToLatLngBounds(zonaInfluencia);
   map.setMaxBounds(b.pad(0.05));
   map.setMinZoom(map.getBoundsZoom(b, false));
 }
@@ -2045,7 +2047,7 @@ function initMap() {
   setTimeout(() => {
     map.invalidateSize();
     if (esCoordNodo() && validarZona(zonaInfluencia)) {
-      map.fitBounds(L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]));
+      map.fitBounds(zonaToLatLngBounds(zonaInfluencia));
     }
     aplicarRestriccionMapa();
     updateMap();
@@ -2122,13 +2124,13 @@ window.iniciarEdicionZona = () => {
   document.getElementById('zona-edit-bar').style.display = 'block';
   document.getElementById('btn-editar-zona').style.display = 'none';
   if (validarZona(zonaInfluencia)) {
-    map.fitBounds(L.latLngBounds(zonaInfluencia.bounds[0], zonaInfluencia.bounds[1]));
+    map.fitBounds(zonaToLatLngBounds(zonaInfluencia));
   }
 };
 
 window.guardarZonaEdicion = async () => {
   const b = map.getBounds();
-  const nueva = { bounds: [[b.getSouthWest().lat, b.getSouthWest().lng], [b.getNorthEast().lat, b.getNorthEast().lng]] };
+  const nueva = { sw: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng }, ne: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng } };
   try {
     await setDoc(doc(db, 'configuracion', currentUser.nodo_id), { zona_influencia: nueva }, { merge: true });
     zonaInfluencia = nueva;
