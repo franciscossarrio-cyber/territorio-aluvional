@@ -795,6 +795,62 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   </div>
 </div>
 
+<div id="esp-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;width:100%;max-width:560px;margin:40px auto">
+    <div style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:16px">Editar espacio</div>
+    <input type="hidden" id="esp-edit-id">
+
+    <div class="field" style="margin-bottom:12px">
+      <span class="field-label">Tipo de espacio</span>
+      <div class="toggle-group" id="esp-edit-tipo-group">
+        <div class="toggle-btn" data-tipo="plaza" onclick="selectEspEditTipo('plaza')"><span class="toggle-btn-icon">🌳</span>Plaza</div>
+        <div class="toggle-btn" data-tipo="club" onclick="selectEspEditTipo('club')"><span class="toggle-btn-icon">🏟️</span>Club</div>
+        <div class="toggle-btn" data-tipo="descampado" onclick="selectEspEditTipo('descampado')"><span class="toggle-btn-icon">🌾</span>Descampado</div>
+        <div class="toggle-btn" data-tipo="otro" onclick="selectEspEditTipo('otro')"><span class="toggle-btn-icon">📍</span>Otro espacio</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre del lugar</span><input id="esp-edit-nombre" style="font-size:16px;padding:12px"></div>
+
+    <div class="field autocomplete-wrap" style="margin-bottom:10px">
+      <span class="field-label">Dirección</span>
+      <input id="esp-edit-dir" placeholder="Calle y número" style="font-size:16px;padding:12px" autocomplete="off" oninput="onEspEditDirInput()">
+      <div class="autocomplete-list" id="esp-edit-autocomplete-list" style="display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="captureEspEditLoc()" style="font-size:14px;padding:10px 14px">📍 Mi GPS</button>
+      <button class="btn btn-secondary" onclick="buscarDireccionEspEdit()" style="font-size:14px;padding:10px 14px">🔍 Buscar en mapa</button>
+      <span id="esp-edit-loc-status" style="font-size:13px;color:var(--dim)"></span>
+    </div>
+    <div id="esp-edit-map-container" style="width:100%;height:200px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px"></div>
+    <input type="hidden" id="esp-edit-lat"><input type="hidden" id="esp-edit-lng">
+
+    <div class="field" style="margin-bottom:8px"><span class="field-label">Estado de situación</span></div>
+    <div id="esp-edit-checklist-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+
+    <div class="field" style="margin-bottom:14px">
+      <span class="field-label">Escala</span>
+      <div class="toggle-group" id="esp-edit-escala-group" style="grid-template-columns:repeat(3,1fr)">
+        <div class="toggle-btn" data-esc="chico" onclick="selectEspEditEscala('chico')">Chico</div>
+        <div class="toggle-btn" data-esc="mediano" onclick="selectEspEditEscala('mediano')">Mediano</div>
+        <div class="toggle-btn" data-esc="grande" onclick="selectEspEditEscala('grande')">Grande</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:8px"><span class="field-label">Materiales solicitados</span></div>
+    <div id="esp-edit-materiales-list"></div>
+    <div id="esp-edit-otros-materiales-wrap" style="display:none;margin-top:10px">
+      <div class="field"><span class="field-label">Otros materiales necesarios</span><textarea id="esp-edit-otros-materiales"></textarea></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" onclick="guardarEdicionEspacio()">Guardar cambios</button>
+      <button class="btn btn-secondary" onclick="cerrarEditEspModal()">Cancelar</button>
+      <button class="btn" style="margin-left:auto;background:rgba(220,50,50,.12);color:var(--red);border:1px solid rgba(220,50,50,.3)" onclick="eliminarEspacioDesdeEdit()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
@@ -1430,7 +1486,7 @@ window.selectAutocomplete = (lat, lon, label) => {
 };
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.autocomplete-wrap')) { hideAutocomplete(); hideInstAutocomplete(); hideEspAutocomplete(); }
+  if (!e.target.closest('.autocomplete-wrap')) { hideAutocomplete(); hideInstAutocomplete(); hideEspAutocomplete(); hideEspEditAutocomplete(); }
 });
 
 window.buscarDireccion = async () => {
@@ -2780,7 +2836,7 @@ function renderEspacios() {
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
           <div style="font-weight:600;font-size:15px">${e.nombre}</div>
-          <button class="btn btn-secondary btn-sm" onclick="eliminarEspacio('${e.id}')" style="flex-shrink:0;font-size:12px;padding:4px 10px">Eliminar</button>
+          <button class="btn btn-secondary btn-sm" onclick="abrirEditEspacio('${e.id}')" style="flex-shrink:0;font-size:12px;padding:4px 10px">Editar</button>
         </div>
         <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
           <span class="badge badge-blue">${ESP_TIPO_LABELS[e.tipo]||e.tipo}</span>
@@ -2794,10 +2850,240 @@ function renderEspacios() {
   }).join('');
 }
 
-window.eliminarEspacio = async (id) => {
+// ─── Edición de un espacio ya cargado ───
+let espEditTipoActual = null, espEditEscalaActual = null;
+let espEditMap = null, espEditPin = null, espEditAutocompleteTimer = null;
+
+window.abrirEditEspacio = (id) => {
+  const e = espacios.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('esp-edit-id').value = id;
+  document.getElementById('esp-edit-nombre').value = e.nombre || '';
+  document.getElementById('esp-edit-dir').value = e.direccion || '';
+  document.getElementById('esp-edit-lat').value = e.lat || '';
+  document.getElementById('esp-edit-lng').value = e.lng || '';
+  document.getElementById('esp-edit-otros-materiales').value = e.materiales_otros || '';
+
+  espEditTipoActual = e.tipo || 'plaza';
+  espEditEscalaActual = e.escala || null;
+  document.querySelectorAll('#esp-edit-tipo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === espEditTipoActual));
+  document.querySelectorAll('#esp-edit-escala-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.esc === espEditEscalaActual));
+
+  renderEspEditChecklist(e.checklist || {});
+  renderEspEditMateriales(e.materiales || {});
+
+  document.getElementById('esp-edit-modal').style.display = 'flex';
+  setTimeout(() => {
+    initEspEditMap();
+    espEditMap.invalidateSize();
+    if (e.lat && e.lng) {
+      setEspEditLocation(e.lat, e.lng);
+      document.getElementById('esp-edit-loc-status').textContent = '✓ Ubicación existente';
+    } else {
+      if (espEditPin) { espEditMap.removeLayer(espEditPin); espEditPin = null; }
+      const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+      espEditMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+      document.getElementById('esp-edit-loc-status').textContent = '';
+    }
+  }, 120);
+};
+
+window.selectEspEditTipo = (tipo) => {
+  espEditTipoActual = tipo;
+  document.querySelectorAll('#esp-edit-tipo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === tipo));
+  renderEspEditChecklist({});
+  renderEspEditMateriales({});
+};
+
+window.selectEspEditEscala = (esc) => {
+  espEditEscalaActual = esc;
+  document.querySelectorAll('#esp-edit-escala-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.esc === esc));
+};
+
+function renderEspEditChecklist(checklistGuardado) {
+  const preguntas = ESP_CHECKLIST[espEditTipoActual] || [];
+  document.getElementById('esp-edit-checklist-list').innerHTML = preguntas.map((p, i) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:14.5px">
+      <input type="checkbox" data-esp-check="${i}" ${checklistGuardado[p] ? 'checked' : ''} style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0"> ${p}
+    </label>`).join('');
+}
+
+function renderEspEditMateriales(materialesGuardados) {
+  const items = ESP_CATALOGO_BASE.concat(ESP_CATALOGO_TIPO[espEditTipoActual] || []);
+  document.getElementById('esp-edit-materiales-list').innerHTML = items.map(it => `
+    <div class="material-row" data-mat-id="${it.id}">
+      <div class="material-info">
+        <div class="material-name">${it.nombre}</div>
+        <div class="material-stock">${it.stock ? `Stock disponible: ${it.stock} ${it.unidad}` : it.unidad}</div>
+      </div>
+      <div class="stepper">
+        <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',-1)">−</button>
+        <span class="stepper-val" id="esp-edit-qty-${it.id}">${materialesGuardados[it.id] || 0}</span>
+        <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('esp-edit-otros-materiales-wrap').style.display = espEditTipoActual === 'otro' ? 'block' : 'none';
+}
+
+window.espEditStepQty = (id, delta) => {
+  const el = document.getElementById('esp-edit-qty-'+id);
+  const val = Math.max(0, (parseInt(el.textContent, 10) || 0) + delta);
+  el.textContent = val;
+};
+
+function initEspEditMap() {
+  if (espEditMap) return;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  espEditMap = L.map('esp-edit-map-container', {zoomControl: true, attributionControl: false})
+    .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(espEditMap);
+  espEditMap.on('click', (e) => {
+    setEspEditLocation(e.latlng.lat, e.latlng.lng);
+    document.getElementById('esp-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
+  });
+}
+
+function setEspEditLocation(lat, lng) {
+  document.getElementById('esp-edit-lat').value = lat;
+  document.getElementById('esp-edit-lng').value = lng;
+  if (!espEditMap) initEspEditMap();
+  setTimeout(() => espEditMap.invalidateSize(), 100);
+  if (espEditPin) {
+    espEditPin.setLatLng([lat, lng]);
+  } else {
+    espEditPin = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
+        iconSize: [16, 16], iconAnchor: [8, 8]
+      })
+    }).addTo(espEditMap);
+  }
+  espEditMap.setView([lat, lng], 17);
+}
+
+window.captureEspEditLoc = async () => {
+  const s = document.getElementById('esp-edit-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    setEspEditLocation(loc.lat, loc.lng);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.onEspEditDirInput = () => {
+  clearTimeout(espEditAutocompleteTimer);
+  const val = document.getElementById('esp-edit-dir').value.trim();
+  if (val.length < 3) { hideEspEditAutocomplete(); return; }
+  espEditAutocompleteTimer = setTimeout(() => fetchEspEditAutocomplete(val), 400);
+};
+
+async function fetchEspEditAutocomplete(text) {
+  const depto = NODO_DEPTO[currentUser?.nodo_id] || '';
+  const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(text)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=6`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    showEspEditAutocomplete(data.direcciones || []);
+  } catch(e) { hideEspEditAutocomplete(); }
+}
+
+function showEspEditAutocomplete(results) {
+  const list = document.getElementById('esp-edit-autocomplete-list');
+  if (!results.length) { hideEspEditAutocomplete(); return; }
+  list.innerHTML = results.map(r => {
+    const label = r.nomenclatura || `${r.calle?.nombre} ${r.altura?.valor}`;
+    const lat = r.ubicacion?.lat;
+    const lon = r.ubicacion?.lon;
+    if (!lat || !lon) return '';
+    const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="autocomplete-item" onclick="selectEspEditAutocomplete(${lat}, ${lon}, '${safeLabel}')">📍 ${label}</div>`;
+  }).filter(Boolean).join('');
+  if (!list.innerHTML) { hideEspEditAutocomplete(); return; }
+  list.style.display = 'block';
+}
+
+function hideEspEditAutocomplete() {
+  const list = document.getElementById('esp-edit-autocomplete-list');
+  if (list) list.style.display = 'none';
+}
+
+window.selectEspEditAutocomplete = (lat, lon, label) => {
+  setEspEditLocation(parseFloat(lat), parseFloat(lon));
+  document.getElementById('esp-edit-dir').value = label;
+  document.getElementById('esp-edit-loc-status').textContent = '✓ Dirección encontrada';
+  hideEspEditAutocomplete();
+};
+
+window.buscarDireccionEspEdit = async () => {
+  const dir = document.getElementById('esp-edit-dir').value.trim();
+  if (!dir) return toast('Escribí la dirección primero', true);
+  const s = document.getElementById('esp-edit-loc-status');
+  s.textContent = 'Buscando...';
+  const depto = NODO_DEPTO[currentUser.nodo_id] || '';
+  try {
+    const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(dir)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=3`;
+    const resp = await fetch(url);
+    const data = resp.ok ? await resp.json() : {};
+    const results = data.direcciones || [];
+    if (results.length > 0 && results[0].ubicacion?.lat) {
+      setEspEditLocation(results[0].ubicacion.lat, results[0].ubicacion.lon);
+      s.textContent = `✓ ${results[0].nomenclatura || 'Dirección encontrada'}`;
+    } else {
+      s.textContent = '✗ No se encontró. Tocá el mapa para ubicar manualmente.';
+      if (!espEditMap) initEspEditMap();
+      setTimeout(() => espEditMap.invalidateSize(), 100);
+    }
+  } catch(e) {
+    s.textContent = '✗ Error buscando. Tocá el mapa.';
+    if (!espEditMap) initEspEditMap();
+    setTimeout(() => espEditMap.invalidateSize(), 100);
+  }
+};
+
+window.cerrarEditEspModal = () => {
+  document.getElementById('esp-edit-modal').style.display = 'none';
+};
+
+window.guardarEdicionEspacio = async () => {
+  const id = document.getElementById('esp-edit-id').value;
+  const nombre = document.getElementById('esp-edit-nombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre', true);
+  const checklist = {};
+  document.querySelectorAll('#esp-edit-checklist-list input[type="checkbox"]').forEach(cb => {
+    checklist[(ESP_CHECKLIST[espEditTipoActual]||[])[cb.dataset.espCheck]] = cb.checked;
+  });
+  const materiales = {};
+  document.querySelectorAll('#esp-edit-materiales-list [data-mat-id]').forEach(row => {
+    const matId = row.dataset.matId;
+    const qty = parseInt(document.getElementById('esp-edit-qty-'+matId).textContent, 10) || 0;
+    if (qty > 0) materiales[matId] = qty;
+  });
+  try {
+    await updateDoc(doc(db, 'espacios_publicos', id), {
+      tipo: espEditTipoActual,
+      nombre,
+      direccion: document.getElementById('esp-edit-dir').value.trim(),
+      lat: parseFloat(document.getElementById('esp-edit-lat').value) || null,
+      lng: parseFloat(document.getElementById('esp-edit-lng').value) || null,
+      checklist,
+      escala: espEditEscalaActual,
+      materiales,
+      materiales_otros: document.getElementById('esp-edit-otros-materiales').value.trim(),
+    });
+    cerrarEditEspModal();
+    toast('Espacio actualizado ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+window.eliminarEspacioDesdeEdit = async () => {
+  const id = document.getElementById('esp-edit-id').value;
   if (!confirm('¿Eliminar este espacio relevado? Esta acción no se puede deshacer.')) return;
   try {
     await deleteDoc(doc(db, 'espacios_publicos', id));
+    cerrarEditEspModal();
     toast('Espacio eliminado');
   } catch(e) { toast('Error: '+e.message, true); }
 };
