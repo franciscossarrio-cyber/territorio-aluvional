@@ -203,7 +203,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .stepper{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .stepper-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface3);color:var(--text);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font)}
 .stepper-btn:hover{border-color:var(--gold);color:var(--gold)}
-.stepper-val{min-width:24px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600}
+.stepper-val{width:44px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px 2px;color:var(--text)}
+.stepper-val:focus{outline:none;border-color:var(--gold)}
 .material-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;margin-bottom:8px;gap:10px}
 .material-info{flex:1;min-width:0}
 .material-name{font-size:14px;color:var(--text)}
@@ -2596,28 +2597,32 @@ function renderEspMateriales() {
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.stock ? `Stock disponible: ${it.stock} ${it.unidad}` : it.unidad}</div>
+        <div class="material-stock">${it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',-1)">−</button>
-        <span class="stepper-val" id="esp-qty-${it.id}">0</span>
+        <input type="number" min="0" inputmode="numeric" class="stepper-val" id="esp-qty-${it.id}" value="0" onchange="espClampQty('esp-qty-${it.id}')">
         <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',1)">+</button>
       </div>
     </div>`).join('');
   document.getElementById('esp-otros-materiales-wrap').style.display = espTipoActual === 'otro' ? 'block' : 'none';
 }
 
+window.espClampQty = (elId) => {
+  const el = document.getElementById(elId);
+  el.value = Math.max(0, parseInt(el.value, 10) || 0);
+};
+
 window.espStepQty = (id, delta) => {
   const el = document.getElementById('esp-qty-'+id);
-  const val = Math.max(0, (parseInt(el.textContent, 10) || 0) + delta);
-  el.textContent = val;
+  el.value = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
 };
 
 function renderEspResumen() {
   const materialesElegidos = Array.from(document.querySelectorAll('#esp-materiales-list [data-mat-id]'))
     .map(row => {
       const id = row.dataset.matId;
-      const qty = parseInt(document.getElementById('esp-qty-'+id).textContent, 10) || 0;
+      const qty = parseInt(document.getElementById('esp-qty-'+id).value, 10) || 0;
       const nombre = row.querySelector('.material-name').textContent;
       return qty > 0 ? `${nombre}: ${qty}` : null;
     }).filter(Boolean);
@@ -2797,7 +2802,7 @@ window.guardarEspacio = async () => {
   const materiales = {};
   document.querySelectorAll('#esp-materiales-list [data-mat-id]').forEach(row => {
     const id = row.dataset.matId;
-    const qty = parseInt(document.getElementById('esp-qty-'+id).textContent, 10) || 0;
+    const qty = parseInt(document.getElementById('esp-qty-'+id).value, 10) || 0;
     if (qty > 0) materiales[id] = qty;
   });
   try {
@@ -2914,11 +2919,11 @@ function renderEspEditMateriales(materialesGuardados) {
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.stock ? `Stock disponible: ${it.stock} ${it.unidad}` : it.unidad}</div>
+        <div class="material-stock">${it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',-1)">−</button>
-        <span class="stepper-val" id="esp-edit-qty-${it.id}">${materialesGuardados[it.id] || 0}</span>
+        <input type="number" min="0" inputmode="numeric" class="stepper-val" id="esp-edit-qty-${it.id}" value="${materialesGuardados[it.id] || 0}" onchange="espClampQty('esp-edit-qty-${it.id}')">
         <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',1)">+</button>
       </div>
     </div>`).join('');
@@ -2927,8 +2932,7 @@ function renderEspEditMateriales(materialesGuardados) {
 
 window.espEditStepQty = (id, delta) => {
   const el = document.getElementById('esp-edit-qty-'+id);
-  const val = Math.max(0, (parseInt(el.textContent, 10) || 0) + delta);
-  el.textContent = val;
+  el.value = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
 };
 
 function initEspEditMap() {
@@ -3058,7 +3062,7 @@ window.guardarEdicionEspacio = async () => {
   const materiales = {};
   document.querySelectorAll('#esp-edit-materiales-list [data-mat-id]').forEach(row => {
     const matId = row.dataset.matId;
-    const qty = parseInt(document.getElementById('esp-edit-qty-'+matId).textContent, 10) || 0;
+    const qty = parseInt(document.getElementById('esp-edit-qty-'+matId).value, 10) || 0;
     if (qty > 0) materiales[matId] = qty;
   });
   try {
