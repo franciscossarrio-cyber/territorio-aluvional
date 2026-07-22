@@ -193,6 +193,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .menu-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-2px)}
 .menu-card-icon{font-size:38px;line-height:1}
 @media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
+
+.step-indicator{font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.toggle-group{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.toggle-btn{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;color:var(--text);text-align:center;transition:all .15s}
+.toggle-btn:hover{border-color:var(--gold)}
+.toggle-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold-dark)}
+.toggle-btn-icon{font-size:26px;line-height:1}
+.stepper{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.stepper-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface3);color:var(--text);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font)}
+.stepper-btn:hover{border-color:var(--gold);color:var(--gold)}
+.stepper-val{min-width:24px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600}
+.material-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;margin-bottom:8px;gap:10px}
+.material-info{flex:1;min-width:0}
+.material-name{font-size:14px;color:var(--text)}
+.material-stock{font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.photo-slot{position:relative;aspect-ratio:1;border:1px dashed var(--border2);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:var(--surface2);overflow:hidden;text-align:center;padding:6px}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-slot-label{font-size:10px;color:var(--muted);position:relative;z-index:1}
+.photo-slot-status{position:absolute;bottom:4px;right:4px;font-size:14px;z-index:2;background:rgba(255,255,255,.9);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+@media(max-width:480px){.photo-grid{grid-template-columns:repeat(3,1fr)}.photo-slot-label{display:none}}
 </style>
 </head>
 <body>
@@ -542,6 +563,113 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       </div>
     </div>
 
+    <!-- ESPACIOS PÚBLICOS -->
+    <div class="section" id="sec-espacios">
+      <div><div class="section-title">Recuperación de Espacios Públicos</div><div class="section-sub">Relevá el espacio, diagnosticá y pedí los materiales que necesita la jornada.</div></div>
+
+      <div class="card">
+        <div class="step-indicator" id="esp-step-label">Paso 1 de 4 · Ubicación y diagnóstico</div>
+
+        <!-- PASO 1: Ubicación y diagnóstico -->
+        <div id="esp-step-1">
+          <div class="field" style="margin-bottom:14px">
+            <span class="field-label">Tipo de espacio</span>
+            <div class="toggle-group" id="esp-tipo-group">
+              <div class="toggle-btn" data-tipo="plaza" onclick="selectEspTipo('plaza')"><span class="toggle-btn-icon">🌳</span>Plaza</div>
+              <div class="toggle-btn" data-tipo="club" onclick="selectEspTipo('club')"><span class="toggle-btn-icon">🏟️</span>Club</div>
+              <div class="toggle-btn" data-tipo="descampado" onclick="selectEspTipo('descampado')"><span class="toggle-btn-icon">🌾</span>Descampado</div>
+              <div class="toggle-btn" data-tipo="otro" onclick="selectEspTipo('otro')"><span class="toggle-btn-icon">📍</span>Otro espacio</div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:14px">
+            <span class="field-label">Nombre del lugar</span>
+            <input id="esp-nombre" placeholder="Club Social Defensores, Descampado de la vía..." style="font-size:16px;padding:12px">
+          </div>
+
+          <div class="field autocomplete-wrap" style="margin-bottom:10px">
+            <span class="field-label">Dirección</span>
+            <input id="esp-dir" placeholder="Calle y número" style="font-size:16px;padding:12px" autocomplete="off" oninput="onEspDirInput()">
+            <div class="autocomplete-list" id="esp-autocomplete-list" style="display:none"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="captureEspLoc()" style="font-size:14px;padding:10px 14px">📍 Usar mi ubicación actual</button>
+            <button class="btn btn-secondary" onclick="buscarDireccionEsp()" style="font-size:14px;padding:10px 14px">🔍 Buscar en mapa</button>
+            <span id="esp-loc-status" style="font-size:13px;color:var(--dim)"></span>
+          </div>
+          <div id="esp-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px"></div>
+          <input type="hidden" id="esp-lat"><input type="hidden" id="esp-lng">
+
+          <div class="field" style="margin-bottom:8px"><span class="field-label">Registro fotográfico</span></div>
+          <div class="photo-grid">
+            <div class="photo-slot" id="esp-foto-slot-acceso" onclick="document.getElementById('esp-foto-input-acceso').click()">
+              <span style="font-size:22px">📸</span><span class="photo-slot-label">Acceso o fachada</span>
+            </div>
+            <div class="photo-slot" id="esp-foto-slot-critica" onclick="document.getElementById('esp-foto-input-critica').click()">
+              <span style="font-size:22px">📸</span><span class="photo-slot-label">Zona más deteriorada</span>
+            </div>
+            <div class="photo-slot" id="esp-foto-slot-general" onclick="document.getElementById('esp-foto-input-general').click()">
+              <span style="font-size:22px">📸</span><span class="photo-slot-label">Vista general</span>
+            </div>
+          </div>
+          <input type="file" accept="image/*" capture="environment" id="esp-foto-input-acceso" style="display:none" onchange="handleEspFoto(this,'acceso')">
+          <input type="file" accept="image/*" capture="environment" id="esp-foto-input-critica" style="display:none" onchange="handleEspFoto(this,'critica')">
+          <input type="file" accept="image/*" capture="environment" id="esp-foto-input-general" style="display:none" onchange="handleEspFoto(this,'general')">
+          <div style="font-size:12px;color:var(--dim);margin-top:8px">Las fotos son opcionales. Si no hay señal, el espacio se guarda igual y quedan marcadas como pendientes para sacarlas después.</div>
+
+          <button class="btn btn-primary" style="width:100%;padding:14px;margin-top:18px" onclick="nextEspStep(2)">Continuar →</button>
+        </div>
+
+        <!-- PASO 2: Diseño de la jornada -->
+        <div id="esp-step-2" style="display:none">
+          <div class="field" style="margin-bottom:8px"><span class="field-label">Estado de situación</span></div>
+          <div id="esp-checklist-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px"></div>
+
+          <div class="field" style="margin-bottom:8px">
+            <span class="field-label">¿Qué tamaño tiene el área principal donde vamos a laburar?</span>
+            <div class="toggle-group" id="esp-escala-group" style="grid-template-columns:1fr">
+              <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-esc="chico" onclick="selectEspEscala('chico')"><b>Chico</b><span style="font-size:12px;font-weight:400;color:var(--muted)">Un buffet de club, una esquina, un sector de juegos</span></div>
+              <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-esc="mediano" onclick="selectEspEscala('mediano')"><b>Mediano</b><span style="font-size:12px;font-weight:400;color:var(--muted)">Una plaza de manzana, una cancha completa, media cuadra</span></div>
+              <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-esc="grande" onclick="selectEspEscala('grande')"><b>Grande</b><span style="font-size:12px;font-weight:400;color:var(--muted)">Predio multideportivo, descampado de más de una cuadra</span></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showEspStep(1)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextEspStep(3)">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- PASO 3: Solicitud de materiales -->
+        <div id="esp-step-3" style="display:none">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">El stock de Provincia es limitado — la mayoría de los materiales se consiguen por fuera (mangueo vecinal, donaciones locales). Pedí lo que necesites igual, sirve para tener el registro.</div>
+          <div id="esp-materiales-list"></div>
+          <div id="esp-otros-materiales-wrap" style="display:none;margin-top:10px">
+            <div class="field"><span class="field-label">Otros materiales necesarios (especificar)</span><textarea id="esp-otros-materiales" placeholder="Describí qué más hace falta..."></textarea></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showEspStep(2)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextEspStep(4)">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- PASO 4: Resumen y guardado -->
+        <div id="esp-step-4" style="display:none">
+          <div class="card-title">Revisá antes de guardar</div>
+          <div id="esp-resumen" style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:18px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showEspStep(3)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="guardarEspacio()">✓ Guardar espacio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="esp-list-card" style="display:none">
+        <div class="card-title">Espacios relevados (<span id="esp-count">0</span>)</div>
+        <div id="esp-list"></div>
+      </div>
+    </div>
+
     <!-- ALFABETIZACIÓN -->
     <div class="section" id="sec-alfabetizacion">
       <div><div class="section-title">Seguimiento DALE!</div><div class="section-sub">Dos sesiones por semana, 20 minutos. Cada pibe es un mundo.</div></div>
@@ -673,6 +801,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, browserLocalPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const app = initializeApp({
   apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
@@ -685,6 +814,7 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
   const secondaryApp = initializeApp({
   apiKey: "AIzaSyAJA82LqAmThNEhsKyFEHCghCCPn6Ltd0A",
@@ -747,11 +877,12 @@ try { await enableIndexedDbPersistence(db); } catch(e) { console.warn('Offline m
 let currentUser = null;
 let currentTab = 'inicio';
 let isRegistering = false;
-let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [];
+let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [], espacios = [];
 let map = null, markers = [], userMarker = null;
 let mapFilterNodo = 'todos';
 let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false };
-let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null;
+let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null, unsubEspacios = null;
+let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendientes = false;
 let preguntasCustom = [];
 let camposOcultos = [];
 let zonaInfluencia = null;
@@ -948,6 +1079,7 @@ window.doLogout = async () => {
   if (unsubInst) unsubInst();
   if (unsubAlf) unsubAlf();
   if (unsubMz) unsubMz();
+  if (unsubEspacios) unsubEspacios();
   await signOut(auth);
 };
 
@@ -1082,8 +1214,14 @@ window.abrirPrograma = (id) => {
     document.getElementById('header-sub').textContent = 'MAPA';
     document.getElementById('nav').style.display = 'none';
     switchTab('mapa');
+  } else if (id === 'espacios') {
+    document.getElementById('header-sub').textContent = 'ESPACIOS PÚBLICOS';
+    document.getElementById('nav').style.display = 'none';
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-espacios').classList.add('active');
+    resetEspWizard();
   } else {
-    const titulos = { ollas: 'Ollas Populares', espacios: 'Recuperación de Espacios Públicos' };
+    const titulos = { ollas: 'Ollas Populares' };
     document.getElementById('header-sub').textContent = titulos[id].toUpperCase();
     document.getElementById('nav').style.display = 'none';
     document.getElementById('proximamente-titulo').textContent = titulos[id];
@@ -1118,6 +1256,7 @@ function subscribeToData() {
   const qManzanas = esGeneral ? collection(db, 'manzanas') : query(collection(db, 'manzanas'), where('nodo_id', '==', nid));
   const qInst = esGeneral ? collection(db, 'instituciones') : query(collection(db, 'instituciones'), where('nodo_id', '==', nid));
   const qAlf = esGeneral ? collection(db, 'alfabetizandos') : query(collection(db, 'alfabetizandos'), where('nodo_id', '==', nid));
+  const qEspacios = esGeneral ? collection(db, 'espacios_publicos') : query(collection(db, 'espacios_publicos'), where('nodo_id', '==', nid));
   unsubVisitas = onSnapshot(
     qVisitas,
     snap => { visitas = snap.docs.map(d => ({id:d.id,...d.data()})); visitas.sort((a,b) => ((b.fecha?.seconds||0) - (a.fecha?.seconds||0))); renderAll(); },
@@ -1137,6 +1276,11 @@ function subscribeToData() {
     qAlf,
     snap => { alfabetizandos = snap.docs.map(d => ({id:d.id,...d.data()})); alfabetizandos.sort((a,b) => ((b.fecha_inicio?.seconds||0) - (a.fecha_inicio?.seconds||0))); renderAll(); },
     err => { console.error('Error alfabetizandos:', err); }
+  );
+  unsubEspacios = onSnapshot(
+    qEspacios,
+    snap => { espacios = snap.docs.map(d => ({id:d.id,...d.data()})); espacios.sort((a,b) => ((b.fecha_creacion?.seconds||0) - (a.fecha_creacion?.seconds||0))); renderAll(); },
+    err => { console.error('Error espacios:', err); }
   );
   if (nid) {
     unsubConfig = onSnapshot(
@@ -1286,7 +1430,7 @@ window.selectAutocomplete = (lat, lon, label) => {
 };
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.autocomplete-wrap')) hideAutocomplete();
+  if (!e.target.closest('.autocomplete-wrap')) { hideAutocomplete(); hideInstAutocomplete(); hideEspAutocomplete(); }
 });
 
 window.buscarDireccion = async () => {
@@ -2270,9 +2414,397 @@ function updateMzMap() {
 
 function getNodoName() { return NODOS.find(n=>n.id===currentUser?.nodo_id)?.nombre || ''; }
 
+// ═══ ESPACIOS PÚBLICOS ═══
+
+const ESP_TIPO_LABELS = { plaza: 'Plaza', club: 'Club', descampado: 'Descampado', otro: 'Otro espacio' };
+const ESP_ESCALA_LABELS = { chico: 'Chico', mediano: 'Mediano', grande: 'Grande' };
+
+const ESP_CHECKLIST = {
+  plaza: [
+    '¿Hay juegos infantiles rotos u oxidados que requieran reparación?',
+    '¿Hay bancos de plaza dañados que necesiten reparación de madera o fijación?',
+    '¿El espacio cuenta con paredones o muros aptos para realizar un mural comunitario?',
+    '¿Existe acumulación de basura o ramas que requiera limpieza general?',
+    '¿Hay zonas completamente oscuras que requieran mantenimiento o luminarias?'
+  ],
+  club: [
+    '¿La cancha o el playón deportivo tiene la pintura descascarada o sin líneas reglamentarias?',
+    '¿Los vestuarios o baños tienen pérdidas de agua o grifería rota?',
+    '¿La instalación eléctrica del buffet o vestuarios presenta cables expuestos o llaves térmicas dañadas?',
+    '¿La fachada del club o las paredes interiores del gimnasio necesitan pintura y enduido?'
+  ],
+  descampado: [
+    '¿Existen microbasurales o acumulación de escombros pesados que requieran acopio?',
+    '¿El perímetro del predio está completamente expuesto y requiere un cerco rústico de delimitación?',
+    '¿El suelo se encuentra muy desparejo o erosionado y requiere nivelación/desinfección?',
+    '¿El espacio es apto para realizar una forestación con plantas nativas?'
+  ]
+};
+ESP_CHECKLIST.otro = ESP_CHECKLIST.descampado;
+
+const ESP_CATALOGO_BASE = [
+  {id:'trapos_piso', nombre:'Trapos de piso', unidad:'unidades', stock:60},
+  {id:'bolsas_residuos', nombre:'Bolsas de residuos', unidad:'unidades', stock:150},
+  {id:'escobas', nombre:'Escobas (Escobillones)', unidad:'unidades', stock:50},
+  {id:'baldes_limpieza', nombre:'Baldes de limpieza', unidad:'unidades', stock:50},
+  {id:'lavandina', nombre:'Lavandina granulada', unidad:'kg', stock:25}
+];
+
+const ESP_CATALOGO_TIPO = {
+  descampado: [
+    {id:'bolsas_consorcio', nombre:'Bolsas de consorcio reforzadas', unidad:'paquetes'},
+    {id:'guantes', nombre:'Guantes de laburo / agarre pesado', unidad:'pares'},
+    {id:'cal_viva', nombre:'Bolsas de cal viva', unidad:'bolsas'},
+    {id:'carteleria', nombre:'Cartelería de concientización ambiental', unidad:'unidades'},
+    {id:'baldes_albanileria', nombre:'Baldes de albañilería', unidad:'unidades', stock:20},
+    {id:'palas', nombre:'Palas de punta', unidad:'unidades', stock:10},
+    {id:'rastrillos', nombre:'Rastrillos (sin palo)', unidad:'unidades', stock:12}
+  ],
+  plaza: [
+    {id:'esmalte', nombre:'Esmalte sintético (colores primarios)', unidad:'latas'},
+    {id:'convertidor_oxido', nombre:'Convertidor de óxido', unidad:'latas'},
+    {id:'latex_ext', nombre:'Látex exterior (blanco/colores)', unidad:'baldes'},
+    {id:'pinceles_kit', nombre:'Pinceles, rodillos y lijas', unidad:'kits'},
+    {id:'bolsas_consorcio', nombre:'Bolsas de consorcio reforzadas', unidad:'paquetes'}
+  ],
+  club: [
+    {id:'pintura_cancha', nombre:'Pintura para canchas / alto tránsito', unidad:'baldes'},
+    {id:'latex_intext', nombre:'Látex interior/exterior', unidad:'baldes'},
+    {id:'pinceles_kit', nombre:'Pinceles, rodillos y lijas', unidad:'kits'},
+    {id:'focos_led', nombre:'Focos / reflectores LED básicos', unidad:'unidades'}
+  ]
+};
+
+function resetEspWizard() {
+  espTipoActual = null; espEscalaActual = null; espFotos = {}; espFotosPendientes = false;
+  const nombreEl = document.getElementById('esp-nombre'); if (nombreEl) nombreEl.value = '';
+  const dirEl = document.getElementById('esp-dir'); if (dirEl) dirEl.value = '';
+  const latEl = document.getElementById('esp-lat'); if (latEl) latEl.value = '';
+  const lngEl = document.getElementById('esp-lng'); if (lngEl) lngEl.value = '';
+  const statusEl = document.getElementById('esp-loc-status'); if (statusEl) statusEl.textContent = '';
+  const otrosEl = document.getElementById('esp-otros-materiales'); if (otrosEl) otrosEl.value = '';
+  clearEspMap();
+  document.querySelectorAll('#esp-tipo-group .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#esp-escala-group .toggle-btn').forEach(b => b.classList.remove('active'));
+  const labelsSlot = { acceso: 'Acceso o fachada', critica: 'Zona más deteriorada', general: 'Vista general' };
+  ['acceso','critica','general'].forEach(slot => {
+    const el = document.getElementById('esp-foto-slot-'+slot);
+    if (el) el.innerHTML = `<span style="font-size:22px">📸</span><span class="photo-slot-label">${labelsSlot[slot]}</span>`;
+    const inputEl = document.getElementById('esp-foto-input-'+slot);
+    if (inputEl) inputEl.value = '';
+  });
+  showEspStep(1);
+}
+
+window.showEspStep = (n) => {
+  [1,2,3,4].forEach(i => { const el = document.getElementById('esp-step-'+i); if (el) el.style.display = (i===n)?'block':'none'; });
+  const labels = {1:'Ubicación y diagnóstico',2:'Diseño de la jornada',3:'Solicitud de materiales',4:'Resumen'};
+  document.getElementById('esp-step-label').textContent = `Paso ${n} de 4 · ${labels[n]}`;
+};
+
+window.nextEspStep = (n) => {
+  if (n === 2) {
+    if (!espTipoActual) return toast('Elegí el tipo de espacio', true);
+    if (!document.getElementById('esp-nombre').value.trim()) return toast('Ingresá el nombre del lugar', true);
+    renderEspChecklist();
+  }
+  if (n === 3) {
+    if (!espEscalaActual) return toast('Elegí el tamaño del área', true);
+    renderEspMateriales();
+  }
+  if (n === 4) renderEspResumen();
+  showEspStep(n);
+};
+
+window.selectEspTipo = (tipo) => {
+  espTipoActual = tipo;
+  document.querySelectorAll('#esp-tipo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === tipo));
+};
+
+window.selectEspEscala = (esc) => {
+  espEscalaActual = esc;
+  document.querySelectorAll('#esp-escala-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.esc === esc));
+};
+
+function renderEspChecklist() {
+  const preguntas = ESP_CHECKLIST[espTipoActual] || [];
+  document.getElementById('esp-checklist-list').innerHTML = preguntas.map((p, i) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:14.5px">
+      <input type="checkbox" data-esp-check="${i}" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0"> ${p}
+    </label>`).join('');
+}
+
+function renderEspMateriales() {
+  const items = ESP_CATALOGO_BASE.concat(ESP_CATALOGO_TIPO[espTipoActual] || []);
+  document.getElementById('esp-materiales-list').innerHTML = items.map(it => `
+    <div class="material-row" data-mat-id="${it.id}">
+      <div class="material-info">
+        <div class="material-name">${it.nombre}</div>
+        <div class="material-stock">${it.stock ? `Stock disponible: ${it.stock} ${it.unidad}` : it.unidad}</div>
+      </div>
+      <div class="stepper">
+        <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',-1)">−</button>
+        <span class="stepper-val" id="esp-qty-${it.id}">0</span>
+        <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('esp-otros-materiales-wrap').style.display = espTipoActual === 'otro' ? 'block' : 'none';
+}
+
+window.espStepQty = (id, delta) => {
+  const el = document.getElementById('esp-qty-'+id);
+  const val = Math.max(0, (parseInt(el.textContent, 10) || 0) + delta);
+  el.textContent = val;
+};
+
+function renderEspResumen() {
+  const materialesElegidos = Array.from(document.querySelectorAll('#esp-materiales-list [data-mat-id]'))
+    .map(row => {
+      const id = row.dataset.matId;
+      const qty = parseInt(document.getElementById('esp-qty-'+id).textContent, 10) || 0;
+      const nombre = row.querySelector('.material-name').textContent;
+      return qty > 0 ? `${nombre}: ${qty}` : null;
+    }).filter(Boolean);
+  const checksMarcados = Array.from(document.querySelectorAll('#esp-checklist-list input:checked')).length;
+  const nombre = document.getElementById('esp-nombre').value.trim();
+  const fotosOk = ['acceso','critica','general'].filter(s => espFotos[s]).length;
+  document.getElementById('esp-resumen').innerHTML = `
+    <div><b>${nombre}</b> · ${ESP_TIPO_LABELS[espTipoActual]}</div>
+    <div>Escala: ${ESP_ESCALA_LABELS[espEscalaActual]}</div>
+    <div>Diagnóstico: ${checksMarcados} punto(s) marcado(s)</div>
+    <div>Fotos subidas: ${fotosOk} de 3${espFotosPendientes ? ' (algunas quedaron pendientes)' : ''}</div>
+    <div>Materiales pedidos: ${materialesElegidos.length ? materialesElegidos.join(', ') : 'Ninguno'}</div>`;
+}
+
+// Mapa + GPS + buscador de dirección (mismo patrón que instituciones/visitas)
+let espMap = null, espPin = null, espAutocompleteTimer = null;
+
+function initEspMap() {
+  if (espMap) return;
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  espMap = L.map('esp-map-container', {zoomControl: true, attributionControl: false})
+    .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(espMap);
+  espMap.on('click', (e) => {
+    setEspLocation(e.latlng.lat, e.latlng.lng);
+    document.getElementById('esp-loc-status').textContent = '✓ Ubicación marcada en mapa';
+  });
+}
+
+function setEspLocation(lat, lng) {
+  document.getElementById('esp-lat').value = lat;
+  document.getElementById('esp-lng').value = lng;
+  if (!espMap) initEspMap();
+  setTimeout(() => espMap.invalidateSize(), 100);
+  if (espPin) {
+    espPin.setLatLng([lat, lng]);
+  } else {
+    espPin = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:#00ADC3;border:3px solid #fff;box-shadow:0 0 10px rgba(0,173,195,.7)"></div>',
+        iconSize: [16, 16], iconAnchor: [8, 8]
+      })
+    }).addTo(espMap);
+  }
+  espMap.setView([lat, lng], 17);
+}
+
+function clearEspMap() {
+  if (espPin && espMap) { espMap.removeLayer(espPin); espPin = null; }
+  if (espMap) {
+    const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+    espMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+  }
+}
+
+window.captureEspLoc = async () => {
+  const s = document.getElementById('esp-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    setEspLocation(loc.lat, loc.lng);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.onEspDirInput = () => {
+  clearTimeout(espAutocompleteTimer);
+  const val = document.getElementById('esp-dir').value.trim();
+  if (val.length < 3) { hideEspAutocomplete(); return; }
+  espAutocompleteTimer = setTimeout(() => fetchEspAutocomplete(val), 400);
+};
+
+async function fetchEspAutocomplete(text) {
+  const depto = NODO_DEPTO[currentUser?.nodo_id] || '';
+  const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(text)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=6`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    showEspAutocomplete(data.direcciones || []);
+  } catch(e) { hideEspAutocomplete(); }
+}
+
+function showEspAutocomplete(results) {
+  const list = document.getElementById('esp-autocomplete-list');
+  if (!results.length) { hideEspAutocomplete(); return; }
+  list.innerHTML = results.map(r => {
+    const label = r.nomenclatura || `${r.calle?.nombre} ${r.altura?.valor}`;
+    const lat = r.ubicacion?.lat;
+    const lon = r.ubicacion?.lon;
+    if (!lat || !lon) return '';
+    const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="autocomplete-item" onclick="selectEspAutocomplete(${lat}, ${lon}, '${safeLabel}')">📍 ${label}</div>`;
+  }).filter(Boolean).join('');
+  if (!list.innerHTML) { hideEspAutocomplete(); return; }
+  list.style.display = 'block';
+}
+
+function hideEspAutocomplete() {
+  const list = document.getElementById('esp-autocomplete-list');
+  if (list) list.style.display = 'none';
+}
+
+window.selectEspAutocomplete = (lat, lon, label) => {
+  setEspLocation(parseFloat(lat), parseFloat(lon));
+  document.getElementById('esp-dir').value = label;
+  document.getElementById('esp-loc-status').textContent = '✓ Dirección encontrada';
+  hideEspAutocomplete();
+};
+
+window.buscarDireccionEsp = async () => {
+  const dir = document.getElementById('esp-dir').value.trim();
+  if (!dir) return toast('Escribí la dirección primero', true);
+  const s = document.getElementById('esp-loc-status');
+  s.textContent = 'Buscando...';
+  const depto = NODO_DEPTO[currentUser.nodo_id] || '';
+  try {
+    const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(dir)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=3`;
+    const resp = await fetch(url);
+    const data = resp.ok ? await resp.json() : {};
+    const results = data.direcciones || [];
+    if (results.length > 0 && results[0].ubicacion?.lat) {
+      setEspLocation(results[0].ubicacion.lat, results[0].ubicacion.lon);
+      s.textContent = `✓ ${results[0].nomenclatura || 'Dirección encontrada'}`;
+    } else {
+      s.textContent = '✗ No se encontró. Tocá el mapa para ubicar manualmente.';
+      if (!espMap) initEspMap();
+      setTimeout(() => espMap.invalidateSize(), 100);
+    }
+  } catch(e) {
+    s.textContent = '✗ Error buscando. Tocá el mapa.';
+    if (!espMap) initEspMap();
+    setTimeout(() => espMap.invalidateSize(), 100);
+  }
+};
+
+// Fotos (best-effort, Firebase Storage)
+async function subirFotoEspacio(file, slot) {
+  try {
+    const path = `espacios/${currentUser.uid}/${Date.now()}_${slot}.jpg`;
+    const r = storageRef(storage, path);
+    await uploadBytes(r, file);
+    return await getDownloadURL(r);
+  } catch(e) {
+    console.error('Error subiendo foto de espacio:', e);
+    return null;
+  }
+}
+
+window.handleEspFoto = async (input, slot) => {
+  const file = input.files[0];
+  if (!file) return;
+  const slotEl = document.getElementById('esp-foto-slot-'+slot);
+  const previewUrl = URL.createObjectURL(file);
+  slotEl.innerHTML = `<img src="${previewUrl}"><span class="photo-slot-status">⏳</span>`;
+  const url = await subirFotoEspacio(file, slot);
+  const statusEl = slotEl.querySelector('.photo-slot-status');
+  if (url) {
+    espFotos[slot] = url;
+    statusEl.textContent = '✓';
+  } else {
+    espFotosPendientes = true;
+    statusEl.textContent = '⚠️';
+    slotEl.title = 'No se pudo subir (sin señal). Se guardará como pendiente.';
+  }
+};
+
+// Guardado
+window.guardarEspacio = async () => {
+  const nombre = document.getElementById('esp-nombre').value.trim();
+  if (!nombre || !espTipoActual) return toast('Faltan datos del Paso 1', true);
+  const checklist = {};
+  document.querySelectorAll('#esp-checklist-list input[type="checkbox"]').forEach(cb => {
+    checklist[(ESP_CHECKLIST[espTipoActual]||[])[cb.dataset.espCheck]] = cb.checked;
+  });
+  const materiales = {};
+  document.querySelectorAll('#esp-materiales-list [data-mat-id]').forEach(row => {
+    const id = row.dataset.matId;
+    const qty = parseInt(document.getElementById('esp-qty-'+id).textContent, 10) || 0;
+    if (qty > 0) materiales[id] = qty;
+  });
+  try {
+    await addDoc(collection(db, 'espacios_publicos'), {
+      nodo_id: currentUser.nodo_id,
+      tipo: espTipoActual,
+      nombre,
+      direccion: document.getElementById('esp-dir').value.trim(),
+      lat: parseFloat(document.getElementById('esp-lat').value) || null,
+      lng: parseFloat(document.getElementById('esp-lng').value) || null,
+      fotos: { acceso: espFotos.acceso || null, critica: espFotos.critica || null, general: espFotos.general || null },
+      fotos_pendientes: espFotosPendientes,
+      checklist,
+      escala: espEscalaActual,
+      materiales,
+      materiales_otros: document.getElementById('esp-otros-materiales').value.trim(),
+      creado_por: currentUser.uid, fecha_creacion: serverTimestamp()
+    });
+    toast('Espacio guardado ✓');
+    resetEspWizard();
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
+function renderEspacios() {
+  const card = document.getElementById('esp-list-card');
+  if (!card) return;
+  if (!espacios.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('esp-count').textContent = espacios.length;
+  document.getElementById('esp-list').innerHTML = espacios.map(e => {
+    const foto = e.fotos?.acceso || e.fotos?.general || e.fotos?.critica;
+    const fecha = e.fecha_creacion?.seconds ? new Date(e.fecha_creacion.seconds*1000).toLocaleDateString('es-AR') : '';
+    return `
+    <div style="display:flex;gap:10px;padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:8px">
+      ${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0">` : ''}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="font-weight:600;font-size:15px">${e.nombre}</div>
+          <button class="btn btn-secondary btn-sm" onclick="eliminarEspacio('${e.id}')" style="flex-shrink:0;font-size:12px;padding:4px 10px">Eliminar</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+          <span class="badge badge-blue">${ESP_TIPO_LABELS[e.tipo]||e.tipo}</span>
+          ${e.escala ? `<span class="badge badge-gold">${ESP_ESCALA_LABELS[e.escala]||e.escala}</span>` : ''}
+          ${e.fotos_pendientes ? `<span class="badge badge-orange">Fotos pendientes</span>` : ''}
+        </div>
+        ${e.direccion?`<div style="font-size:13px;color:var(--muted);margin-top:5px">📍 ${e.direccion}</div>`:''}
+        ${fecha?`<div style="font-size:11px;color:var(--dim);margin-top:3px">${fecha}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.eliminarEspacio = async (id) => {
+  if (!confirm('¿Eliminar este espacio relevado? Esta acción no se puede deshacer.')) return;
+  try {
+    await deleteDoc(doc(db, 'espacios_publicos', id));
+    toast('Espacio eliminado');
+  } catch(e) { toast('Error: '+e.message, true); }
+};
+
 function renderAll() {
   if (!currentUser) return;
-  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos();
+  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos(); renderEspacios();
   if (currentTab === 'mapa') updateMap();
   if (currentTab === 'territorio') updateMzMap();
 }
