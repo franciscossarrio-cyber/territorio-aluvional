@@ -154,9 +154,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .leaflet-container{background:var(--bg)!important}
 #mz-map-container{border-radius:var(--radius-md);border:1px solid var(--border)}
 .map-controls{position:absolute;top:10px;right:10px;z-index:999;display:flex;flex-direction:column;gap:6px}
-.map-control-btn{background:rgba(26,24,20,.92);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);transition:all .15s}
+.map-control-btn{background:rgba(255,255,255,.94);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);transition:all .15s}
 .map-control-btn:hover{background:var(--surface2);border-color:var(--gold)}
-.map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(26,24,20,.92);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);color:var(--text)}
+.map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);color:var(--text)}
 .map-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .map-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
@@ -354,7 +354,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       </div>
       <div style="position:relative">
         <div id="map-container"></div>
-        <div id="zona-edit-bar" style="display:none;position:absolute;top:10px;left:10px;right:10px;z-index:1000;background:rgba(26,24,20,.95);border:1px solid var(--gold);border-radius:3px;padding:10px 14px;backdrop-filter:blur(8px)">
+        <div id="zona-edit-bar" style="display:none;position:absolute;top:10px;left:10px;right:10px;z-index:1000;background:rgba(255,255,255,.96);border:1px solid var(--gold);border-radius:3px;padding:10px 14px;backdrop-filter:blur(8px);box-shadow:var(--shadow-2)">
           <div style="font-size:13px;color:var(--text);margin-bottom:8px">Moví y hacé zoom hasta encuadrar tu zona de influencia. Después tocá "Guardar zona".</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="guardarZonaEdicion()" style="font-size:13px;padding:8px 14px">✓ Guardar zona</button>
@@ -2680,7 +2680,7 @@ function initEspMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   espMap = L.map('esp-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(espMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espMap);
   espMap.on('click', (e) => {
     setEspLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('esp-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -3015,7 +3015,7 @@ function initEspEditMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   espEditMap = L.map('esp-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(espEditMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espEditMap);
   espEditMap.on('click', (e) => {
     setEspEditLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('esp-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
