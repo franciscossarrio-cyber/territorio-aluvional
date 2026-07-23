@@ -2615,31 +2615,42 @@ function renderEspChecklist() {
     </label>`).join('');
 }
 
+function espMaterialMax(id) {
+  const item = ESP_CATALOGO_BASE.concat(...Object.values(ESP_CATALOGO_TIPO)).find(it => it.id === id);
+  return item && item.stock ? item.stock : null;
+}
+
 function renderEspMateriales() {
   const items = ESP_CATALOGO_BASE.concat(ESP_CATALOGO_TIPO[espTipoActual] || []);
   document.getElementById('esp-materiales-list').innerHTML = items.map(it => `
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.unidad}</div>
+        <div class="material-stock">${it.stock ? `${it.unidad} · Máx. ${it.stock}` : it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',-1)">−</button>
-        <input type="number" min="0" inputmode="numeric" class="stepper-val" id="esp-qty-${it.id}" value="0" onchange="espClampQty('esp-qty-${it.id}')">
+        <input type="number" min="0" ${it.stock ? `max="${it.stock}"` : ''} inputmode="numeric" class="stepper-val" id="esp-qty-${it.id}" value="0" onchange="espClampQty('esp-qty-${it.id}','${it.id}')">
         <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',1)">+</button>
       </div>
     </div>`).join('');
   document.getElementById('esp-otros-materiales-wrap').style.display = espTipoActual === 'otro' ? 'block' : 'none';
 }
 
-window.espClampQty = (elId) => {
+window.espClampQty = (elId, matId) => {
   const el = document.getElementById(elId);
-  el.value = Math.max(0, parseInt(el.value, 10) || 0);
+  const max = espMaterialMax(matId);
+  let val = Math.max(0, parseInt(el.value, 10) || 0);
+  if (max != null && val > max) { val = max; toast(`Máximo ${max} unidades para este material`, true); }
+  el.value = val;
 };
 
 window.espStepQty = (id, delta) => {
   const el = document.getElementById('esp-qty-'+id);
-  el.value = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
+  const max = espMaterialMax(id);
+  let val = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
+  if (max != null) val = Math.min(val, max);
+  el.value = val;
 };
 
 function renderEspResumen() {
@@ -2980,11 +2991,11 @@ function renderEspEditMateriales(materialesGuardados) {
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.unidad}</div>
+        <div class="material-stock">${it.stock ? `${it.unidad} · Máx. ${it.stock}` : it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',-1)">−</button>
-        <input type="number" min="0" inputmode="numeric" class="stepper-val" id="esp-edit-qty-${it.id}" value="${materialesGuardados[it.id] || 0}" onchange="espClampQty('esp-edit-qty-${it.id}')">
+        <input type="number" min="0" ${it.stock ? `max="${it.stock}"` : ''} inputmode="numeric" class="stepper-val" id="esp-edit-qty-${it.id}" value="${Math.min(materialesGuardados[it.id] || 0, it.stock || Infinity)}" onchange="espClampQty('esp-edit-qty-${it.id}','${it.id}')">
         <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',1)">+</button>
       </div>
     </div>`).join('');
@@ -2993,7 +3004,10 @@ function renderEspEditMateriales(materialesGuardados) {
 
 window.espEditStepQty = (id, delta) => {
   const el = document.getElementById('esp-edit-qty-'+id);
-  el.value = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
+  const max = espMaterialMax(id);
+  let val = Math.max(0, (parseInt(el.value, 10) || 0) + delta);
+  if (max != null) val = Math.min(val, max);
+  el.value = val;
 };
 
 function initEspEditMap() {
