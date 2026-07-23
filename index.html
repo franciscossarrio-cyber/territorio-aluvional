@@ -705,9 +705,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
             <div class="card-title" style="margin-bottom:0">Total de materiales pedidos</div>
-            <select class="map-filter-select" id="esp-resumen-nodo-select" onchange="renderEspResumenGeneral()">
-              <option value="todos">Todos los nodos</option>
-            </select>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="map-filter-select" id="esp-resumen-nodo-select" onchange="renderEspResumenGeneral()">
+                <option value="todos">Todos los nodos</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="exportEspResumenXLSX()">⬇ Exportar XLSX</button>
+            </div>
           </div>
           <div id="esp-resumen-general-meta" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
           <div id="esp-resumen-general-list"></div>
@@ -898,6 +901,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, browserLocalPersistence, setPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -2928,22 +2932,8 @@ window.espMostrarVista = (v) => {
   if (v === 'resumen') renderEspResumenGeneral();
 };
 
-function renderEspResumenGeneral() {
-  const listEl = document.getElementById('esp-resumen-general-list');
-  if (!listEl || currentUser.rol !== 'coordinador_general') return;
-
-  const sel = document.getElementById('esp-resumen-nodo-select');
-  if (sel && sel.options.length === 1) {
-    NODOS.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = n.nombre; sel.appendChild(o); });
-  }
-  const nodoFiltro = sel ? sel.value : 'todos';
+function getEspResumenFilas(nodoFiltro) {
   const espaciosFiltrados = nodoFiltro === 'todos' ? espacios : espacios.filter(e => e.nodo_id === nodoFiltro);
-
-  const nodosConPedidos = new Set(espaciosFiltrados.filter(e => e.materiales && Object.keys(e.materiales).length).map(e => e.nodo_id));
-  document.getElementById('esp-resumen-general-meta').textContent = nodoFiltro === 'todos'
-    ? `${espaciosFiltrados.length} espacio(s) relevado(s) · ${nodosConPedidos.size} nodo(s) con pedidos`
-    : `${espaciosFiltrados.length} espacio(s) relevado(s) en este nodo`;
-
   const items = ESP_CATALOGO_BASE.concat(...Object.values(ESP_CATALOGO_TIPO));
   const totales = {};
   espaciosFiltrados.forEach(e => {
@@ -2955,6 +2945,25 @@ function renderEspResumenGeneral() {
     .map(it => ({...it, total: totales[it.id] || 0}))
     .filter(it => it.total > 0)
     .sort((a, b) => b.total - a.total);
+  return { espaciosFiltrados, filas };
+}
+
+function renderEspResumenGeneral() {
+  const listEl = document.getElementById('esp-resumen-general-list');
+  if (!listEl || currentUser.rol !== 'coordinador_general') return;
+
+  const sel = document.getElementById('esp-resumen-nodo-select');
+  if (sel && sel.options.length === 1) {
+    NODOS.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = n.nombre; sel.appendChild(o); });
+  }
+  const nodoFiltro = sel ? sel.value : 'todos';
+  const { espaciosFiltrados, filas } = getEspResumenFilas(nodoFiltro);
+
+  const nodosConPedidos = new Set(espaciosFiltrados.filter(e => e.materiales && Object.keys(e.materiales).length).map(e => e.nodo_id));
+  document.getElementById('esp-resumen-general-meta').textContent = nodoFiltro === 'todos'
+    ? `${espaciosFiltrados.length} espacio(s) relevado(s) · ${nodosConPedidos.size} nodo(s) con pedidos`
+    : `${espaciosFiltrados.length} espacio(s) relevado(s) en este nodo`;
+
   listEl.innerHTML = filas.length ? filas.map(it => `
     <div class="material-row">
       <div class="material-info">
@@ -2964,6 +2973,28 @@ function renderEspResumenGeneral() {
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
     </div>`).join('') : `<div style="color:var(--dim);font-size:14px">Todavía no hay materiales pedidos.</div>`;
 }
+
+window.exportEspResumenXLSX = () => {
+  const sel = document.getElementById('esp-resumen-nodo-select');
+  const nodoFiltro = sel ? sel.value : 'todos';
+  const { filas } = getEspResumenFilas(nodoFiltro);
+  if (!filas.length) { toast('No hay materiales pedidos para exportar', true); return; }
+
+  const nodoLabel = nodoFiltro === 'todos' ? 'Todos los nodos' : (NODOS.find(n => n.id === nodoFiltro)?.nombre || nodoFiltro);
+  const data = [
+    ['Resumen de pedidos - Recuperación de Espacios Públicos'],
+    [nodoLabel],
+    [],
+    ['Material', 'Unidad', 'Total pedido'],
+    ...filas.map(it => [it.nombre, it.unidad, it.total])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:42},{wch:14},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Resumen de pedidos');
+  XLSX.writeFile(wb, `resumen_pedidos_${nodoFiltro}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('XLSX exportado');
+};
 
 function renderEspacios() {
   const card = document.getElementById('esp-list-card');
