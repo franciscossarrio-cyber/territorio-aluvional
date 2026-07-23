@@ -2626,7 +2626,7 @@ function renderEspMateriales() {
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.stock ? `${it.unidad} · Máx. ${it.stock}` : it.unidad}</div>
+        <div class="material-stock">${it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espStepQty('${it.id}',-1)">−</button>
@@ -2991,7 +2991,7 @@ function renderEspEditMateriales(materialesGuardados) {
     <div class="material-row" data-mat-id="${it.id}">
       <div class="material-info">
         <div class="material-name">${it.nombre}</div>
-        <div class="material-stock">${it.stock ? `${it.unidad} · Máx. ${it.stock}` : it.unidad}</div>
+        <div class="material-stock">${it.unidad}</div>
       </div>
       <div class="stepper">
         <button type="button" class="stepper-btn" onclick="espEditStepQty('${it.id}',-1)">−</button>
