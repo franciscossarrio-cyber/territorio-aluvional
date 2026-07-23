@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bonaerenses-v1';
+const CACHE_NAME = 'bonaerenses-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -30,10 +30,17 @@ self.addEventListener('activate', event => {
 
 // Fetch: network first, fallback to cache
 self.addEventListener('fetch', event => {
-  // No cachear requests de Firebase (auth, firestore)
+  // Nunca interceptar requests que no son GET (uploads a Storage, escrituras, etc.):
+  // re-emitir un Request con body binario desde el service worker es frágil y en
+  // varios navegadores móviles hace fallar la subida de fotos silenciosamente.
+  if (event.request.method !== 'GET') return;
+
+  // No cachear requests de Firebase (auth, firestore, storage)
   if (event.request.url.includes('firebaseapp.com') ||
       event.request.url.includes('googleapis.com/identitytoolkit') ||
       event.request.url.includes('firestore.googleapis.com') ||
+      event.request.url.includes('firebasestorage.googleapis.com') ||
+      event.request.url.includes('firebasestorage.app') ||
       event.request.url.includes('gstatic.com/firebasejs')) {
     return;
   }

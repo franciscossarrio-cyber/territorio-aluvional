@@ -603,13 +603,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
           <div class="field" style="margin-bottom:8px"><span class="field-label">Registro fotográfico</span></div>
           <div class="photo-grid">
-            <div class="photo-slot" id="esp-foto-slot-acceso" onclick="document.getElementById('esp-foto-input-acceso').click()">
+            <div class="photo-slot" id="esp-foto-slot-acceso" onclick="espFotoSlotClick('acceso')">
               <span style="font-size:22px">📸</span><span class="photo-slot-label">Acceso o fachada</span>
             </div>
-            <div class="photo-slot" id="esp-foto-slot-critica" onclick="document.getElementById('esp-foto-input-critica').click()">
+            <div class="photo-slot" id="esp-foto-slot-critica" onclick="espFotoSlotClick('critica')">
               <span style="font-size:22px">📸</span><span class="photo-slot-label">Zona más deteriorada</span>
             </div>
-            <div class="photo-slot" id="esp-foto-slot-general" onclick="document.getElementById('esp-foto-input-general').click()">
+            <div class="photo-slot" id="esp-foto-slot-general" onclick="espFotoSlotClick('general')">
               <span style="font-size:22px">📸</span><span class="photo-slot-label">Vista general</span>
             </div>
           </div>
@@ -939,7 +939,7 @@ let map = null, markers = [], userMarker = null;
 let mapFilterNodo = 'todos';
 let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false };
 let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null, unsubEspacios = null;
-let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendientes = false;
+let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendientes = false, espFotosRaw = {};
 let preguntasCustom = [];
 let camposOcultos = [];
 let zonaInfluencia = null;
@@ -2533,7 +2533,7 @@ const ESP_CATALOGO_TIPO = {
 };
 
 function resetEspWizard() {
-  espTipoActual = null; espEscalaActual = null; espFotos = {}; espFotosPendientes = false;
+  espTipoActual = null; espEscalaActual = null; espFotos = {}; espFotosPendientes = false; espFotosRaw = {};
   const nombreEl = document.getElementById('esp-nombre'); if (nombreEl) nombreEl.value = '';
   const dirEl = document.getElementById('esp-dir'); if (dirEl) dirEl.value = '';
   const latEl = document.getElementById('esp-lat'); if (latEl) latEl.value = '';
@@ -2773,22 +2773,53 @@ async function subirFotoEspacio(file, slot) {
   }
 }
 
+window.espFotoSlotClick = (slot) => {
+  // Si hay una foto que falló al subir, reintentar con el mismo archivo
+  // en vez de abrir la cámara de nuevo (evita perder la foto ya sacada).
+  if (espFotosRaw[slot] && !espFotos[slot]) {
+    reintentarEspFoto(slot);
+  } else {
+    document.getElementById('esp-foto-input-'+slot).click();
+  }
+};
+
+async function subirEspFotoConReintento(file, slot, slotEl) {
+  const statusEl = slotEl.querySelector('.photo-slot-status');
+  const url = await subirFotoEspacio(file, slot);
+  if (url) {
+    espFotos[slot] = url;
+    delete espFotosRaw[slot];
+    if (statusEl) statusEl.textContent = '✓';
+    slotEl.title = '';
+    return true;
+  } else {
+    espFotosRaw[slot] = file;
+    espFotosPendientes = true;
+    if (statusEl) statusEl.textContent = '⚠️';
+    slotEl.title = 'No se pudo subir (sin señal). Tocá la foto para reintentar.';
+    return false;
+  }
+}
+
+async function reintentarEspFoto(slot) {
+  const file = espFotosRaw[slot];
+  if (!file) return;
+  const slotEl = document.getElementById('esp-foto-slot-'+slot);
+  const statusEl = slotEl.querySelector('.photo-slot-status');
+  if (statusEl) statusEl.textContent = '⏳';
+  const ok = await subirEspFotoConReintento(file, slot, slotEl);
+  if (!ok) toast('Sigue sin poder subirse. Se guardará como pendiente.', true);
+};
+
 window.handleEspFoto = async (input, slot) => {
   const file = input.files[0];
+  input.value = '';
   if (!file) return;
   const slotEl = document.getElementById('esp-foto-slot-'+slot);
   const previewUrl = URL.createObjectURL(file);
   slotEl.innerHTML = `<img src="${previewUrl}"><span class="photo-slot-status">⏳</span>`;
-  const url = await subirFotoEspacio(file, slot);
-  const statusEl = slotEl.querySelector('.photo-slot-status');
-  if (url) {
-    espFotos[slot] = url;
-    statusEl.textContent = '✓';
-  } else {
-    espFotosPendientes = true;
-    statusEl.textContent = '⚠️';
-    slotEl.title = 'No se pudo subir (sin señal). Se guardará como pendiente.';
-  }
+  const ok = await subirEspFotoConReintento(file, slot, slotEl);
+  if (!ok) toast('No se pudo subir la foto (sin señal). Quedó guardada para reintentar.', true);
 };
 
 // Guardado
@@ -2805,6 +2836,12 @@ window.guardarEspacio = async () => {
     const qty = parseInt(document.getElementById('esp-qty-'+id).value, 10) || 0;
     if (qty > 0) materiales[id] = qty;
   });
+  // Último intento de subir fotos que hayan quedado pendientes (p.ej. por falta
+  // de señal al sacarlas) antes de guardar, para no perderlas si ya hay conexión.
+  for (const slot of Object.keys(espFotosRaw)) {
+    const slotEl = document.getElementById('esp-foto-slot-'+slot);
+    if (slotEl) await subirEspFotoConReintento(espFotosRaw[slot], slot, slotEl);
+  }
   try {
     await addDoc(collection(db, 'espacios_publicos'), {
       nodo_id: currentUser.nodo_id,
