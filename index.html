@@ -592,6 +592,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div class="section" id="sec-espacios">
       <div><div class="section-title">Recuperación de Espacios Públicos</div><div class="section-sub">Relevá el espacio, diagnosticá y pedí los materiales que necesita la jornada.</div></div>
 
+      <div id="esp-subnav" style="display:none;gap:8px;margin-bottom:2px">
+        <button class="map-filter-btn active" id="esp-tab-cargar" onclick="espMostrarVista('cargar')" style="padding:8px 14px;font-size:12.5px">＋ Cargar espacio</button>
+        <button class="map-filter-btn" id="esp-tab-resumen" onclick="espMostrarVista('resumen')" style="padding:8px 14px;font-size:12.5px">📊 Resumen de pedidos (todos los nodos)</button>
+      </div>
+
+      <div id="esp-vista-cargar">
       <div class="card">
         <div class="step-indicator" id="esp-step-label">Paso 1 de 4 · Ubicación y diagnóstico</div>
 
@@ -692,6 +698,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <div class="card" id="esp-list-card" style="display:none">
         <div class="card-title">Espacios relevados (<span id="esp-count">0</span>)</div>
         <div id="esp-list"></div>
+      </div>
+      </div>
+
+      <div id="esp-vista-resumen" style="display:none">
+        <div class="card">
+          <div class="card-title">Total de materiales pedidos · todos los nodos</div>
+          <div id="esp-resumen-general-meta" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
+          <div id="esp-resumen-general-list"></div>
+        </div>
       </div>
     </div>
 
@@ -1300,6 +1315,8 @@ window.abrirPrograma = (id) => {
     document.getElementById('nav').style.display = 'none';
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('sec-espacios').classList.add('active');
+    document.getElementById('esp-subnav').style.display = currentUser.rol === 'coordinador_general' ? 'flex' : 'none';
+    espMostrarVista('cargar');
     resetEspWizard();
   } else {
     const titulos = { ollas: 'Ollas Populares' };
@@ -2898,6 +2915,41 @@ window.guardarEspacio = async () => {
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
+window.espMostrarVista = (v) => {
+  document.getElementById('esp-vista-cargar').style.display = v === 'cargar' ? 'block' : 'none';
+  document.getElementById('esp-vista-resumen').style.display = v === 'resumen' ? 'block' : 'none';
+  document.getElementById('esp-tab-cargar').classList.toggle('active', v === 'cargar');
+  document.getElementById('esp-tab-resumen').classList.toggle('active', v === 'resumen');
+  if (v === 'resumen') renderEspResumenGeneral();
+};
+
+function renderEspResumenGeneral() {
+  const listEl = document.getElementById('esp-resumen-general-list');
+  if (!listEl || currentUser.rol !== 'coordinador_general') return;
+  const nodosConPedidos = new Set(espacios.filter(e => e.materiales && Object.keys(e.materiales).length).map(e => e.nodo_id));
+  document.getElementById('esp-resumen-general-meta').textContent =
+    `${espacios.length} espacio(s) relevado(s) · ${nodosConPedidos.size} nodo(s) con pedidos`;
+  const items = ESP_CATALOGO_BASE.concat(...Object.values(ESP_CATALOGO_TIPO));
+  const totales = {};
+  espacios.forEach(e => {
+    Object.entries(e.materiales || {}).forEach(([matId, qty]) => {
+      totales[matId] = (totales[matId] || 0) + (parseInt(qty, 10) || 0);
+    });
+  });
+  const filas = items
+    .map(it => ({...it, total: totales[it.id] || 0}))
+    .filter(it => it.total > 0)
+    .sort((a, b) => b.total - a.total);
+  listEl.innerHTML = filas.length ? filas.map(it => `
+    <div class="material-row">
+      <div class="material-info">
+        <div class="material-name">${it.nombre}</div>
+        <div class="material-stock">${it.unidad}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:14px">Todavía no hay materiales pedidos.</div>`;
+}
+
 function renderEspacios() {
   const card = document.getElementById('esp-list-card');
   if (!card) return;
@@ -3169,7 +3221,7 @@ window.eliminarEspacioDesdeEdit = async () => {
 
 function renderAll() {
   if (!currentUser) return;
-  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos(); renderEspacios();
+  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos(); renderEspacios(); renderEspResumenGeneral();
   if (currentTab === 'mapa') updateMap();
   if (currentTab === 'territorio') updateMzMap();
 }
