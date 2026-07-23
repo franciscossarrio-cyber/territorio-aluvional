@@ -2992,7 +2992,15 @@ window.exportEspResumenXLSX = () => {
   ws['!cols'] = [{wch:42},{wch:14},{wch:14}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Resumen de pedidos');
-  XLSX.writeFile(wb, `resumen_pedidos_${nodoFiltro}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  const wbArray = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([wbArray], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `resumen_pedidos_${nodoFiltro}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
   toast('XLSX exportado');
 };
 
