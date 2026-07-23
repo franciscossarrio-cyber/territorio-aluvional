@@ -703,7 +703,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
       <div id="esp-vista-resumen" style="display:none">
         <div class="card">
-          <div class="card-title">Total de materiales pedidos · todos los nodos</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+            <div class="card-title" style="margin-bottom:0">Total de materiales pedidos</div>
+            <select class="map-filter-select" id="esp-resumen-nodo-select" onchange="renderEspResumenGeneral()">
+              <option value="todos">Todos los nodos</option>
+            </select>
+          </div>
           <div id="esp-resumen-general-meta" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
           <div id="esp-resumen-general-list"></div>
         </div>
@@ -2926,12 +2931,22 @@ window.espMostrarVista = (v) => {
 function renderEspResumenGeneral() {
   const listEl = document.getElementById('esp-resumen-general-list');
   if (!listEl || currentUser.rol !== 'coordinador_general') return;
-  const nodosConPedidos = new Set(espacios.filter(e => e.materiales && Object.keys(e.materiales).length).map(e => e.nodo_id));
-  document.getElementById('esp-resumen-general-meta').textContent =
-    `${espacios.length} espacio(s) relevado(s) · ${nodosConPedidos.size} nodo(s) con pedidos`;
+
+  const sel = document.getElementById('esp-resumen-nodo-select');
+  if (sel && sel.options.length === 1) {
+    NODOS.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = n.nombre; sel.appendChild(o); });
+  }
+  const nodoFiltro = sel ? sel.value : 'todos';
+  const espaciosFiltrados = nodoFiltro === 'todos' ? espacios : espacios.filter(e => e.nodo_id === nodoFiltro);
+
+  const nodosConPedidos = new Set(espaciosFiltrados.filter(e => e.materiales && Object.keys(e.materiales).length).map(e => e.nodo_id));
+  document.getElementById('esp-resumen-general-meta').textContent = nodoFiltro === 'todos'
+    ? `${espaciosFiltrados.length} espacio(s) relevado(s) · ${nodosConPedidos.size} nodo(s) con pedidos`
+    : `${espaciosFiltrados.length} espacio(s) relevado(s) en este nodo`;
+
   const items = ESP_CATALOGO_BASE.concat(...Object.values(ESP_CATALOGO_TIPO));
   const totales = {};
-  espacios.forEach(e => {
+  espaciosFiltrados.forEach(e => {
     Object.entries(e.materiales || {}).forEach(([matId, qty]) => {
       totales[matId] = (totales[matId] || 0) + (parseInt(qty, 10) || 0);
     });
