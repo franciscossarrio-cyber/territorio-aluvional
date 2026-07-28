@@ -350,6 +350,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <button id="mfl-instituciones" class="map-filter-btn active" onclick="toggleMapLayer('instituciones')">Instituciones</button>
         <button id="mfl-analfabetos" class="map-filter-btn" onclick="toggleMapLayer('analfabetos')">Analfabetos</button>
         <button id="mfl-alfabetizadores" class="map-filter-btn" onclick="toggleMapLayer('alfabetizadores')">Alfab. pot.</button>
+        <button id="mfl-espacios" class="map-filter-btn active" onclick="toggleMapLayer('espacios')">Espacios públicos</button>
+        <button id="mfl-ollas" class="map-filter-btn active" onclick="toggleMapLayer('ollas')">🍲 Ollas</button>
+        <button id="mfl-puntosciegos" class="map-filter-btn active" onclick="toggleMapLayer('puntosciegos')">Puntos ciegos</button>
         <button id="btn-editar-zona" class="map-filter-btn" onclick="iniciarEdicionZona()" style="display:none;margin-left:auto">📍 Configurar zona de influencia</button>
       </div>
       <div style="position:relative">
@@ -371,6 +374,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--green)"></div> Alfabetizador pot.</div>
           <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--blue)"></div> Visita estándar</div>
           <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--gold)"></div> Institución</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#8a5cf6"></div> Espacio público</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#c86a2c"></div> Olla popular</div>
+          <div class="map-legend-item"><div class="map-legend-dot" style="background:#c94b4b"></div> Punto ciego</div>
         </div>
       </div>
       <div class="stats" id="map-stats"></div>
@@ -1462,7 +1468,7 @@ let isRegistering = false;
 let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [], espacios = [], ollas = [];
 let map = null, markers = [], userMarker = null;
 let mapFilterNodo = 'todos';
-let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false };
+let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false, espacios: true, ollas: true, puntosciegos: true };
 let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null, unsubEspacios = null, unsubOllas = null;
 let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendientes = false, espFotosRaw = {};
 let ollaObjetivoActual = null, ollaFrecuenciaActual = null, ollaLugarActual = null, ollaSistemaActual = null, ollaModalidadActual = null;
@@ -2880,6 +2886,8 @@ function updateMap() {
   const fVisitas = byNodo(visitas);
   const fInst = byNodo(instituciones);
   const fManzanas = byNodo(manzanas);
+  const fEspacios = byNodo(espacios);
+  const fOllas = byNodo(ollas);
 
   fVisitas.forEach(v => {
     if (!v.lat||!v.lng) return;
@@ -2917,6 +2925,42 @@ function updateMap() {
     });
   }
 
+  if (mapActiveLayers.espacios) {
+    fEspacios.forEach(e => {
+      if (!e.lat||!e.lng) return;
+      const nodoName = NODOS.find(n => n.id === e.nodo_id)?.nombre || '';
+      const m = L.marker([e.lat,e.lng],{icon:mkIcon('#8a5cf6',14)}).addTo(map)
+        .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🌳 ${e.nombre}</b><br>${ESP_TIPO_LABELS[e.tipo]||e.tipo}${nodoName?' · '+nodoName:''}${e.escala?'<br>Escala: '+(ESP_ESCALA_LABELS[e.escala]||e.escala):''}${e.direccion?'<br>📍 '+e.direccion:''}</div>`);
+      markers.push(m);
+    });
+  }
+
+  if (mapActiveLayers.ollas) {
+    fOllas.forEach(o => {
+      if (!o.lat||!o.lng) return;
+      const nodoName = NODOS.find(n => n.id === o.nodo_id)?.nombre || '';
+      const m = L.marker([o.lat,o.lng],{icon:mkIcon('#c86a2c',14)}).addTo(map)
+        .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🍲 ${o.nombre}</b><br>${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}${nodoName?' · '+nodoName:''}${o.porciones_jornada?'<br>'+o.porciones_jornada+' porciones × '+(o.jornadas_mes||0)+' jornadas/mes':''}${o.indice_cobertura?'<br>'+(OLLA_COBERTURA_LABELS[o.indice_cobertura]||o.indice_cobertura):''}${o.cupa?'<br><span style="font-family:monospace;font-size:11px">'+o.cupa+'</span>':''}</div>`);
+      markers.push(m);
+    });
+  }
+
+  if (mapActiveLayers.puntosciegos) {
+    fOllas.forEach(o => {
+      (o.puntos_ciegos||[]).forEach(p => {
+        const estilo = {color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15, weight:2};
+        const popup = `<div style="font-family:'EB Garamond',serif;font-size:14px"><b>⚠ ${p.nombre_zona}</b><br>Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]||p.prioridad}<br>${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>`;
+        let capa = null;
+        if (p.tipo_marcacion === 'radio' && p.lat && p.lng) {
+          capa = L.circle([p.lat,p.lng], {...estilo, radius: p.radio_m || 300}).addTo(map).bindPopup(popup);
+        } else if (p.tipo_marcacion === 'poligono' && p.puntos && p.puntos.length >= 3) {
+          capa = L.polygon(p.puntos.map(v => [v.lat,v.lng]), estilo).addTo(map).bindPopup(popup);
+        }
+        if (capa) markers.push(capa);
+      });
+    });
+  }
+
   const zonaFrizada = esCoordNodo() && validarZona(zonaInfluencia) && !modoEdicionZona;
   if (markers.length && !zonaFrizada) fitMapToMarkers();
   const geoV = fVisitas.filter(v=>v.lat&&v.lng).length;
@@ -2925,7 +2969,9 @@ function updateMap() {
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${geoV}</div><div class="stat-label">Con GPS</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--red)">${fVisitas.filter(v=>v.analfabeto).length}</div><div class="stat-label">Analfabetos</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--green)">${fVisitas.filter(v=>v.dispuesto_alfabetizar==='si'||v.dispuesto_alfabetizar===true).length}</div><div class="stat-label">Alfab. pot.</div></div>
-    <div class="stat"><div class="stat-val" style="color:var(--gold)">${fInst.length}</div><div class="stat-label">Instituciones</div></div>`;
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${fInst.length}</div><div class="stat-label">Instituciones</div></div>
+    <div class="stat"><div class="stat-val" style="color:#8a5cf6">${fEspacios.length}</div><div class="stat-label">Espacios públicos</div></div>
+    <div class="stat"><div class="stat-val" style="color:#c86a2c">${fOllas.length}</div><div class="stat-label">Ollas</div></div>`;
 }
 
 window.fitMapToMarkers = () => { if (!map||!markers.length) return; map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1)); };
