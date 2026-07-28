@@ -2819,6 +2819,14 @@ function zonaToLatLngBounds(zona) {
   return L.latLngBounds([zona.sw.lat, zona.sw.lng], [zona.ne.lat, zona.ne.lng]);
 }
 
+// Dibuja la zona de influencia del nodo como referencia visual en los mapas
+// de carga/edición de Espacios Públicos y Ollas Populares (no restringe el
+// mapa, solo la muestra; esa restricción es exclusiva del Mapa general).
+function mostrarZonaInfluenciaEnMapa(mapa) {
+  if (!validarZona(zonaInfluencia)) return;
+  L.rectangle(zonaToLatLngBounds(zonaInfluencia), {color:'#d4a017', weight:2, fill:false, dashArray:'6,6', interactive:false}).addTo(mapa);
+}
+
 function aplicarRestriccionMapa() {
   if (!map) return;
   if (modoEdicionZona || !esCoordNodo() || !validarZona(zonaInfluencia)) {
@@ -3291,6 +3299,7 @@ function initEspMap() {
   espMap = L.map('esp-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espMap);
+  mostrarZonaInfluenciaEnMapa(espMap);
   espMap.on('click', (e) => {
     setEspLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('esp-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -3706,6 +3715,7 @@ function initEspEditMap() {
   espEditMap = L.map('esp-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espEditMap);
+  mostrarZonaInfluenciaEnMapa(espEditMap);
   espEditMap.on('click', (e) => {
     setEspEditLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('esp-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -4452,6 +4462,7 @@ function initOllaMap() {
   ollaMap = L.map('olla-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaMap);
+  mostrarZonaInfluenciaEnMapa(ollaMap);
   ollaMap.on('click', (e) => {
     setOllaLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('olla-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -4707,6 +4718,7 @@ function initOllaEditMap() {
   ollaEditMap = L.map('olla-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaEditMap);
+  mostrarZonaInfluenciaEnMapa(ollaEditMap);
   ollaEditMap.on('click', (e) => {
     setOllaEditLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('olla-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
