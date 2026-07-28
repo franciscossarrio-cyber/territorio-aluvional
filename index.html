@@ -895,13 +895,142 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           </div>
         </div>
 
-        <!-- PASO 5: Resumen y guardado -->
+        <!-- PASO 5: Red alimentaria y puntos ciegos -->
         <div id="olla-step-5" style="display:none">
-          <div class="card-title">Revisá antes de guardar</div>
+          <div class="card-title" style="font-size:14px">Dispositivos de asistencia alimentaria cercanos</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Registrá otros comedores, merenderos o puntos de entrega en la zona para evitar superponer esfuerzos. Es opcional.</div>
+          <div id="olla-disp-list" style="margin-bottom:10px"></div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispAbrirForm()">＋ Registrar dispositivo cercano</button>
+
+          <div id="olla-disp-form" style="display:none;margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
+            <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre o identificación</span><input id="olla-disp-nombre" placeholder="Comedor San Cayetano, Merendero Caritas Felices..." style="font-size:14px;padding:10px"></div>
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Tipo de dispositivo</span>
+              <div class="toggle-group" id="olla-disp-tipo-group" style="grid-template-columns:1fr">
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-tipo="olla_comedor" onclick="selectOllaDispTipo('olla_comedor')">Olla Popular / Comedor (comida caliente)</div>
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-tipo="merendero" onclick="selectOllaDispTipo('merendero')">Merendero / Copa de leche</div>
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-tipo="entrega_viandas" onclick="selectOllaDispTipo('entrega_viandas')">Punto de entrega de viandas / bolsas</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Referencia política / organizativa</span>
+              <div class="toggle-group" id="olla-disp-ref-group">
+                <div class="toggle-btn" data-ref="organizacion_social" onclick="selectOllaDispRef('organizacion_social')">Organización social / militante</div>
+                <div class="toggle-btn" data-ref="iglesia_club" onclick="selectOllaDispRef('iglesia_club')">Iglesia / Club / Entidad de bien público</div>
+                <div class="toggle-btn" data-ref="vecinos_independientes" onclick="selectOllaDispRef('vecinos_independientes')">Vecinos independientes</div>
+                <div class="toggle-btn" data-ref="estatal_municipal" onclick="selectOllaDispRef('estatal_municipal')">Estatal / Municipal</div>
+                <div class="toggle-btn" style="grid-column:span 2" data-ref="sin_datos" onclick="selectOllaDispRef('sin_datos')">Sin datos / No especifica</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:8px"><span class="field-label">Días de funcionamiento aproximados</span></div>
+            <div class="checkbox-row" id="olla-disp-dias-list" style="margin-bottom:10px">
+              <label><input type="checkbox" value="lunes"> Lunes</label>
+              <label><input type="checkbox" value="martes"> Martes</label>
+              <label><input type="checkbox" value="miercoles"> Miércoles</label>
+              <label><input type="checkbox" value="jueves"> Jueves</label>
+              <label><input type="checkbox" value="viernes"> Viernes</label>
+              <label><input type="checkbox" value="sabado"> Sábado</label>
+              <label><input type="checkbox" value="domingo"> Domingo</label>
+            </div>
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Frecuencia estimada</span>
+              <div class="toggle-group" id="olla-disp-frecuencia-group">
+                <div class="toggle-btn" data-frec="diaria" onclick="selectOllaDispFrecuencia('diaria')">Diaria</div>
+                <div class="toggle-btn" data-frec="2_3_semana" onclick="selectOllaDispFrecuencia('2_3_semana')">2 a 3 veces por semana</div>
+                <div class="toggle-btn" data-frec="semanal" onclick="selectOllaDispFrecuencia('semanal')">Semanal</div>
+                <div class="toggle-btn" data-frec="esporadica" onclick="selectOllaDispFrecuencia('esporadica')">Esporádica</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:8px"><span class="field-label">Ubicación</span></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+              <button class="btn btn-secondary" onclick="captureOllaDispLoc()" style="font-size:14px;padding:10px 14px">📍 Usar mi ubicación actual</button>
+              <span id="olla-disp-loc-status" style="font-size:13px;color:var(--dim)"></span>
+            </div>
+            <div id="olla-disp-map-container" style="width:100%;height:180px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px"></div>
+            <input type="hidden" id="olla-disp-lat"><input type="hidden" id="olla-disp-lng">
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" onclick="ollaDispCancelar()">Cancelar</button>
+              <button class="btn btn-primary" onclick="ollaDispGuardar()">Agregar dispositivo</button>
+            </div>
+          </div>
+
+          <div class="card-title" style="font-size:14px;margin-top:26px">Puntos ciegos (zonas sin cobertura)</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marcá zonas con población vulnerable donde no hay ningún dispositivo a menos de 5-8 cuadras. Es opcional.</div>
+          <div id="olla-pc-list" style="margin-bottom:10px"></div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcAbrirForm()">＋ Marcar punto ciego</button>
+
+          <div id="olla-pc-form" style="display:none;margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Tipo de marcación</span>
+              <div class="toggle-group" id="olla-pc-tipo-group">
+                <div class="toggle-btn" data-tipo="radio" onclick="selectOllaPcTipo('radio')">Por radio (punto)</div>
+                <div class="toggle-btn" data-tipo="poligono" onclick="selectOllaPcTipo('poligono')">Por polígono (área)</div>
+              </div>
+            </div>
+            <div id="olla-pc-radio-wrap" style="display:none;margin-bottom:10px">
+              <div class="field" style="margin-bottom:6px">
+                <span class="field-label">Radio</span>
+                <div class="toggle-group" id="olla-pc-radio-group">
+                  <div class="toggle-btn" data-radio="100" onclick="selectOllaPcRadio(100)">100 m</div>
+                  <div class="toggle-btn" data-radio="300" onclick="selectOllaPcRadio(300)">300 m</div>
+                  <div class="toggle-btn" data-radio="500" onclick="selectOllaPcRadio(500)">500 m</div>
+                </div>
+              </div>
+              <div style="font-size:12.5px;color:var(--dim)">Tocá el mapa para ubicar el centro de la zona.</div>
+            </div>
+            <div id="olla-pc-poligono-wrap" style="display:none;margin-bottom:10px">
+              <div style="font-size:12.5px;color:var(--dim);margin-bottom:6px">Tocá el mapa para agregar cada vértice (mínimo 3, máximo 6).</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcDeshacerPunto()">↩ Deshacer último punto</button>
+                <span id="olla-pc-poligono-count" style="font-size:13px;color:var(--dim)">0 puntos</span>
+              </div>
+            </div>
+            <div id="olla-pc-map-container" style="width:100%;height:220px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin:10px 0"></div>
+
+            <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre de la zona / sector</span><input id="olla-pc-nombre" placeholder="Manzanas del fondo del arroyo, Barrio Nuevo..." style="font-size:14px;padding:10px"></div>
+            <div class="field" style="margin-bottom:8px"><span class="field-label">Población afectada predominante</span></div>
+            <div class="checkbox-row" id="olla-pc-poblacion-list" style="margin-bottom:10px">
+              <label><input type="checkbox" value="familias_escolares"> Familias con pibes en edad escolar</label>
+              <label><input type="checkbox" value="adultos_mayores"> Adultos mayores / Jubilados</label>
+              <label><input type="checkbox" value="situacion_calle"> Situación de calle / extrema vulnerabilidad</label>
+              <label><input type="checkbox" value="trabajadores_informales"> Trabajadores informales / changarines</label>
+            </div>
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Causa de la falta de cobertura</span>
+              <div class="toggle-group" id="olla-pc-causa-group" style="grid-template-columns:1fr">
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-causa="zona_reciente" onclick="selectOllaPcCausa('zona_reciente')">Zona de reciente formación / crecimiento poblacional</div>
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-causa="lejania" onclick="selectOllaPcCausa('lejania')">Lejanía a arterias principales o comedores existentes</div>
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-causa="cierre_reciente" onclick="selectOllaPcCausa('cierre_reciente')">Cierre reciente de un espacio comunitario previo</div>
+                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-causa="inexistencia_referentes" onclick="selectOllaPcCausa('inexistencia_referentes')">Inexistencia de referentes o infraestructura local</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:10px">
+              <span class="field-label">Prioridad sugerida</span>
+              <div class="toggle-group" id="olla-pc-prioridad-group">
+                <div class="toggle-btn" data-prioridad="alta" onclick="selectOllaPcPrioridad('alta')">Alta</div>
+                <div class="toggle-btn" data-prioridad="media" onclick="selectOllaPcPrioridad('media')">Media</div>
+                <div class="toggle-btn" data-prioridad="baja" onclick="selectOllaPcPrioridad('baja')">Baja</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" onclick="ollaPcCancelar()">Cancelar</button>
+              <button class="btn btn-primary" onclick="ollaPcGuardar()">Agregar punto ciego</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(4)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextOllaStep(6)">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- PASO 6: Resumen y confirmación -->
+        <div id="olla-step-6" style="display:none">
+          <div class="card-title">Revisá antes de confirmar</div>
           <div id="olla-resumen" style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:18px"></div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(4)">← Atrás</button>
-            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="guardarOlla()">✓ Guardar olla</button>
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(5)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="guardarOlla()">✓ Confirmar registro y generar CUPA</button>
           </div>
         </div>
       </div>
@@ -928,6 +1057,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div id="olla-resumen-consumo-list" style="margin-bottom:18px"></div>
           <div class="card-title" style="font-size:14px">Equipamiento pedido a Tolosa</div>
           <div id="olla-resumen-equipo-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Cobertura territorial</div>
+          <div class="stats" id="olla-resumen-cobertura-stats" style="margin-bottom:14px"></div>
+          <div class="card-title" style="font-size:14px">Puntos ciegos de prioridad alta</div>
+          <div id="olla-resumen-puntos-ciegos-list"></div>
         </div>
       </div>
     </div>
@@ -1230,6 +1366,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div class="field" style="margin-bottom:8px"><span class="field-label">Necesidades de infraestructura</span></div>
     <div id="olla-edit-necesidades-list"></div>
 
+    <div id="olla-edit-red-alimentaria" style="margin-top:16px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--muted);display:none"></div>
+
     <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary" onclick="guardarEdicionOlla()">Guardar cambios</button>
       <button class="btn btn-secondary" onclick="cerrarEditOllaModal()">Cancelar</button>
@@ -1330,6 +1468,9 @@ let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendien
 let ollaObjetivoActual = null, ollaFrecuenciaActual = null, ollaLugarActual = null, ollaSistemaActual = null, ollaModalidadActual = null;
 let ollaPadronActual = [];
 let ollaPadronCtx = { arr: [], containerId: 'olla-padron-list' };
+let ollaDispositivosActual = [], ollaPuntosCiegosActual = [];
+let ollaDispTipoActual = null, ollaDispRefActual = null, ollaDispFrecuenciaActual = null;
+let ollaPcTipoActual = null, ollaPcRadioActual = null, ollaPcCausaActual = null, ollaPcPrioridadActual = null, ollaPcPoligonoPuntos = [];
 let preguntasCustom = [];
 let camposOcultos = [];
 let zonaInfluencia = null;
@@ -3689,13 +3830,19 @@ function resetOllaWizard() {
   document.getElementById('olla-equipamiento-list').innerHTML = '';
   document.getElementById('olla-necesidades-list').innerHTML = '';
   renderOllaPadronList();
+  ollaDispositivosActual = [];
+  ollaPuntosCiegosActual = [];
+  ollaDispCancelar();
+  ollaPcCancelar();
+  renderOllaDispList();
+  renderOllaPcList();
   showOllaStep(1);
 }
 
 window.showOllaStep = (n) => {
-  [1,2,3,4,5].forEach(i => { const el = document.getElementById('olla-step-'+i); if (el) el.style.display = (i===n)?'block':'none'; });
-  const labels = {1:'Objetivo y ubicación',2:'Plan de lanzamiento / Funcionamiento',3:'Porciones y padrón',4:'Insumos y solicitud',5:'Resumen'};
-  document.getElementById('olla-step-label').textContent = `Paso ${n} de 5 · ${labels[n]}`;
+  [1,2,3,4,5,6].forEach(i => { const el = document.getElementById('olla-step-'+i); if (el) el.style.display = (i===n)?'block':'none'; });
+  const labels = {1:'Objetivo y ubicación',2:'Plan de lanzamiento / Funcionamiento',3:'Porciones y padrón',4:'Insumos y solicitud',5:'Red alimentaria',6:'Resumen'};
+  document.getElementById('olla-step-label').textContent = `Paso ${n} de 6 · ${labels[n]}`;
 };
 
 window.nextOllaStep = (n) => {
@@ -3714,7 +3861,7 @@ window.nextOllaStep = (n) => {
     if (!document.getElementById('olla-equipamiento-list').children.length) renderOllaEquipamientoInto('olla-equipamiento-list', {});
     if (!document.getElementById('olla-necesidades-list').children.length) renderOllaNecesidadesInto('olla-necesidades-list', {});
   }
-  if (n === 5) renderOllaResumenStep();
+  if (n === 6) renderOllaResumenStep();
   showOllaStep(n);
 };
 
@@ -3865,6 +4012,265 @@ function readOllaNecesidadesFrom(containerId) {
   return out;
 }
 
+// ─── Paso 5: red alimentaria (dispositivos cercanos + puntos ciegos) ───
+const OLLA_DISP_TIPO_LABELS = { olla_comedor: 'Olla Popular / Comedor', merendero: 'Merendero / Copa de leche', entrega_viandas: 'Entrega de viandas / bolsas' };
+const OLLA_DISP_REF_LABELS = { organizacion_social: 'Organización social / militante', iglesia_club: 'Iglesia / Club / Entidad de bien público', vecinos_independientes: 'Vecinos independientes', estatal_municipal: 'Estatal / Municipal', sin_datos: 'Sin datos / No especifica' };
+const OLLA_DISP_FRECUENCIA_LABELS = { diaria: 'Diaria', '2_3_semana': '2 a 3 veces por semana', semanal: 'Semanal', esporadica: 'Esporádica' };
+const OLLA_PC_CAUSA_LABELS = { zona_reciente: 'Zona de reciente formación', lejania: 'Lejanía a comedores existentes', cierre_reciente: 'Cierre reciente de un espacio', inexistencia_referentes: 'Inexistencia de referentes/infraestructura' };
+const OLLA_PC_POBLACION_LABELS = { familias_escolares: 'Familias con pibes en edad escolar', adultos_mayores: 'Adultos mayores / Jubilados', situacion_calle: 'Situación de calle', trabajadores_informales: 'Trabajadores informales' };
+const OLLA_PC_PRIORIDAD_LABELS = { alta: 'Alta', media: 'Media', baja: 'Baja' };
+const OLLA_COBERTURA_LABELS = { saturada: 'Zona saturada', optimizada: 'Zona optimizada', critica: 'Zona crítica / punto ciego' };
+
+function haversineMeters(lat1, lng1, lat2, lng2) {
+  if ([lat1,lng1,lat2,lng2].some(v => v == null || isNaN(v))) return null;
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function generarCUPA(nodoId) {
+  const fecha = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const rand = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `CUPA-${(nodoId||'NODO').toUpperCase()}-${fecha}-${rand}`;
+}
+
+function computeIndiceCobertura(ollaLat, ollaLng, dispositivos, puntosCiegos) {
+  const dists = (dispositivos||[]).map(d => ({...d, distancia_m: haversineMeters(ollaLat, ollaLng, d.lat, d.lng)}));
+  const comedoresCerca = dists.filter(d => d.tipo === 'olla_comedor' && d.distancia_m != null && d.distancia_m < 300).length;
+  if (1 + comedoresCerca >= 3) return 'saturada';
+  const algunoA600 = dists.some(d => d.distancia_m != null && d.distancia_m < 600);
+  const hayPrioridadAlta = (puntosCiegos||[]).some(p => p.prioridad === 'alta');
+  if (!algunoA600 && hayPrioridadAlta) return 'critica';
+  return 'optimizada';
+}
+
+// -- Dispositivos cercanos --
+function ollaDispResetForm() {
+  ollaDispTipoActual = null; ollaDispRefActual = null; ollaDispFrecuenciaActual = null;
+  ['olla-disp-nombre','olla-disp-lat','olla-disp-lng'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const s = document.getElementById('olla-disp-loc-status'); if (s) s.textContent = '';
+  document.querySelectorAll('#olla-disp-tipo-group .toggle-btn, #olla-disp-ref-group .toggle-btn, #olla-disp-frecuencia-group .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#olla-disp-dias-list input').forEach(cb => cb.checked = false);
+  if (ollaDispPin && ollaDispMap) { ollaDispMap.removeLayer(ollaDispPin); ollaDispPin = null; }
+}
+window.ollaDispAbrirForm = () => {
+  ollaDispResetForm();
+  document.getElementById('olla-disp-form').style.display = 'block';
+  setTimeout(() => { initOllaDispMap(); ollaDispMap.invalidateSize(); }, 120);
+};
+window.ollaDispCancelar = () => {
+  document.getElementById('olla-disp-form').style.display = 'none';
+  ollaDispResetForm();
+};
+window.selectOllaDispTipo = (t) => {
+  ollaDispTipoActual = t;
+  document.querySelectorAll('#olla-disp-tipo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
+};
+window.selectOllaDispRef = (r) => {
+  ollaDispRefActual = r;
+  document.querySelectorAll('#olla-disp-ref-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.ref === r));
+};
+window.selectOllaDispFrecuencia = (f) => {
+  ollaDispFrecuenciaActual = f;
+  document.querySelectorAll('#olla-disp-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === f));
+};
+
+let ollaDispMap = null, ollaDispPin = null;
+function initOllaDispMap() {
+  if (ollaDispMap) return;
+  const ollaLat = parseFloat(document.getElementById('olla-lat').value);
+  const ollaLng = parseFloat(document.getElementById('olla-lng').value);
+  const nodo = (ollaLat && ollaLng) ? null : NODOS.find(n => n.id === currentUser.nodo_id);
+  const centro = (ollaLat && ollaLng) ? [ollaLat, ollaLng] : [nodo?.lat || -34.6, nodo?.lng || -58.5];
+  ollaDispMap = L.map('olla-disp-map-container', {zoomControl: true, attributionControl: false}).setView(centro, 16);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaDispMap);
+  ollaDispMap.on('click', (e) => setOllaDispLocation(e.latlng.lat, e.latlng.lng));
+}
+function setOllaDispLocation(lat, lng) {
+  document.getElementById('olla-disp-lat').value = lat;
+  document.getElementById('olla-disp-lng').value = lng;
+  if (!ollaDispMap) initOllaDispMap();
+  if (ollaDispPin) { ollaDispPin.setLatLng([lat, lng]); } else {
+    ollaDispPin = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<div style="width:14px;height:14px;border-radius:50%;background:#c86a2c;border:3px solid #fff;box-shadow:0 0 8px rgba(200,106,44,.7)"></div>', iconSize:[14,14], iconAnchor:[7,7] }) }).addTo(ollaDispMap);
+  }
+}
+window.captureOllaDispLoc = async () => {
+  const s = document.getElementById('olla-disp-loc-status');
+  s.textContent = 'Buscando...';
+  try {
+    const loc = await getLoc();
+    setOllaDispLocation(loc.lat, loc.lng);
+    if (ollaDispMap) ollaDispMap.setView([loc.lat, loc.lng], 17);
+    s.textContent = `✓ GPS (~${Math.round(loc.acc)}m)`;
+  } catch(e) { s.textContent = '✗ ' + e; }
+};
+
+window.ollaDispGuardar = () => {
+  const nombre = document.getElementById('olla-disp-nombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre del dispositivo', true);
+  if (!ollaDispTipoActual) return toast('Elegí el tipo de dispositivo', true);
+  const lat = parseFloat(document.getElementById('olla-disp-lat').value);
+  const lng = parseFloat(document.getElementById('olla-disp-lng').value);
+  ollaDispositivosActual.push({
+    nombre,
+    tipo: ollaDispTipoActual,
+    referencia: ollaDispRefActual || 'sin_datos',
+    dias: Array.from(document.querySelectorAll('#olla-disp-dias-list input:checked')).map(cb => cb.value),
+    frecuencia: ollaDispFrecuenciaActual || null,
+    lat: isNaN(lat) ? null : lat,
+    lng: isNaN(lng) ? null : lng
+  });
+  window.ollaDispCancelar();
+  renderOllaDispList();
+};
+window.ollaDispEliminar = (i) => { ollaDispositivosActual.splice(i,1); renderOllaDispList(); };
+function renderOllaDispList() {
+  const el = document.getElementById('olla-disp-list');
+  if (!el) return;
+  el.innerHTML = ollaDispositivosActual.length ? ollaDispositivosActual.map((d,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:14px">${escHtml(d.nombre)}</div>
+        <div style="font-size:12px;color:var(--muted)">${OLLA_DISP_TIPO_LABELS[d.tipo]||d.tipo} · ${OLLA_DISP_REF_LABELS[d.referencia]||''}</div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispEliminar(${i})">✕</button>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no registraste dispositivos cercanos. Es opcional.</div>`;
+}
+
+// -- Puntos ciegos --
+function ollaPcResetForm() {
+  ollaPcTipoActual = null; ollaPcRadioActual = null; ollaPcCausaActual = null; ollaPcPrioridadActual = null; ollaPcPoligonoPuntos = [];
+  const nombreEl = document.getElementById('olla-pc-nombre'); if (nombreEl) nombreEl.value = '';
+  document.querySelectorAll('#olla-pc-tipo-group .toggle-btn, #olla-pc-radio-group .toggle-btn, #olla-pc-causa-group .toggle-btn, #olla-pc-prioridad-group .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#olla-pc-poblacion-list input').forEach(cb => cb.checked = false);
+  document.getElementById('olla-pc-radio-wrap').style.display = 'none';
+  document.getElementById('olla-pc-poligono-wrap').style.display = 'none';
+  document.getElementById('olla-pc-poligono-count').textContent = '0 puntos';
+  ollaPcClearDrawing();
+}
+window.ollaPcAbrirForm = () => {
+  ollaPcResetForm();
+  document.getElementById('olla-pc-form').style.display = 'block';
+  setTimeout(() => { initOllaPcMap(); ollaPcMap.invalidateSize(); }, 120);
+};
+window.ollaPcCancelar = () => {
+  document.getElementById('olla-pc-form').style.display = 'none';
+  ollaPcResetForm();
+};
+window.selectOllaPcTipo = (t) => {
+  ollaPcTipoActual = t;
+  document.querySelectorAll('#olla-pc-tipo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
+  document.getElementById('olla-pc-radio-wrap').style.display = t === 'radio' ? 'block' : 'none';
+  document.getElementById('olla-pc-poligono-wrap').style.display = t === 'poligono' ? 'block' : 'none';
+  ollaPcClearDrawing();
+};
+window.selectOllaPcRadio = (r) => {
+  ollaPcRadioActual = r;
+  document.querySelectorAll('#olla-pc-radio-group .toggle-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.radio,10) === r));
+  if (ollaPcCircle) ollaPcCircle.setRadius(r);
+};
+window.selectOllaPcCausa = (c) => {
+  ollaPcCausaActual = c;
+  document.querySelectorAll('#olla-pc-causa-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.causa === c));
+};
+window.selectOllaPcPrioridad = (p) => {
+  ollaPcPrioridadActual = p;
+  document.querySelectorAll('#olla-pc-prioridad-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.prioridad === p));
+};
+
+let ollaPcMap = null, ollaPcPin = null, ollaPcCircle = null, ollaPcPolygon = null, ollaPcVertexMarkers = [];
+function initOllaPcMap() {
+  if (ollaPcMap) return;
+  const ollaLat = parseFloat(document.getElementById('olla-lat').value);
+  const ollaLng = parseFloat(document.getElementById('olla-lng').value);
+  const nodo = (ollaLat && ollaLng) ? null : NODOS.find(n => n.id === currentUser.nodo_id);
+  const centro = (ollaLat && ollaLng) ? [ollaLat, ollaLng] : [nodo?.lat || -34.6, nodo?.lng || -58.5];
+  ollaPcMap = L.map('olla-pc-map-container', {zoomControl: true, attributionControl: false}).setView(centro, 16);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaPcMap);
+  ollaPcMap.on('click', (e) => {
+    if (ollaPcTipoActual === 'radio') {
+      ollaPcSetRadioCenter(e.latlng.lat, e.latlng.lng);
+    } else if (ollaPcTipoActual === 'poligono') {
+      ollaPcAgregarVertice(e.latlng.lat, e.latlng.lng);
+    } else {
+      toast('Elegí primero "Por radio" o "Por polígono"', true);
+    }
+  });
+}
+function ollaPcClearDrawing() {
+  if (ollaPcPin && ollaPcMap) { ollaPcMap.removeLayer(ollaPcPin); ollaPcPin = null; }
+  if (ollaPcCircle && ollaPcMap) { ollaPcMap.removeLayer(ollaPcCircle); ollaPcCircle = null; }
+  if (ollaPcPolygon && ollaPcMap) { ollaPcMap.removeLayer(ollaPcPolygon); ollaPcPolygon = null; }
+  ollaPcVertexMarkers.forEach(m => ollaPcMap && ollaPcMap.removeLayer(m));
+  ollaPcVertexMarkers = [];
+  ollaPcPoligonoPuntos = [];
+  const countEl = document.getElementById('olla-pc-poligono-count'); if (countEl) countEl.textContent = '0 puntos';
+}
+function ollaPcSetRadioCenter(lat, lng) {
+  if (ollaPcPin) { ollaPcPin.setLatLng([lat,lng]); } else {
+    ollaPcPin = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<div style="width:14px;height:14px;border-radius:50%;background:#c94b4b;border:3px solid #fff;box-shadow:0 0 8px rgba(201,75,75,.7)"></div>', iconSize:[14,14], iconAnchor:[7,7] }) }).addTo(ollaPcMap);
+  }
+  const radio = ollaPcRadioActual || 300;
+  if (ollaPcCircle) { ollaPcCircle.setLatLng([lat,lng]).setRadius(radio); }
+  else { ollaPcCircle = L.circle([lat,lng], {radius: radio, color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15}).addTo(ollaPcMap); }
+}
+function ollaPcRedibujarPoligono() {
+  if (ollaPcPolygon) { ollaPcMap.removeLayer(ollaPcPolygon); ollaPcPolygon = null; }
+  ollaPcVertexMarkers.forEach(m => ollaPcMap.removeLayer(m));
+  ollaPcVertexMarkers = [];
+  if (ollaPcPoligonoPuntos.length >= 2) {
+    ollaPcPolygon = L.polygon(ollaPcPoligonoPuntos, {color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15}).addTo(ollaPcMap);
+  }
+  ollaPcVertexMarkers = ollaPcPoligonoPuntos.map(([lat,lng]) => L.circleMarker([lat,lng], {radius:4, color:'#c94b4b', fillColor:'#fff', fillOpacity:1, weight:2}).addTo(ollaPcMap));
+  const countEl = document.getElementById('olla-pc-poligono-count'); if (countEl) countEl.textContent = `${ollaPcPoligonoPuntos.length} punto(s)`;
+}
+function ollaPcAgregarVertice(lat, lng) {
+  if (ollaPcPoligonoPuntos.length >= 6) return toast('Máximo 6 vértices', true);
+  ollaPcPoligonoPuntos.push([lat, lng]);
+  ollaPcRedibujarPoligono();
+}
+window.ollaPcDeshacerPunto = () => {
+  if (!ollaPcPoligonoPuntos.length) return;
+  ollaPcPoligonoPuntos.pop();
+  ollaPcRedibujarPoligono();
+};
+
+window.ollaPcGuardar = () => {
+  const nombre_zona = document.getElementById('olla-pc-nombre').value.trim();
+  if (!nombre_zona) return toast('Ingresá el nombre de la zona', true);
+  if (!ollaPcTipoActual) return toast('Elegí el tipo de marcación', true);
+  if (!ollaPcCausaActual) return toast('Elegí la causa de la falta de cobertura', true);
+  if (!ollaPcPrioridadActual) return toast('Elegí la prioridad sugerida', true);
+  const poblacion_afectada = Array.from(document.querySelectorAll('#olla-pc-poblacion-list input:checked')).map(cb => cb.value);
+  const punto = { nombre_zona, poblacion_afectada, causa: ollaPcCausaActual, prioridad: ollaPcPrioridadActual, tipo_marcacion: ollaPcTipoActual };
+  if (ollaPcTipoActual === 'radio') {
+    if (!ollaPcPin) return toast('Tocá el mapa para ubicar el centro de la zona', true);
+    const c = ollaPcPin.getLatLng();
+    punto.lat = c.lat; punto.lng = c.lng; punto.radio_m = ollaPcRadioActual || 300;
+  } else {
+    if (ollaPcPoligonoPuntos.length < 3) return toast('Marcá al menos 3 vértices', true);
+    punto.puntos = ollaPcPoligonoPuntos.map(([lat,lng]) => ({lat,lng}));
+  }
+  ollaPuntosCiegosActual.push(punto);
+  window.ollaPcCancelar();
+  renderOllaPcList();
+};
+window.ollaPcEliminar = (i) => { ollaPuntosCiegosActual.splice(i,1); renderOllaPcList(); };
+function renderOllaPcList() {
+  const el = document.getElementById('olla-pc-list');
+  if (!el) return;
+  el.innerHTML = ollaPuntosCiegosActual.length ? ollaPuntosCiegosActual.map((p,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:14px">${escHtml(p.nombre_zona)} <span class="badge ${p.prioridad==='alta'?'badge-red':p.prioridad==='media'?'badge-orange':'badge-blue'}" style="margin-left:4px">Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]}</span></div>
+        <div style="font-size:12px;color:var(--muted)">${p.tipo_marcacion === 'radio' ? `Radio de ${p.radio_m}m` : `Polígono de ${p.puntos.length} vértices`} · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcEliminar(${i})">✕</button>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no marcaste puntos ciegos. Es opcional.</div>`;
+}
+
 function renderOllaResumenStep() {
   ollaPadronSync();
   const nombre = document.getElementById('olla-nombre').value.trim();
@@ -3873,13 +4279,20 @@ function renderOllaResumenStep() {
   const jornadas = parseInt(document.getElementById('olla-jornadas').value, 10) || 0;
   const equipamiento = readOllaEquipamientoFrom('olla-equipamiento-list');
   const equipoTxt = Object.entries(equipamiento).map(([id, q]) => `${(OLLA_EQUIPAMIENTO.find(e=>e.id===id)||{}).nombre||id}: ${q}`).join(', ') || 'Ninguno';
+  const lat = parseFloat(document.getElementById('olla-lat').value);
+  const lng = parseFloat(document.getElementById('olla-lng').value);
+  const cobertura = computeIndiceCobertura(lat, lng, ollaDispositivosActual, ollaPuntosCiegosActual);
+  const coberturaColor = cobertura === 'critica' ? 'badge-red' : cobertura === 'saturada' ? 'badge-gold' : 'badge-green';
   document.getElementById('olla-resumen').innerHTML = `
     <div><b>${nombre}</b> · ${OLLA_OBJETIVO_LABELS[ollaObjetivoActual]}</div>
     ${dir ? `<div>📍 ${dir}</div>` : ''}
     <div>Sistema de cocción: ${OLLA_SISTEMA_LABELS[ollaSistemaActual] || '—'}</div>
     <div>Porciones: ${porciones} por jornada × ${jornadas} jornadas al mes</div>
     <div>Padrón cargado: ${ollaPadronCtx.arr.filter(p => p.nombre).length} familia(s)</div>
-    <div>Equipamiento solicitado: ${equipoTxt}</div>`;
+    <div>Equipamiento solicitado: ${equipoTxt}</div>
+    <div>Dispositivos cercanos registrados: ${ollaDispositivosActual.length}</div>
+    <div>Puntos ciegos marcados: ${ollaPuntosCiegosActual.length}</div>
+    <div>Índice de cobertura: <span class="badge ${coberturaColor}">${OLLA_COBERTURA_LABELS[cobertura]}</span></div>`;
 }
 
 window.guardarOlla = async () => {
@@ -3891,13 +4304,17 @@ window.guardarOlla = async () => {
   const estrategia_obtencion = Array.from(document.querySelectorAll('#olla-estrategia-list input:checked')).map(cb => cb.value);
   const equipamiento = readOllaEquipamientoFrom('olla-equipamiento-list');
   const necesidades_infra = readOllaNecesidadesFrom('olla-necesidades-list');
+  const lat = parseFloat(document.getElementById('olla-lat').value) || null;
+  const lng = parseFloat(document.getElementById('olla-lng').value) || null;
+  const dispositivos_cercanos = ollaDispositivosActual.map(d => ({...d, distancia_m: haversineMeters(lat, lng, d.lat, d.lng)}));
+  const indice_cobertura = computeIndiceCobertura(lat, lng, ollaDispositivosActual, ollaPuntosCiegosActual);
+  const cupa = generarCUPA(currentUser.nodo_id);
   const nuevaOlla = {
     nodo_id: currentUser.nodo_id,
     objetivo: ollaObjetivoActual,
     nombre,
     direccion: document.getElementById('olla-dir').value.trim(),
-    lat: parseFloat(document.getElementById('olla-lat').value) || null,
-    lng: parseFloat(document.getElementById('olla-lng').value) || null,
+    lat, lng,
     sistema_coccion: ollaSistemaActual,
     porciones_jornada: porciones,
     jornadas_mes: jornadas,
@@ -3906,6 +4323,10 @@ window.guardarOlla = async () => {
     estrategia_obtencion,
     equipamiento,
     necesidades_infra,
+    dispositivos_cercanos,
+    puntos_ciegos: ollaPuntosCiegosActual,
+    indice_cobertura,
+    cupa,
     creado_por: currentUser.uid, fecha_creacion: serverTimestamp()
   };
   if (ollaObjetivoActual === 'nueva') {
@@ -3923,7 +4344,7 @@ window.guardarOlla = async () => {
   }
   try {
     await addDoc(collection(db, 'ollas'), nuevaOlla);
-    toast('Olla guardada ✓');
+    toast(`Olla guardada ✓ · CUPA ${cupa}`);
     resetOllaWizard();
   } catch(e) { toast('Error: '+e.message, true); }
 };
@@ -4077,8 +4498,10 @@ function renderOllas() {
         <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
           <span class="badge ${o.objetivo==='nueva'?'badge-gold':'badge-blue'}">${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}</span>
           ${o.porciones_jornada ? `<span class="badge badge-green">${o.porciones_jornada} porc. × ${o.jornadas_mes||0} jorn./mes</span>` : ''}
+          ${o.indice_cobertura ? `<span class="badge ${o.indice_cobertura==='critica'?'badge-red':o.indice_cobertura==='saturada'?'badge-gold':'badge-green'}">${OLLA_COBERTURA_LABELS[o.indice_cobertura]}</span>` : ''}
         </div>
         ${o.direccion?`<div style="font-size:13px;color:var(--muted);margin-top:5px">📍 ${o.direccion}</div>`:''}
+        ${o.cupa?`<div style="font-size:11px;color:var(--dim);margin-top:3px;font-family:var(--mono)">${o.cupa}</div>`:''}
         ${fecha?`<div style="font-size:11px;color:var(--dim);margin-top:3px">${fecha}</div>`:''}
       </div>
     </div>`;
@@ -4134,6 +4557,19 @@ window.abrirEditOlla = (id) => {
 
   renderOllaEquipamientoInto('olla-edit-equipamiento-list', o.equipamiento || {});
   renderOllaNecesidadesInto('olla-edit-necesidades-list', o.necesidades_infra || {});
+
+  const redEl = document.getElementById('olla-edit-red-alimentaria');
+  if (o.cupa || (o.dispositivos_cercanos && o.dispositivos_cercanos.length) || (o.puntos_ciegos && o.puntos_ciegos.length)) {
+    redEl.style.display = 'block';
+    redEl.innerHTML = `
+      <div style="font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;font-size:11px;margin-bottom:6px">Red alimentaria (cargada al confirmar, no editable acá)</div>
+      <div>Dispositivos cercanos registrados: ${(o.dispositivos_cercanos||[]).length}</div>
+      <div>Puntos ciegos marcados: ${(o.puntos_ciegos||[]).length}</div>
+      ${o.indice_cobertura ? `<div>Índice de cobertura: <span class="badge ${o.indice_cobertura==='critica'?'badge-red':o.indice_cobertura==='saturada'?'badge-gold':'badge-green'}">${OLLA_COBERTURA_LABELS[o.indice_cobertura]}</span></div>` : ''}
+      ${o.cupa ? `<div style="margin-top:4px;font-family:var(--mono)">${o.cupa}</div>` : ''}`;
+  } else {
+    redEl.style.display = 'none';
+  }
 
   ollaEditPadronActual = (o.padron || []).map(p => ({...p}));
   ollaPadronCtx = { arr: ollaEditPadronActual, containerId: 'olla-edit-padron-list' };
@@ -4396,6 +4832,24 @@ function renderOllaResumenGeneral() {
       <div class="material-info"><div class="material-name">${it.nombre}</div><div class="material-stock">${it.unidad}</div></div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
     </div>`).join('') : `<div style="color:var(--dim);font-size:14px">Todavía no hay equipamiento pedido.</div>`;
+
+  const cSaturada = ollasFiltradas.filter(o => o.indice_cobertura === 'saturada').length;
+  const cOptimizada = ollasFiltradas.filter(o => o.indice_cobertura === 'optimizada').length;
+  const cCritica = ollasFiltradas.filter(o => o.indice_cobertura === 'critica').length;
+  document.getElementById('olla-resumen-cobertura-stats').innerHTML = `
+    <div class="stat"><div class="stat-val" style="color:var(--gold)">${cSaturada}</div><div class="stat-label">Saturadas</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--green)">${cOptimizada}</div><div class="stat-label">Optimizadas</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--red)">${cCritica}</div><div class="stat-label">Críticas</div></div>`;
+
+  const puntosAlta = ollasFiltradas.flatMap(o => (o.puntos_ciegos||[]).filter(p => p.prioridad === 'alta').map(p => ({...p, nodo: (NODOS.find(n=>n.id===o.nodo_id)||{}).nombre || o.nodo_id, olla: o.nombre})));
+  document.getElementById('olla-resumen-puntos-ciegos-list').innerHTML = puntosAlta.length ? puntosAlta.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
+      <div>
+        <div style="font-weight:600;font-size:14px">${p.nombre_zona}</div>
+        <div style="font-size:12px;color:var(--muted)">${p.nodo} · cerca de "${p.olla}" · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
+      </div>
+      <span class="badge badge-red">Alta</span>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:14px">No hay puntos ciegos de prioridad alta.</div>`;
 }
 
 window.exportOllaResumenXLSX = () => {
