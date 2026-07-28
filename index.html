@@ -1839,6 +1839,7 @@ window.abrirPrograma = (id) => {
     document.getElementById('esp-subnav').style.display = currentUser.rol === 'coordinador_general' ? 'flex' : 'none';
     espMostrarVista('cargar');
     resetEspWizard();
+    setTimeout(() => { initEspMap(); espMap.invalidateSize(); }, 150);
   } else if (id === 'ollas') {
     document.getElementById('header-sub').textContent = 'OLLAS POPULARES';
     document.getElementById('nav').style.display = 'none';
@@ -1847,6 +1848,7 @@ window.abrirPrograma = (id) => {
     document.getElementById('olla-subnav').style.display = currentUser.rol === 'coordinador_general' ? 'flex' : 'none';
     ollaMostrarVista('cargar');
     resetOllaWizard();
+    setTimeout(() => { initOllaMap(); ollaMap.invalidateSize(); }, 150);
   } else {
     const titulos = {};
     document.getElementById('header-sub').textContent = titulos[id].toUpperCase();
@@ -2842,11 +2844,29 @@ function zonaToLatLngBounds(zona) {
 }
 
 // Dibuja la zona de influencia del nodo como referencia visual en los mapas
-// de carga/edición de Espacios Públicos y Ollas Populares (no restringe el
-// mapa, solo la muestra; esa restricción es exclusiva del Mapa general).
+// de carga/edición de Espacios Públicos y Ollas Populares, encuadra la vista
+// en ella por defecto, y (solo para coordinador de nodo) aplica el mismo
+// límite de paneo/zoom que usa el Mapa general (aplicarRestriccionMapa).
 function mostrarZonaInfluenciaEnMapa(mapa) {
-  if (!validarZona(zonaInfluencia)) return;
-  L.rectangle(zonaToLatLngBounds(zonaInfluencia), {color:'#d4a017', weight:2, fill:false, dashArray:'6,6', interactive:false}).addTo(mapa);
+  if (!validarZona(zonaInfluencia)) return false;
+  const bounds = zonaToLatLngBounds(zonaInfluencia);
+  L.rectangle(bounds, {color:'#d4a017', weight:2, fill:false, dashArray:'6,6', interactive:false}).addTo(mapa);
+  if (esCoordNodo()) {
+    mapa.setMaxBounds(bounds.pad(0.05));
+    mapa.setMinZoom(mapa.getBoundsZoom(bounds, false));
+  }
+  mapa.fitBounds(bounds.pad(0.1));
+  return true;
+}
+
+// Centra el mapa en la zona de influencia si está configurada; si no, en el nodo.
+function centrarMapaPorDefecto(mapa) {
+  if (validarZona(zonaInfluencia)) {
+    mapa.fitBounds(zonaToLatLngBounds(zonaInfluencia).pad(0.1));
+    return;
+  }
+  const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
+  mapa.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
 }
 
 function aplicarRestriccionMapa() {
@@ -3349,10 +3369,7 @@ function setEspLocation(lat, lng) {
 
 function clearEspMap() {
   if (espPin && espMap) { espMap.removeLayer(espPin); espPin = null; }
-  if (espMap) {
-    const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-    espMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  }
+  if (espMap) centrarMapaPorDefecto(espMap);
 }
 
 window.captureEspLoc = async () => {
@@ -3679,8 +3696,7 @@ window.abrirEditEspacio = (id) => {
       document.getElementById('esp-edit-loc-status').textContent = '✓ Ubicación existente';
     } else {
       if (espEditPin) { espEditMap.removeLayer(espEditPin); espEditPin = null; }
-      const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-      espEditMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+      centrarMapaPorDefecto(espEditMap);
       document.getElementById('esp-edit-loc-status').textContent = '';
     }
   }, 120);
@@ -4512,10 +4528,7 @@ function setOllaLocation(lat, lng) {
 
 function clearOllaMap() {
   if (ollaPin && ollaMap) { ollaMap.removeLayer(ollaPin); ollaPin = null; }
-  if (ollaMap) {
-    const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-    ollaMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  }
+  if (ollaMap) centrarMapaPorDefecto(ollaMap);
 }
 
 window.captureOllaLoc = async () => {
@@ -4703,8 +4716,7 @@ window.abrirEditOlla = (id) => {
       document.getElementById('olla-edit-loc-status').textContent = '✓ Ubicación existente';
     } else {
       if (ollaEditPin) { ollaEditMap.removeLayer(ollaEditPin); ollaEditPin = null; }
-      const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
-      ollaEditMap.setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
+      centrarMapaPorDefecto(ollaEditMap);
       document.getElementById('olla-edit-loc-status').textContent = '';
     }
   }, 120);
