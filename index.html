@@ -157,8 +157,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .map-control-btn{background:rgba(255,255,255,.94);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);transition:all .15s}
 .map-control-btn:hover{background:var(--surface2);border-color:var(--gold)}
 .map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);color:var(--text)}
-.map-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.map-legend-item{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.map-legend-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:16px}
+.map-legend-icon svg{display:block}
 .map-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
 .map-filter-btn{background:var(--surface2);color:var(--dim);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all .15s}
 .map-filter-btn.active{background:rgba(0,173,195,.18);color:var(--gold);border-color:var(--gold)}
@@ -390,16 +391,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <button class="map-control-btn" onclick="captureMyLocation()">📍 Mi ubicación</button>
           <button class="map-control-btn" onclick="fitMapToMarkers()">🔍 Ver todo</button>
         </div>
-        <div class="map-legend">
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--red)"></div> Analfabeto</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--orange)"></div> Sin secundario</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--green)"></div> Alfabetizador pot.</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--blue)"></div> Visita estándar</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--gold)"></div> Institución</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:#8a5cf6"></div> Espacio público</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:#c86a2c"></div> Olla popular</div>
-          <div class="map-legend-item"><div class="map-legend-dot" style="background:#c94b4b"></div> Punto ciego</div>
-        </div>
+        <div class="map-legend" id="map-legend"></div>
       </div>
       <div class="stats" id="map-stats"></div>
     </div>
@@ -2961,6 +2953,25 @@ const iconoAlerta = c => `
   <polygon points="0,-7.5 7.5,6 -7.5,6" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/>
   <rect x="-0.9" y="-3.2" width="1.8" height="5.6" rx="0.9" fill="${c}"/>
   <rect x="-0.9" y="3.6" width="1.8" height="1.8" rx="0.9" fill="${c}"/>`;
+
+// Referencias del mapa: usan el mismo mkPinIcon/glifo que los marcadores reales,
+// para que la leyenda muestre exactamente el ícono que aparece en el mapa.
+function renderMapLegend() {
+  const el = document.getElementById('map-legend');
+  if (!el) return;
+  const items = [
+    {icon: mkPinIcon('#b83a2e', iconoCasa, 20), label: 'Analfabeto'},
+    {icon: mkPinIcon('#cc8a1a', iconoCasa, 20), label: 'Sin secundario'},
+    {icon: mkPinIcon('#2c8858', iconoCasa, 20), label: 'Alfabetizador pot.'},
+    {icon: mkPinIcon('#3878cc', iconoCasa, 20), label: 'Visita estándar'},
+    {icon: mkPinIcon('#00ADC3', iconoInstitucion, 20), label: 'Institución'},
+    {icon: mkPinIcon('#8a5cf6', iconoArbol, 20), label: 'Espacio público'},
+    {icon: mkPinIcon('#c86a2c', iconoOlla, 20), label: 'Olla popular'},
+    {icon: mkPinIcon('#c94b4b', iconoAlerta, 20), label: 'Punto ciego'}
+  ];
+  el.innerHTML = items.map(it => `<div class="map-legend-item"><span class="map-legend-icon">${it.icon.options.html}</span> ${it.label}</div>`).join('');
+}
+renderMapLegend();
 
 function updateMap() {
   if (!map) return;
