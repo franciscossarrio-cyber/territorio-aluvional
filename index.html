@@ -2874,9 +2874,43 @@ function initMap() {
   }, 200);
 }
 
-function mkIcon(color, sz) {
-  return L.divIcon({className:'',html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,.7);box-shadow:0 0 8px ${color}88"></div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+// Pines con silueta propia (SVG a medida) en vez de puntos de color lisos.
+// El glifo se dibuja en el mismo color que el pin sobre un círculo blanco,
+// centrado en (0,0) dentro de un radio de ~8px.
+function mkPinIcon(color, glyphSvg, sz) {
+  sz = sz || 32;
+  const h = Math.round(sz * 1.28);
+  const html = `<svg width="${sz}" height="${h}" viewBox="0 0 34 44" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))">
+    <path d="M17 0C7.6 0 0 7.6 0 17c0 12.7 17 27 17 27s17-14.3 17-27C34 7.6 26.4 0 17 0z" fill="${color}"/>
+    <circle cx="17" cy="16.5" r="11.5" fill="#fff"/>
+    <g transform="translate(17,16.5)">${glyphSvg(color)}</g>
+  </svg>`;
+  return L.divIcon({className:'', html, iconSize:[sz,h], iconAnchor:[sz/2,h], popupAnchor:[0,-h*0.85]});
 }
+
+const iconoCasa = c => `<path d="M-6.5 1 L0 -6.5 L6.5 1 L6.5 7 L2 7 L2 2 L-2 2 L-2 7 L-6.5 7 Z" fill="${c}"/>`;
+const iconoInstitucion = c => `
+  <polygon points="-7,-2 0,-7.5 7,-2" fill="${c}"/>
+  <rect x="-7.2" y="-2" width="14.4" height="1.6" fill="${c}"/>
+  <rect x="-5.8" y="0.6" width="1.6" height="5.4" fill="${c}"/>
+  <rect x="-2.3" y="0.6" width="1.6" height="5.4" fill="${c}"/>
+  <rect x="1.2" y="0.6" width="1.6" height="5.4" fill="${c}"/>
+  <rect x="4.7" y="0.6" width="1.6" height="5.4" fill="${c}"/>
+  <rect x="-7.5" y="6.6" width="15" height="1.6" fill="${c}"/>`;
+const iconoArbol = c => `
+  <polygon points="0,-8 4.8,-2.2 -4.8,-2.2" fill="${c}"/>
+  <polygon points="0,-4.8 5.8,2 -5.8,2" fill="${c}"/>
+  <rect x="-1" y="2" width="2" height="4.5" fill="${c}"/>`;
+const iconoOlla = c => `
+  <path d="M-6 -1.5 L6 -1.5 L5 5.5 Q0 8 -5 5.5 Z" fill="${c}"/>
+  <path d="M-7 -1.5 Q-9.2 -3 -7.3 -5.5" fill="none" stroke="${c}" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M7 -1.5 Q9.2 -3 7.3 -5.5" fill="none" stroke="${c}" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M-2 -2.5 Q-3.2 -5 -1.6 -7.5" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".75"/>
+  <path d="M2 -2.5 Q3.2 -5 1.6 -7.5" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity=".75"/>`;
+const iconoAlerta = c => `
+  <polygon points="0,-7.5 7.5,6 -7.5,6" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/>
+  <rect x="-0.9" y="-3.2" width="1.8" height="5.6" rx="0.9" fill="${c}"/>
+  <rect x="-0.9" y="3.6" width="1.8" height="1.8" rx="0.9" fill="${c}"/>`;
 
 function updateMap() {
   if (!map) return;
@@ -2900,7 +2934,7 @@ function updateMap() {
     let c = '#3878cc';
     if (esAnalf) c = '#b83a2e'; else if (v.sin_secundario) c = '#cc8a1a'; else if (esAlfab) c = '#2c8858';
     const nodoName = NODOS.find(n => n.id === v.nodo_id)?.nombre || '';
-    const m = L.marker([v.lat,v.lng],{icon:mkIcon(c,12)}).addTo(map)
+    const m = L.marker([v.lat,v.lng],{icon:mkPinIcon(c,iconoCasa,28)}).addTo(map)
       .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>${v.direccion||'Sin dir.'}</b><br>Mz ${v.manzana_numero||'s/n'}${nodoName?' · '+nodoName:''}<br>${esAnalf?'<span style="color:#b83a2e">● Analfabeto</span><br>':''}${v.sin_secundario?'<span style="color:#cc8a1a">● Sin sec.</span><br>':''}${esAlfab?'<span style="color:#2c8858">● Quiere alfabetizar</span><br>':''}${v.observaciones?'<i>'+v.observaciones.slice(0,80)+'</i>':''}</div>`);
     markers.push(m);
   });
@@ -2909,7 +2943,7 @@ function updateMap() {
     fInst.forEach(inst => {
       if (!inst.lat||!inst.lng) return;
       const nodoName = NODOS.find(n => n.id === inst.nodo_id)?.nombre || '';
-      const m = L.marker([inst.lat,inst.lng],{icon:mkIcon('#00ADC3',14)}).addTo(map)
+      const m = L.marker([inst.lat,inst.lng],{icon:mkPinIcon('#00ADC3',iconoInstitucion,32)}).addTo(map)
         .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🏛 ${inst.nombre}</b><br>${inst.tipo}${nodoName?' · '+nodoName:''}<br>${inst.colabora_alfabetizacion?'<span style="color:#2c8858">Colabora</span>':''}</div>`);
       markers.push(m);
     });
@@ -2929,7 +2963,7 @@ function updateMap() {
     fEspacios.forEach(e => {
       if (!e.lat||!e.lng) return;
       const nodoName = NODOS.find(n => n.id === e.nodo_id)?.nombre || '';
-      const m = L.marker([e.lat,e.lng],{icon:mkIcon('#8a5cf6',14)}).addTo(map)
+      const m = L.marker([e.lat,e.lng],{icon:mkPinIcon('#8a5cf6',iconoArbol,32)}).addTo(map)
         .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🌳 ${e.nombre}</b><br>${ESP_TIPO_LABELS[e.tipo]||e.tipo}${nodoName?' · '+nodoName:''}${e.escala?'<br>Escala: '+(ESP_ESCALA_LABELS[e.escala]||e.escala):''}${e.direccion?'<br>📍 '+e.direccion:''}</div>`);
       markers.push(m);
     });
@@ -2939,7 +2973,7 @@ function updateMap() {
     fOllas.forEach(o => {
       if (!o.lat||!o.lng) return;
       const nodoName = NODOS.find(n => n.id === o.nodo_id)?.nombre || '';
-      const m = L.marker([o.lat,o.lng],{icon:mkIcon('#c86a2c',14)}).addTo(map)
+      const m = L.marker([o.lat,o.lng],{icon:mkPinIcon('#c86a2c',iconoOlla,32)}).addTo(map)
         .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🍲 ${o.nombre}</b><br>${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}${nodoName?' · '+nodoName:''}${o.porciones_jornada?'<br>'+o.porciones_jornada+' porciones × '+(o.jornadas_mes||0)+' jornadas/mes':''}${o.indice_cobertura?'<br>'+(OLLA_COBERTURA_LABELS[o.indice_cobertura]||o.indice_cobertura):''}${o.cupa?'<br><span style="font-family:monospace;font-size:11px">'+o.cupa+'</span>':''}</div>`);
       markers.push(m);
     });
@@ -2950,13 +2984,19 @@ function updateMap() {
       (o.puntos_ciegos||[]).forEach(p => {
         const estilo = {color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15, weight:2};
         const popup = `<div style="font-family:'EB Garamond',serif;font-size:14px"><b>⚠ ${p.nombre_zona}</b><br>Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]||p.prioridad}<br>${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>`;
-        let capa = null;
+        let capa = null, centro = null;
         if (p.tipo_marcacion === 'radio' && p.lat && p.lng) {
           capa = L.circle([p.lat,p.lng], {...estilo, radius: p.radio_m || 300}).addTo(map).bindPopup(popup);
+          centro = [p.lat, p.lng];
         } else if (p.tipo_marcacion === 'poligono' && p.puntos && p.puntos.length >= 3) {
           capa = L.polygon(p.puntos.map(v => [v.lat,v.lng]), estilo).addTo(map).bindPopup(popup);
+          centro = [p.puntos.reduce((s,v)=>s+v.lat,0)/p.puntos.length, p.puntos.reduce((s,v)=>s+v.lng,0)/p.puntos.length];
         }
         if (capa) markers.push(capa);
+        if (centro) {
+          const pin = L.marker(centro, {icon: mkPinIcon('#c94b4b', iconoAlerta, 28)}).addTo(map).bindPopup(popup);
+          markers.push(pin);
+        }
       });
     });
   }
