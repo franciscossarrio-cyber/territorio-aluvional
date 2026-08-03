@@ -1243,6 +1243,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div id="esp-edit-map-container" style="width:100%;height:200px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px"></div>
     <input type="hidden" id="esp-edit-lat"><input type="hidden" id="esp-edit-lng">
 
+    <div class="field" style="margin-bottom:8px"><span class="field-label">Registro fotográfico</span></div>
+    <div class="photo-grid">
+      <div class="photo-slot" id="esp-edit-foto-slot-acceso" onclick="espEditFotoSlotClick('acceso')">
+        <span style="font-size:22px">📸</span><span class="photo-slot-label">Acceso o fachada</span>
+      </div>
+      <div class="photo-slot" id="esp-edit-foto-slot-critica" onclick="espEditFotoSlotClick('critica')">
+        <span style="font-size:22px">📸</span><span class="photo-slot-label">Zona más deteriorada</span>
+      </div>
+      <div class="photo-slot" id="esp-edit-foto-slot-general" onclick="espEditFotoSlotClick('general')">
+        <span style="font-size:22px">📸</span><span class="photo-slot-label">Vista general</span>
+      </div>
+    </div>
+    <input type="file" accept="image/*" id="esp-edit-foto-input-acceso" style="display:none" onchange="handleEspEditFoto(this,'acceso')">
+    <input type="file" accept="image/*" id="esp-edit-foto-input-critica" style="display:none" onchange="handleEspEditFoto(this,'critica')">
+    <input type="file" accept="image/*" id="esp-edit-foto-input-general" style="display:none" onchange="handleEspEditFoto(this,'general')">
+    <div style="font-size:12px;color:var(--dim);margin:8px 0 14px">Las fotos son opcionales. Tocá un casillero para sacar una nueva o reemplazar la existente.</div>
+
     <div class="field" style="margin-bottom:8px"><span class="field-label">Estado de situación</span></div>
     <div id="esp-edit-checklist-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
 
@@ -3170,6 +3187,7 @@ function getNodoName() { return NODOS.find(n=>n.id===currentUser?.nodo_id)?.nomb
 
 const ESP_TIPO_LABELS = { plaza: 'Plaza', club: 'Club', descampado: 'Descampado', otro: 'Otro espacio' };
 const ESP_ESCALA_LABELS = { chico: 'Chico', mediano: 'Mediano', grande: 'Grande' };
+const ESP_FOTO_SLOT_LABELS = { acceso: 'Acceso o fachada', critica: 'Zona más deteriorada', general: 'Vista general' };
 
 const ESP_CHECKLIST = {
   plaza: [
@@ -3238,10 +3256,9 @@ function resetEspWizard() {
   clearEspMap();
   document.querySelectorAll('#esp-tipo-group .toggle-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#esp-escala-group .toggle-btn').forEach(b => b.classList.remove('active'));
-  const labelsSlot = { acceso: 'Acceso o fachada', critica: 'Zona más deteriorada', general: 'Vista general' };
   ['acceso','critica','general'].forEach(slot => {
     const el = document.getElementById('esp-foto-slot-'+slot);
-    if (el) el.innerHTML = `<span style="font-size:22px">📸</span><span class="photo-slot-label">${labelsSlot[slot]}</span>`;
+    if (el) el.innerHTML = `<span style="font-size:22px">📸</span><span class="photo-slot-label">${ESP_FOTO_SLOT_LABELS[slot]}</span>`;
     const inputEl = document.getElementById('esp-foto-input-'+slot);
     if (inputEl) inputEl.value = '';
   });
@@ -3679,6 +3696,7 @@ function renderEspacios() {
 // ─── Edición de un espacio ya cargado ───
 let espEditTipoActual = null, espEditEscalaActual = null;
 let espEditMap = null, espEditPin = null, espEditAutocompleteTimer = null;
+let espEditFotos = {}, espEditFotosRaw = {}, espEditFotosPendientes = false;
 
 window.abrirEditEspacio = (id) => {
   const e = espacios.find(x => x.id === id);
@@ -3698,6 +3716,11 @@ window.abrirEditEspacio = (id) => {
   renderEspEditChecklist(e.checklist || {});
   renderEspEditMateriales(e.materiales || {});
 
+  espEditFotos = { acceso: e.fotos?.acceso || null, critica: e.fotos?.critica || null, general: e.fotos?.general || null };
+  espEditFotosRaw = {};
+  espEditFotosPendientes = e.fotos_pendientes || false;
+  renderEspEditFotoSlots();
+
   document.getElementById('esp-edit-modal').style.display = 'flex';
   setTimeout(() => {
     initEspEditMap();
@@ -3711,6 +3734,70 @@ window.abrirEditEspacio = (id) => {
       document.getElementById('esp-edit-loc-status').textContent = '';
     }
   }, 120);
+};
+
+function renderEspEditFotoSlots() {
+  ['acceso','critica','general'].forEach(slot => {
+    const el = document.getElementById('esp-edit-foto-slot-'+slot);
+    if (!el) return;
+    if (espEditFotos[slot]) {
+      el.innerHTML = `<img src="${espEditFotos[slot]}"><span class="photo-slot-status">✓</span>`;
+      el.title = '';
+    } else if (espEditFotosRaw[slot]) {
+      el.innerHTML = `<img src="${URL.createObjectURL(espEditFotosRaw[slot])}"><span class="photo-slot-status">⚠️</span>`;
+      el.title = 'No se pudo subir (sin señal). Tocá la foto para reintentar.';
+    } else {
+      el.innerHTML = `<span style="font-size:22px">📸</span><span class="photo-slot-label">${ESP_FOTO_SLOT_LABELS[slot]}</span>`;
+      el.title = '';
+    }
+  });
+}
+
+window.espEditFotoSlotClick = (slot) => {
+  if (espEditFotosRaw[slot] && !espEditFotos[slot]) {
+    reintentarEspEditFoto(slot);
+  } else {
+    document.getElementById('esp-edit-foto-input-'+slot).click();
+  }
+};
+
+async function subirEspEditFotoConReintento(file, slot, slotEl) {
+  const statusEl = slotEl.querySelector('.photo-slot-status');
+  const url = await subirFotoEspacio(file, slot);
+  if (url) {
+    espEditFotos[slot] = url;
+    delete espEditFotosRaw[slot];
+    if (statusEl) statusEl.textContent = '✓';
+    slotEl.title = '';
+    return true;
+  } else {
+    espEditFotosRaw[slot] = file;
+    espEditFotosPendientes = true;
+    if (statusEl) statusEl.textContent = '⚠️';
+    slotEl.title = 'No se pudo subir (sin señal). Tocá la foto para reintentar.';
+    return false;
+  }
+}
+
+async function reintentarEspEditFoto(slot) {
+  const file = espEditFotosRaw[slot];
+  if (!file) return;
+  const slotEl = document.getElementById('esp-edit-foto-slot-'+slot);
+  const statusEl = slotEl.querySelector('.photo-slot-status');
+  if (statusEl) statusEl.textContent = '⏳';
+  const ok = await subirEspEditFotoConReintento(file, slot, slotEl);
+  if (!ok) toast('Sigue sin poder subirse. Se guardará como pendiente.', true);
+}
+
+window.handleEspEditFoto = async (input, slot) => {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const slotEl = document.getElementById('esp-edit-foto-slot-'+slot);
+  const previewUrl = URL.createObjectURL(file);
+  slotEl.innerHTML = `<img src="${previewUrl}"><span class="photo-slot-status">⏳</span>`;
+  const ok = await subirEspEditFotoConReintento(file, slot, slotEl);
+  if (!ok) toast('No se pudo subir la foto (sin señal). Quedó guardada para reintentar.', true);
 };
 
 window.selectEspEditTipo = (tipo) => {
@@ -3889,6 +3976,10 @@ window.guardarEdicionEspacio = async () => {
     const qty = parseInt(document.getElementById('esp-edit-qty-'+matId).value, 10) || 0;
     if (qty > 0) materiales[matId] = qty;
   });
+  for (const slot of Object.keys(espEditFotosRaw)) {
+    const slotEl = document.getElementById('esp-edit-foto-slot-'+slot);
+    if (slotEl) await subirEspEditFotoConReintento(espEditFotosRaw[slot], slot, slotEl);
+  }
   try {
     await updateDoc(doc(db, 'espacios_publicos', id), {
       tipo: espEditTipoActual,
@@ -3896,6 +3987,8 @@ window.guardarEdicionEspacio = async () => {
       direccion: document.getElementById('esp-edit-dir').value.trim(),
       lat: parseFloat(document.getElementById('esp-edit-lat').value) || null,
       lng: parseFloat(document.getElementById('esp-edit-lng').value) || null,
+      fotos: { acceso: espEditFotos.acceso || null, critica: espEditFotos.critica || null, general: espEditFotos.general || null },
+      fotos_pendientes: espEditFotosPendientes,
       checklist,
       escala: espEditEscalaActual,
       materiales,
