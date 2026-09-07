@@ -156,7 +156,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .map-controls{position:absolute;top:10px;right:10px;z-index:999;display:flex;flex-direction:column;gap:6px}
 .map-control-btn{background:rgba(255,255,255,.94);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);transition:all .15s}
 .map-control-btn:hover{background:var(--surface2);border-color:var(--gold)}
-.map-legend{position:absolute;bottom:10px;left:10px;z-index:999;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);color:var(--text)}
+.map-legend{position:absolute;bottom:10px;left:10px;z-index:999;max-width:calc(100% - 20px)}
+.map-legend-toggle{background:rgba(255,255,255,.94);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;cursor:pointer;font-family:var(--mono);backdrop-filter:blur(8px);box-shadow:var(--shadow-1);transition:all .15s}
+.map-legend-toggle:hover{background:var(--surface2);border-color:var(--gold)}
+.map-legend-items{margin-top:6px;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;backdrop-filter:blur(8px);box-shadow:var(--shadow-1);color:var(--text);max-height:min(220px,50vh);overflow-y:auto}
 .map-legend-item{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .map-legend-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:16px}
 .map-legend-icon svg{display:block}
@@ -323,6 +326,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         </div>
       </div>
       <div class="menu-grid">
+        <div class="menu-card" style="position:relative" onclick="abrirPrograma('mapa')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Mapa','Lo primero que tenés que hacer es delimitar tu campo de acción solidaria. Seleccioná en el mapa tu zona de referencia para tus proyectos y ayudanos a detectar los que ya existen.')">ⓘ</button>
+          <span class="menu-card-icon"><img src="icons/icon-menu-mapa.png" alt="" width="40" height="40"></span>
+          <span>Mapa</span>
+          <span class="menu-card-desc">Visualización georreferenciada de todo el relevamiento</span>
+        </div>
         <div class="menu-card" style="position:relative" onclick="abrirPrograma('ollas')">
           <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Ollas Populares','Herramienta para organizar ollas populares nuevas, y ayudar a las que ya existen.')">ⓘ</button>
           <span class="menu-card-icon"><img src="icons/icon-menu-ollas.png" alt="" width="40" height="40"></span>
@@ -340,12 +349,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <span class="menu-card-icon"><img src="icons/icon-menu-espacios.png" alt="" width="40" height="40"></span>
           <span>Recuperación de Espacios Públicos</span>
           <span class="menu-card-desc">Relevamiento, diagnóstico y pedido de materiales</span>
-        </div>
-        <div class="menu-card" style="position:relative" onclick="abrirPrograma('mapa')">
-          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Mapa','Lo primero que tenés que hacer es delimitar tu campo de acción solidaria. Seleccioná en el mapa tu zona de referencia para tus proyectos y ayudanos a detectar los que ya existen.')">ⓘ</button>
-          <span class="menu-card-icon"><img src="icons/icon-menu-mapa.png" alt="" width="40" height="40"></span>
-          <span>Mapa</span>
-          <span class="menu-card-desc">Visualización georreferenciada de todo el relevamiento</span>
         </div>
       </div>
     </div>
@@ -403,7 +406,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <button class="map-control-btn" onclick="captureMyLocation()">📍 Mi ubicación</button>
           <button class="map-control-btn" onclick="fitMapToMarkers()">🔍 Ver todo</button>
         </div>
-        <div class="map-legend" id="map-legend"></div>
+        <div class="map-legend">
+          <button type="button" class="map-legend-toggle" onclick="toggleMapLegend()" id="map-legend-toggle">🏷 Referencias</button>
+          <div class="map-legend-items" id="map-legend" style="display:none"></div>
+        </div>
       </div>
       <div class="stats" id="map-stats"></div>
     </div>
@@ -2941,6 +2947,11 @@ const iconoAlerta = c => `
   <polygon points="0,-7.5 7.5,6 -7.5,6" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/>
   <rect x="-0.9" y="-3.2" width="1.8" height="5.6" rx="0.9" fill="${c}"/>
   <rect x="-0.9" y="3.6" width="1.8" height="1.8" rx="0.9" fill="${c}"/>`;
+
+window.toggleMapLegend = () => {
+  const el = document.getElementById('map-legend');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
 
 // Referencias del mapa: usan el mismo mkPinIcon/glifo que los marcadores reales,
 // para que la leyenda muestre exactamente el ícono que aparece en el mapa.
