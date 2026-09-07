@@ -1946,7 +1946,7 @@ function initVisMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   visMap = L.map('vis-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(visMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(visMap);
   visMap.on('click', (e) => {
     setVisitaLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('vis-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -2093,7 +2093,7 @@ function initInstMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   instMap = L.map('inst-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(instMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(instMap);
   instMap.on('click', (e) => {
     setInstLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('inst-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -2134,7 +2134,7 @@ function initInstEditMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   instEditMap = L.map('inst-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(instEditMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(instEditMap);
   instEditMap.on('click', (e) => {
     setInstEditLocation(e.latlng.lat, e.latlng.lng);
     document.getElementById('inst-edit-loc-status').textContent = '✓ Ubicación marcada en mapa';
@@ -2888,7 +2888,7 @@ function initMap() {
   if (map) { updateMap(); aplicarRestriccionMapa(); return; }
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   map = L.map('map-container',{zoomControl:false}).setView([nodo?.lat||-34.6,nodo?.lng||-58.5],13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',maxZoom:19}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(map);
   L.control.zoom({position:'bottomright'}).addTo(map);
   map.on('resize', aplicarRestriccionMapa);
   setTimeout(() => {
@@ -3111,7 +3111,7 @@ function initMzMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   mzMap = L.map('mz-map-container', {zoomControl: true}).setView([nodo?.lat||-34.6, nodo?.lng||-58.5], 15);
   const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution: '© Esri', maxZoom: 19});
-  const light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '© CartoDB', maxZoom: 19});
+  const light = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap contributors', maxZoom: 19});
   const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OSM', maxZoom: 19});
   satellite.addTo(mzMap);
   L.control.layers({'Satélite': satellite, 'Claro': light, 'Calles': streets}, {}, {position: 'topright'}).addTo(mzMap);
@@ -3338,7 +3338,7 @@ function initEspMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   espMap = L.map('esp-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(espMap);
   mostrarZonaInfluenciaEnMapa(espMap);
   espMap.on('click', (e) => {
     setEspLocation(e.latlng.lat, e.latlng.lng);
@@ -3820,7 +3820,7 @@ function initEspEditMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   espEditMap = L.map('esp-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(espEditMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(espEditMap);
   mostrarZonaInfluenciaEnMapa(espEditMap);
   espEditMap.on('click', (e) => {
     setEspEditLocation(e.latlng.lat, e.latlng.lng);
@@ -4269,7 +4269,7 @@ function initOllaDispMap() {
   const nodo = (ollaLat && ollaLng) ? null : NODOS.find(n => n.id === currentUser.nodo_id);
   const centro = (ollaLat && ollaLng) ? [ollaLat, ollaLng] : [nodo?.lat || -34.6, nodo?.lng || -58.5];
   ollaDispMap = L.map('olla-disp-map-container', {zoomControl: true, attributionControl: false}).setView(centro, 16);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaDispMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(ollaDispMap);
   ollaDispMap.on('click', (e) => setOllaDispLocation(e.latlng.lat, e.latlng.lng));
 }
 function setOllaDispLocation(lat, lng) {
@@ -4382,7 +4382,7 @@ function initOllaPcMap() {
   const nodo = (ollaLat && ollaLng) ? null : NODOS.find(n => n.id === currentUser.nodo_id);
   const centro = (ollaLat && ollaLng) ? [ollaLat, ollaLng] : [nodo?.lat || -34.6, nodo?.lng || -58.5];
   ollaPcMap = L.map('olla-pc-map-container', {zoomControl: true, attributionControl: false}).setView(centro, 16);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaPcMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(ollaPcMap);
   ollaPcMap.on('click', (e) => {
     if (ollaPcTipoActual === 'radio') {
       ollaPcSetRadioCenter(e.latlng.lat, e.latlng.lng);
@@ -4546,7 +4546,7 @@ function initOllaMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   ollaMap = L.map('olla-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(ollaMap);
   mostrarZonaInfluenciaEnMapa(ollaMap);
   ollaMap.on('click', (e) => {
     setOllaLocation(e.latlng.lat, e.latlng.lng);
@@ -4758,7 +4758,7 @@ function initOllaEditMap() {
   const nodo = NODOS.find(n => n.id === currentUser.nodo_id);
   ollaEditMap = L.map('olla-edit-map-container', {zoomControl: true, attributionControl: false})
     .setView([nodo?.lat || -34.6, nodo?.lng || -58.5], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom: 19}).addTo(ollaEditMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom: 19}).addTo(ollaEditMap);
   mostrarZonaInfluenciaEnMapa(ollaEditMap);
   ollaEditMap.on('click', (e) => {
     setOllaEditLocation(e.latlng.lat, e.latlng.lng);
@@ -5114,7 +5114,7 @@ window.toggleInstMapLista = (id, lat, lng) => {
     container.style.display = 'block';
     if (!instListaMaps[id]) {
       const m = L.map(container, {zoomControl: false, attributionControl: false}).setView([lat, lng], 16);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(m);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(m);
       L.marker([lat, lng], {
         icon: L.divIcon({
           className: '',
