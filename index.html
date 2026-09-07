@@ -1060,8 +1060,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             <label><input type="checkbox" value="iglesias_redes"> Iglesias / Redes barriales</label>
           </div>
 
-          <div class="card-title" style="font-size:14px">Consumo mensual estimado</div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Calculado automáticamente a partir de las porciones y jornadas cargadas arriba.</div>
+          <div class="card-title" style="font-size:14px">Consumo estimado</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">"Por jornada" es lo que necesitás comprar para un día de cocción. "Total del mes" multiplica eso por la cantidad de jornadas cargada arriba.</div>
           <div id="calc-consumo-list" style="margin-bottom:18px"></div>
 
           <div class="field" style="margin-bottom:8px"><span class="field-label">Necesidades de infraestructura</span></div>
@@ -4203,16 +4203,20 @@ function calcJornadasMes() {
 window.renderCalcResultado = () => {
   const porciones = parseInt((document.getElementById('calc-porciones')||{}).value, 10) || 0;
   const jornadas = calcJornadasMes();
-  const consumo = computeOllaConsumo(porciones, jornadas);
+  const porJornada = computeOllaConsumo(porciones, 1);
+  const totalMes = computeOllaConsumo(porciones, jornadas);
   const el = document.getElementById('calc-consumo-list');
   if (!el) return;
   el.innerHTML = OLLA_MASA_TECNICA_100.map(it => `
     <div class="material-row">
       <div class="material-info">
         <div class="material-name">${it.nombre}${it.autogestion ? ' <span class="badge badge-orange" style="margin-left:4px">Autogestión</span>' : ''}</div>
-        <div class="material-stock">${it.unidad}</div>
+        <div class="material-stock">${it.unidad} · por jornada: ${porJornada[it.id]}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${consumo[it.id]}</div>
+      <div style="text-align:right">
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${totalMes[it.id]}</div>
+        <div style="font-size:10px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.3px">total del mes</div>
+      </div>
     </div>`).join('');
 };
 
