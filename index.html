@@ -217,6 +217,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .menu-card:hover{border-color:var(--gold);box-shadow:var(--shadow-2);transform:translateY(-2px)}
 .menu-card-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .menu-card-desc{font-size:12px;font-weight:400;color:var(--muted);line-height:1.4;text-align:center;margin-top:-4px}
+.menu-card-info{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font);transition:all .15s}
+.menu-card-info:hover{border-color:var(--gold);color:var(--gold)}
 @media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
 
 .step-indicator{font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
@@ -313,29 +315,38 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <div style="position:absolute;top:0;right:0;width:220px;height:220px;background:radial-gradient(circle at top right,rgba(0,173,195,.08),transparent);pointer-events:none"></div>
         <div style="position:absolute;bottom:0;left:0;width:160px;height:160px;background:radial-gradient(circle at bottom left,rgba(230,33,117,.05),transparent);pointer-events:none"></div>
         <div class="section-title" style="margin-bottom:0">Bonaerenses Solidarios</div>
-        <div style="color:var(--muted);font-size:14.5px;margin-top:6px;max-width:560px;line-height:1.6">Elegí un programa para relevar, organizar y gestionar el trabajo territorial de tu nodo.</div>
+        <div style="color:var(--gold-dark);font-size:15px;font-weight:600;font-style:italic;margin-top:6px">Organizando la Comunidad</div>
+        <div style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:600px;line-height:1.6">
+          ¡Hola! Esta es una aplicación para ayudar a organizar la solidaridad en nuestros barrios Bonaerenses.<br><br>
+          Podés gestionar jornadas para arreglar espacios públicos de tu barrio (baldíos, plazas, clubes). Calcular qué necesitás para organizar una Olla popular, y capacitarte como Alfabetizador, para aprender a enseñar a leer y escribir a algún vecino que no sepa.<br><br>
+          ¡Nadie se salva solo! ¡La Comunidad Organizada es la respuesta!
+        </div>
       </div>
       <div class="menu-grid">
-        <button class="menu-card" onclick="abrirPrograma('ollas')">
+        <div class="menu-card" style="position:relative" onclick="abrirPrograma('ollas')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Ollas Populares','Herramienta para organizar ollas populares nuevas, y ayudar a las que ya existen.')">ⓘ</button>
           <span class="menu-card-icon"><img src="icons/icon-menu-ollas.png" alt="" width="40" height="40"></span>
           <span>Ollas Populares</span>
           <span class="menu-card-desc">Organización, calculadora de consumo y pedidos a Provincia</span>
-        </button>
-        <button class="menu-card" onclick="abrirPrograma('alfabetizacion')">
+        </div>
+        <div class="menu-card" style="position:relative" onclick="abrirPrograma('alfabetizacion')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Alfabetización','Herramienta para capacitarte en ser Alfabetizador. El verdadero cambio es la educación. Guía de clases y métodos para que otro también pueda aprender al leer y escribir. (Aún en construcción)')">ⓘ</button>
           <span class="menu-card-icon"><img src="icons/icon-menu-alfabetizacion.png" alt="" width="40" height="40"></span>
           <span>Alfabetización</span>
           <span class="menu-card-desc">Seguimiento DALE! de alfabetizandos y alfabetizadores</span>
-        </button>
-        <button class="menu-card" onclick="abrirPrograma('espacios')">
+        </div>
+        <div class="menu-card" style="position:relative" onclick="abrirPrograma('espacios')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Recuperación de Espacio Público','Si querés organizar una jornada de mantenimiento de un espacio público de tu barrio podés gestionarlo desde acá.')">ⓘ</button>
           <span class="menu-card-icon"><img src="icons/icon-menu-espacios.png" alt="" width="40" height="40"></span>
           <span>Recuperación de Espacios Públicos</span>
           <span class="menu-card-desc">Relevamiento, diagnóstico y pedido de materiales</span>
-        </button>
-        <button class="menu-card" onclick="abrirPrograma('mapa')">
+        </div>
+        <div class="menu-card" style="position:relative" onclick="abrirPrograma('mapa')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Mapa','Lo primero que tenés que hacer es delimitar tu campo de acción solidaria. Seleccioná en el mapa tu zona de referencia para tus proyectos y ayudanos a detectar los que ya existen.')">ⓘ</button>
           <span class="menu-card-icon"><img src="icons/icon-menu-mapa.png" alt="" width="40" height="40"></span>
           <span>Mapa</span>
           <span class="menu-card-desc">Visualización georreferenciada de todo el relevamiento</span>
-        </button>
+        </div>
       </div>
     </div>
 
@@ -740,29 +751,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
     <!-- OLLAS POPULARES -->
     <div class="section" id="sec-ollas">
-      <div><div class="section-title">Ollas Populares</div><div class="section-sub">Organizá una olla nueva o relevá una existente, calculá el consumo del mes y pedí el equipamiento a Provincia.</div></div>
+      <div><div class="section-title">Ollas Populares</div><div class="section-sub">Organizá una olla nueva, relevá las que ya existen en el barrio y calculá lo que necesitás para sostenerlas.</div></div>
 
-      <div id="olla-subnav" style="display:none;gap:8px;margin-bottom:2px">
-        <button class="map-filter-btn active" id="olla-tab-cargar" onclick="ollaMostrarVista('cargar')" style="padding:8px 14px;font-size:12.5px">＋ Cargar olla</button>
-        <button class="map-filter-btn" id="olla-tab-resumen" onclick="ollaMostrarVista('resumen')" style="padding:8px 14px;font-size:12.5px">📊 Resumen de pedidos (todos los nodos)</button>
+      <div id="olla-subnav" style="display:flex;gap:8px;margin-bottom:2px;flex-wrap:wrap">
+        <button class="map-filter-btn active" id="olla-tab-nueva" onclick="ollaMostrarVista('nueva')" style="padding:8px 14px;font-size:12.5px">🍲 I · Olla nueva</button>
+        <button class="map-filter-btn" id="olla-tab-relevar" onclick="ollaMostrarVista('relevar')" style="padding:8px 14px;font-size:12.5px">🗺️ II · Relevador de ollas</button>
+        <button class="map-filter-btn" id="olla-tab-calc" onclick="ollaMostrarVista('calc')" style="padding:8px 14px;font-size:12.5px">🧮 III · Calculadora</button>
+        <button class="map-filter-btn" id="olla-tab-resumen" onclick="ollaMostrarVista('resumen')" style="padding:8px 14px;font-size:12.5px">📊 Resumen de pedidos</button>
       </div>
 
-      <div id="olla-vista-cargar">
+      <!-- ═══ I - OLLA NUEVA ═══ -->
+      <div id="olla-vista-nueva">
+      <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Para pedir Olla y Cuchillas a Provincia y organizar una olla nueva. Te recomendamos revisar las otras dos solapas para organizarnos mejor.</div>
       <div class="card">
-        <div class="step-indicator" id="olla-step-label">Paso 1 de 5 · Objetivo y ubicación</div>
+        <div class="step-indicator" id="olla-step-label">Paso 1 de 5 · Ubicación</div>
 
-        <!-- PASO 1: Objetivo y ubicación -->
+        <!-- PASO 1: Ubicación -->
         <div id="olla-step-1">
           <div class="field" style="margin-bottom:14px">
-            <span class="field-label">¿Qué querés hacer?</span>
-            <div class="toggle-group" id="olla-objetivo-group">
-              <div class="toggle-btn" data-obj="nueva" onclick="selectOllaObjetivo('nueva')">Organizar una olla nueva</div>
-              <div class="toggle-btn" data-obj="existente" onclick="selectOllaObjetivo('existente')">Relevar una olla existente</div>
-            </div>
-          </div>
-
-          <div class="field" style="margin-bottom:14px">
-            <span class="field-label">Nombre del espacio / olla</span>
+            <span class="field-label">Nombre del lugar donde se realiza la Olla</span>
             <input id="olla-nombre" placeholder="Olla Los Pinos, Comedor Esquina Sur..." style="font-size:16px;padding:12px">
           </div>
 
@@ -782,88 +789,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <button class="btn btn-primary" style="width:100%;padding:14px;margin-top:4px" onclick="nextOllaStep(2)">Continuar →</button>
         </div>
 
-        <!-- PASO 2: Plan de lanzamiento (nueva) / Funcionamiento actual (existente) -->
+        <!-- PASO 2: Responsable -->
         <div id="olla-step-2" style="display:none">
-          <div id="olla-step2-nueva" style="display:none">
-            <div class="field" style="margin-bottom:8px"><span class="field-label">Responsables de organización</span></div>
-            <div class="form-grid" style="margin-bottom:6px">
-              <div class="field"><span class="field-label">Referente 1 · Nombre y apellido</span><input id="olla-resp1-nombre" placeholder="Nombre y apellido"></div>
-              <div class="field"><span class="field-label">Referente 1 · Teléfono</span><input id="olla-resp1-tel" placeholder="11-XXXX-XXXX"></div>
-            </div>
-            <div class="form-grid" style="margin-bottom:16px">
-              <div class="field"><span class="field-label">Referente 2 · Nombre y apellido</span><input id="olla-resp2-nombre" placeholder="Nombre y apellido"></div>
-              <div class="field"><span class="field-label">Referente 2 · Teléfono</span><input id="olla-resp2-tel" placeholder="11-XXXX-XXXX"></div>
-            </div>
+          <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre del Responsable de Olla</span><input id="olla-resp-nombre" placeholder="Nombre y apellido" style="font-size:16px;padding:12px"></div>
+          <div class="field" style="margin-bottom:14px"><span class="field-label">Teléfono</span><input id="olla-resp-tel" placeholder="11-XXXX-XXXX" style="font-size:16px;padding:12px"></div>
+          <div class="field" style="margin-bottom:12px"><span class="field-label">Organización a la que pertenece</span><input id="olla-organizacion" placeholder="Nombre de la organización" style="font-size:16px;padding:12px"></div>
 
-            <div class="field" style="margin-bottom:14px">
-              <span class="field-label">Frecuencia proyectada</span>
-              <div class="toggle-group" id="olla-frecuencia-group">
-                <div class="toggle-btn" data-frec="semanal" onclick="selectOllaFrecuencia('semanal')">Semanal</div>
-                <div class="toggle-btn" data-frec="quincenal" onclick="selectOllaFrecuencia('quincenal')">Quincenal</div>
-                <div class="toggle-btn" style="grid-column:span 2" data-frec="especifica_emergencia" onclick="selectOllaFrecuencia('especifica_emergencia')">Días específicos / Emergencia</div>
-              </div>
-            </div>
-
-            <div class="field" style="margin-bottom:14px">
-              <span class="field-label">Lugar de cocción</span>
-              <div class="toggle-group" id="olla-lugar-group">
-                <div class="toggle-btn" data-lugar="casa_vecino" onclick="selectOllaLugar('casa_vecino')">Casa de un vecino/militante</div>
-                <div class="toggle-btn" data-lugar="calle_vereda" onclick="selectOllaLugar('calle_vereda')">En la calle / Vereda</div>
-                <div class="toggle-btn" data-lugar="centro_comunitario" onclick="selectOllaLugar('centro_comunitario')">Centro Comunitario / Club</div>
-                <div class="toggle-btn" data-lugar="aire_libre" onclick="selectOllaLugar('aire_libre')">Espacio al aire libre / Plaza</div>
-                <div class="toggle-btn" style="grid-column:span 2" data-lugar="otro" onclick="selectOllaLugar('otro')">Otro (especificar)</div>
-              </div>
-              <div id="olla-lugar-otro-wrap" style="display:none;margin-top:8px"><input id="olla-lugar-otro" placeholder="Especificar lugar o referencia" style="font-size:14px;padding:10px"></div>
-            </div>
-
-            <div class="field" style="margin-bottom:8px">
-              <span class="field-label">Sistema de cocción</span>
-              <div class="toggle-group" data-sistema-group>
-                <div class="toggle-btn" data-sistema="lena" onclick="selectOllaSistema('lena')">A leña</div>
-                <div class="toggle-btn" data-sistema="gas_garrafa" onclick="selectOllaSistema('gas_garrafa')">A gas (Mechero + Garrafa)</div>
-                <div class="toggle-btn" style="grid-column:span 2" data-sistema="gas_natural" onclick="selectOllaSistema('gas_natural')">Gas natural</div>
-              </div>
-              <div id="olla-sistema-nota" style="font-size:12px;color:var(--dim);margin-top:6px"></div>
-            </div>
-          </div>
-
-          <div id="olla-step2-existente" style="display:none">
-            <div class="field" style="margin-bottom:8px"><span class="field-label">Días de funcionamiento</span></div>
-            <div class="checkbox-row" id="olla-dias-list" style="margin-bottom:14px">
-              <label><input type="checkbox" value="lunes"> Lunes</label>
-              <label><input type="checkbox" value="martes"> Martes</label>
-              <label><input type="checkbox" value="miercoles"> Miércoles</label>
-              <label><input type="checkbox" value="jueves"> Jueves</label>
-              <label><input type="checkbox" value="viernes"> Viernes</label>
-              <label><input type="checkbox" value="sabado"> Sábado</label>
-              <label><input type="checkbox" value="domingo"> Domingo</label>
-            </div>
-
-            <div class="field" style="margin-bottom:8px"><span class="field-label">Turno</span></div>
-            <div class="checkbox-row" id="olla-turnos-list" style="margin-bottom:14px">
-              <label><input type="checkbox" value="almuerzo"> Almuerzo</label>
-              <label><input type="checkbox" value="merienda"> Merienda</label>
-              <label><input type="checkbox" value="cena"> Cena</label>
-            </div>
-
-            <div class="field" style="margin-bottom:14px">
-              <span class="field-label">Modalidad del espacio</span>
-              <div class="toggle-group" id="olla-modalidad-group" style="grid-template-columns:1fr">
-                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="comedor_fisico" onclick="selectOllaModalidad('comedor_fisico')">Comedor en espacio físico</div>
-                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="retiro_viandas" onclick="selectOllaModalidad('retiro_viandas')">Retiro de viandas / Para comer en la calle</div>
-                <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="ambulatorio" onclick="selectOllaModalidad('ambulatorio')">Ambulatorio / Recorrida</div>
-              </div>
-            </div>
-
-            <div class="field" style="margin-bottom:8px">
-              <span class="field-label">Sistema de cocción</span>
-              <div class="toggle-group" data-sistema-group>
-                <div class="toggle-btn" data-sistema="lena" onclick="selectOllaSistema('lena')">A leña</div>
-                <div class="toggle-btn" data-sistema="gas_garrafa" onclick="selectOllaSistema('gas_garrafa')">A gas (Mechero + Garrafa)</div>
-                <div class="toggle-btn" style="grid-column:span 2" data-sistema="gas_natural" onclick="selectOllaSistema('gas_natural')">Gas natural</div>
-              </div>
-            </div>
-          </div>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:14.5px;margin-bottom:8px">
+            <input type="checkbox" id="olla-autoconvocado" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0" onchange="toggleOllaAutoconvocado(this.checked)">
+            Vecinos autoconvocados sin organización
+          </label>
 
           <div style="display:flex;gap:8px;margin-top:18px">
             <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(1)">← Atrás</button>
@@ -871,10 +806,44 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           </div>
         </div>
 
-        <!-- PASO 3: Porciones y padrón -->
+        <!-- PASO 3: Pedido -->
         <div id="olla-step-3" style="display:none">
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;padding:12px 14px;background:var(--surface2);border-left:3px solid var(--gold);border-radius:6px">Desde Provincia por ahora sólo podemos garantizar esta infraestructura. Solo pedí si tenés garantizado el resto de materiales (consultá la Calculadora de elementos).</div>
+
+          <div class="material-row" style="border-color:#8a5cf6;background:rgba(138,92,246,.08)">
+            <div class="material-info"><div class="material-name" style="color:#6a3fd6;font-weight:600">Ollas</div><div class="material-stock">máximo 1</div></div>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" onclick="ollaPedidoStep('ollas',-1)">−</button>
+              <input type="number" min="0" max="1" inputmode="numeric" class="stepper-val" id="olla-pedido-ollas" value="0" onchange="ollaPedidoClamp('ollas')">
+              <button type="button" class="stepper-btn" onclick="ollaPedidoStep('ollas',1)">+</button>
+            </div>
+          </div>
+          <div class="material-row" style="border-color:#8a5cf6;background:rgba(138,92,246,.08);margin-bottom:16px">
+            <div class="material-info"><div class="material-name" style="color:#6a3fd6;font-weight:600">Cuchillas</div><div class="material-stock">máximo 2</div></div>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" onclick="ollaPedidoStep('cuchillas',-1)">−</button>
+              <input type="number" min="0" max="2" inputmode="numeric" class="stepper-val" id="olla-pedido-cuchillas" value="0" onchange="ollaPedidoClamp('cuchillas')">
+              <button type="button" class="stepper-btn" onclick="ollaPedidoStep('cuchillas',1)">+</button>
+            </div>
+          </div>
+
+          <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:14.5px;margin-bottom:14px">
+            <input type="checkbox" id="olla-cuenta-infraestructura" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0">
+            Cuento, o puedo contar a corto plazo, con el resto de materiales para organizar una olla
+          </label>
+
+          <div class="field" style="margin-bottom:8px"><span class="field-label">Observaciones</span><textarea id="olla-observaciones" placeholder="Anotá si hay alguna particularidad que quieras que sepamos"></textarea></div>
+
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(2)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextOllaStep(4)">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- PASO 4: Porciones y padrón -->
+        <div id="olla-step-4" style="display:none">
           <div class="form-grid" style="margin-bottom:16px">
-            <div class="field"><span class="field-label">Porciones por jornada</span><input id="olla-porciones" type="number" min="0" placeholder="100" inputmode="numeric" style="font-size:16px;padding:12px"></div>
+            <div class="field"><span class="field-label">Porciones estimadas por jornada</span><input id="olla-porciones" type="number" min="0" placeholder="100" inputmode="numeric" style="font-size:16px;padding:12px"></div>
             <div class="field"><span class="field-label">Jornadas al mes</span><input id="olla-jornadas" type="number" min="0" placeholder="4" inputmode="numeric" style="font-size:16px;padding:12px"></div>
           </div>
 
@@ -884,43 +853,37 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPadronAdd()">＋ Agregar familia</button>
 
           <div style="display:flex;gap:8px;margin-top:18px">
-            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(2)">← Atrás</button>
-            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextOllaStep(4)">Continuar →</button>
-          </div>
-        </div>
-
-        <!-- PASO 4: Insumos, calculadora y solicitud -->
-        <div id="olla-step-4" style="display:none">
-          <div class="card-title" style="font-size:14px">Consumo mensual estimado</div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Calculado automáticamente a partir de las porciones y jornadas del paso anterior.</div>
-          <div id="olla-consumo-list" style="margin-bottom:18px"></div>
-
-          <div class="field" style="margin-bottom:8px"><span class="field-label">¿Cómo se consiguen los alimentos?</span></div>
-          <div class="checkbox-row" id="olla-estrategia-list" style="margin-bottom:18px">
-            <label><input type="checkbox" value="donaciones_mangazo"> Donaciones / Mangazo local</label>
-            <label><input type="checkbox" value="militantes"> Aporte de militantes</label>
-            <label><input type="checkbox" value="programas_estatales"> Programas estatales</label>
-            <label><input type="checkbox" value="iglesias_redes"> Iglesias / Redes barriales</label>
-          </div>
-
-          <div class="field" style="margin-bottom:8px"><span class="field-label">Solicitud de equipamiento a Provincia (stock Tolosa)</span></div>
-          <div id="olla-equipamiento-list" style="margin-bottom:18px"></div>
-
-          <div class="field" style="margin-bottom:8px"><span class="field-label">Necesidades de infraestructura</span></div>
-          <div id="olla-necesidades-list"></div>
-
-          <div style="display:flex;gap:8px;margin-top:18px">
             <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(3)">← Atrás</button>
             <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextOllaStep(5)">Continuar →</button>
           </div>
         </div>
 
-        <!-- PASO 5: Red alimentaria y puntos ciegos -->
+        <!-- PASO 5: Revisión y confirmación -->
         <div id="olla-step-5" style="display:none">
-          <div class="card-title" style="font-size:14px">Dispositivos de asistencia alimentaria cercanos</div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Registrá otros comedores, merenderos o puntos de entrega en la zona para evitar superponer esfuerzos. Es opcional.</div>
+          <div class="card-title">Revisá antes de confirmar el pedido</div>
+          <div id="olla-resumen" style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:18px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(4)">← Atrás</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="guardarOlla()">✓ Confirmar pedido</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="olla-list-card" style="display:none">
+        <div class="card-title">Ollas nuevas cargadas (<span id="olla-count">0</span>)</div>
+        <div id="olla-list"></div>
+      </div>
+      </div>
+
+      <!-- ═══ II - RELEVADOR DE OLLAS EXISTENTES ═══ -->
+      <div id="olla-vista-relevar" style="display:none">
+        <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Es necesario que articulemos con todos los espacios solidarios del barrio para que nadie pase hambre. Mapeá las ollas del barrio y qué día funcionan. Todas las ollas que releves acá se marcarán en tu mapa para tener mayor registro del territorio en el que nos organizamos. Los puntos ciegos son los lugares que detectamos donde hay una población vulnerable sin organización resolviendo la comida.</div>
+
+        <div class="card">
+          <div class="card-title" style="font-size:14px">Ollas y dispositivos de asistencia alimentaria</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Registrá los comedores, ollas, merenderos o puntos de entrega que ya existen en el barrio.</div>
           <div id="olla-disp-list" style="margin-bottom:10px"></div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispAbrirForm()">＋ Registrar dispositivo cercano</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispAbrirForm()">＋ Relevar olla / dispositivo</button>
 
           <div id="olla-disp-form" style="display:none;margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
             <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre o identificación</span><input id="olla-disp-nombre" placeholder="Comedor San Cayetano, Merendero Caritas Felices..." style="font-size:14px;padding:10px"></div>
@@ -970,12 +933,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             <input type="hidden" id="olla-disp-lat"><input type="hidden" id="olla-disp-lng">
             <div style="display:flex;gap:8px">
               <button class="btn btn-secondary" onclick="ollaDispCancelar()">Cancelar</button>
-              <button class="btn btn-primary" onclick="ollaDispGuardar()">Agregar dispositivo</button>
+              <button class="btn btn-primary" onclick="ollaDispGuardar()">Guardar relevamiento</button>
             </div>
           </div>
+        </div>
 
-          <div class="card-title" style="font-size:14px;margin-top:26px">Puntos ciegos (zonas sin cobertura)</div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marcá zonas con población vulnerable donde no hay ningún dispositivo a menos de 5-8 cuadras. Es opcional.</div>
+        <div class="card">
+          <div class="card-title" style="font-size:14px">Puntos ciegos (zonas sin cobertura)</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marcá zonas con población vulnerable donde no hay ningún dispositivo a menos de 5-8 cuadras.</div>
           <div id="olla-pc-list" style="margin-bottom:10px"></div>
           <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcAbrirForm()">＋ Marcar punto ciego</button>
 
@@ -1034,33 +999,71 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             </div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-secondary" onclick="ollaPcCancelar()">Cancelar</button>
-              <button class="btn btn-primary" onclick="ollaPcGuardar()">Agregar punto ciego</button>
+              <button class="btn btn-primary" onclick="ollaPcGuardar()">Guardar punto ciego</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ III - CALCULADORA DE ELEMENTOS ═══ -->
+      <div id="olla-vista-calc" style="display:none">
+        <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Esta herramienta es para calcular logísticamente todo lo que se requiere para organizar una olla y que funcione. Sin esto va a ser difícil sostenerla. Lamentablemente por ahora no contamos con más materiales para aportar desde Provincia.</div>
+
+        <div class="card">
+          <div style="font-size:12.5px;color:var(--dim);margin-bottom:16px;line-height:1.5">*Una porción es un plato de guiso nutritivo, para que una persona esté satisfecha (450cm³).</div>
+
+          <div class="field" style="margin-bottom:14px">
+            <span class="field-label">Frecuencia proyectada</span>
+            <div class="toggle-group" id="calc-frecuencia-group">
+              <div class="toggle-btn" data-frec="semanal" onclick="selectCalcFrecuencia('semanal')">Semanal</div>
+              <div class="toggle-btn" data-frec="quincenal" onclick="selectCalcFrecuencia('quincenal')">Quincenal</div>
+              <div class="toggle-btn" style="grid-column:span 2" data-frec="especifica" onclick="selectCalcFrecuencia('especifica')">Días específicos</div>
+            </div>
+            <div id="calc-jornadas-wrap" style="display:none;margin-top:8px"><span class="field-label">Jornadas al mes</span><input id="calc-jornadas" type="number" min="0" placeholder="4" inputmode="numeric" style="font-size:16px;padding:12px" oninput="renderCalcResultado()"></div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px"><span class="field-label">Porciones por jornada proyectadas</span><input id="calc-porciones" type="number" min="0" placeholder="100" inputmode="numeric" style="font-size:16px;padding:12px" oninput="renderCalcResultado()"></div>
+
+          <div class="field" style="margin-bottom:14px">
+            <span class="field-label">Lugar de cocción</span>
+            <div class="toggle-group" id="calc-lugar-group">
+              <div class="toggle-btn" data-lugar="casa_vecino" onclick="selectCalcLugar('casa_vecino')">Patio de un vecino</div>
+              <div class="toggle-btn" data-lugar="calle_vereda" onclick="selectCalcLugar('calle_vereda')">Calle / Vereda</div>
+              <div class="toggle-btn" data-lugar="centro_comunitario" onclick="selectCalcLugar('centro_comunitario')">Club / Centro Comunitario</div>
+              <div class="toggle-btn" data-lugar="aire_libre" onclick="selectCalcLugar('aire_libre')">Espacio al aire libre / Plaza</div>
+              <div class="toggle-btn" style="grid-column:span 2" data-lugar="otro" onclick="selectCalcLugar('otro')">Otro (especificar)</div>
+            </div>
+            <div id="calc-lugar-otro-wrap" style="display:none;margin-top:8px"><input id="calc-lugar-otro" placeholder="Especificar lugar o referencia" style="font-size:14px;padding:10px"></div>
+          </div>
+
+          <div class="field" style="margin-bottom:14px">
+            <span class="field-label">Sistema de cocción</span>
+            <div class="toggle-group" id="calc-sistema-group">
+              <div class="toggle-btn" data-sistema="lena" onclick="selectCalcSistema('lena')">A leña (15 kg de madera de pallet x olla)</div>
+              <div class="toggle-btn" data-sistema="gas_garrafa" onclick="selectCalcSistema('gas_garrafa')">A gas (Mechero + Garrafa)</div>
+              <div class="toggle-btn" style="grid-column:span 2" data-sistema="gas_natural" onclick="selectCalcSistema('gas_natural')">Gas natural</div>
             </div>
           </div>
 
-          <div style="display:flex;gap:8px;margin-top:18px">
-            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(4)">← Atrás</button>
-            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="nextOllaStep(6)">Continuar →</button>
+          <div class="field" style="margin-bottom:8px"><span class="field-label">¿Cómo se consiguen los alimentos?</span></div>
+          <div class="checkbox-row" id="calc-estrategia-list" style="margin-bottom:20px">
+            <label><input type="checkbox" value="donaciones_mangazo"> Donaciones / Mangazo local</label>
+            <label><input type="checkbox" value="militantes"> Aporte de militantes</label>
+            <label><input type="checkbox" value="programas_estatales"> Programas estatales</label>
+            <label><input type="checkbox" value="iglesias_redes"> Iglesias / Redes barriales</label>
           </div>
-        </div>
 
-        <!-- PASO 6: Resumen y confirmación -->
-        <div id="olla-step-6" style="display:none">
-          <div class="card-title">Revisá antes de confirmar</div>
-          <div id="olla-resumen" style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:18px"></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="showOllaStep(5)">← Atrás</button>
-            <button class="btn btn-primary" style="flex:2;padding:14px" onclick="guardarOlla()">✓ Confirmar registro y generar CUPA</button>
-          </div>
+          <div class="card-title" style="font-size:14px">Consumo mensual estimado</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Calculado automáticamente a partir de las porciones y jornadas cargadas arriba.</div>
+          <div id="calc-consumo-list" style="margin-bottom:18px"></div>
+
+          <div class="field" style="margin-bottom:8px"><span class="field-label">Necesidades de infraestructura</span></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Mínimo recomendado por olla: 5 tablas, 5 cuchillos, 2 pelapapas y 6 palanganas plásticas de uso exclusivo.</div>
+          <div id="calc-necesidades-list"></div>
         </div>
       </div>
 
-      <div class="card" id="olla-list-card" style="display:none">
-        <div class="card-title">Ollas relevadas (<span id="olla-count">0</span>)</div>
-        <div id="olla-list"></div>
-      </div>
-      </div>
-
+      <!-- ═══ RESUMEN DE PEDIDOS ═══ -->
       <div id="olla-vista-resumen" style="display:none">
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
@@ -1075,8 +1078,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <div id="olla-resumen-general-meta" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
           <div class="card-title" style="font-size:14px">Insumos alimentarios (consumo mensual proyectado)</div>
           <div id="olla-resumen-consumo-list" style="margin-bottom:18px"></div>
-          <div class="card-title" style="font-size:14px">Equipamiento pedido a Tolosa</div>
-          <div id="olla-resumen-equipo-list"></div>
+          <div class="card-title" style="font-size:14px">Equipamiento pedido a Provincia</div>
+          <div id="olla-resumen-equipo-list" style="margin-bottom:18px"></div>
+          <div class="card-title" style="font-size:14px">Detalle de pedidos</div>
+          <div style="overflow-x:auto"><table class="data-table" id="olla-resumen-detalle-tabla"><thead><tr><th>Olla</th><th>Ollas</th><th>Cuchillas</th><th>Usuario</th><th>Fecha</th></tr></thead><tbody id="olla-resumen-detalle-body"></tbody></table></div>
         </div>
 
         <div class="card">
@@ -1288,18 +1293,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 <div id="olla-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;width:100%;max-width:560px;margin:40px auto">
-    <div style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:16px">Editar olla</div>
+    <div style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:16px">Editar pedido de olla</div>
     <input type="hidden" id="olla-edit-id">
 
-    <div class="field" style="margin-bottom:12px">
-      <span class="field-label">¿Qué es?</span>
-      <div class="toggle-group" id="olla-edit-objetivo-group">
-        <div class="toggle-btn" data-obj="nueva" onclick="selectOllaEditObjetivo('nueva')">Nueva</div>
-        <div class="toggle-btn" data-obj="existente" onclick="selectOllaEditObjetivo('existente')">Existente</div>
-      </div>
-    </div>
-
-    <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre del espacio / olla</span><input id="olla-edit-nombre" style="font-size:16px;padding:12px"></div>
+    <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre del lugar donde se realiza la Olla</span><input id="olla-edit-nombre" style="font-size:16px;padding:12px"></div>
 
     <div class="field autocomplete-wrap" style="margin-bottom:10px">
       <span class="field-label">Dirección</span>
@@ -1314,96 +1311,47 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div id="olla-edit-map-container" style="width:100%;height:200px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px"></div>
     <input type="hidden" id="olla-edit-lat"><input type="hidden" id="olla-edit-lng">
 
-    <div id="olla-edit-step2-nueva" style="display:none">
-      <div class="form-grid" style="margin-bottom:6px">
-        <div class="field"><span class="field-label">Referente 1</span><input id="olla-edit-resp1-nombre" placeholder="Nombre y apellido"></div>
-        <div class="field"><span class="field-label">Teléfono</span><input id="olla-edit-resp1-tel" placeholder="11-XXXX-XXXX"></div>
+    <div class="field" style="margin-bottom:10px"><span class="field-label">Nombre del Responsable de Olla</span><input id="olla-edit-resp-nombre" placeholder="Nombre y apellido" style="font-size:16px;padding:12px"></div>
+    <div class="field" style="margin-bottom:14px"><span class="field-label">Teléfono</span><input id="olla-edit-resp-tel" placeholder="11-XXXX-XXXX" style="font-size:16px;padding:12px"></div>
+    <div class="field" style="margin-bottom:12px"><span class="field-label">Organización a la que pertenece</span><input id="olla-edit-organizacion" placeholder="Nombre de la organización" style="font-size:16px;padding:12px"></div>
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:14.5px;margin-bottom:16px">
+      <input type="checkbox" id="olla-edit-autoconvocado" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0" onchange="toggleOllaEditAutoconvocado(this.checked)">
+      Vecinos autoconvocados sin organización
+    </label>
+
+    <div class="field" style="margin-bottom:8px"><span class="field-label">Pedido a Provincia</span></div>
+    <div class="material-row" style="border-color:#8a5cf6;background:rgba(138,92,246,.08)">
+      <div class="material-info"><div class="material-name" style="color:#6a3fd6;font-weight:600">Ollas</div><div class="material-stock">máximo 1</div></div>
+      <div class="stepper">
+        <button type="button" class="stepper-btn" onclick="ollaEditPedidoStep('ollas',-1)">−</button>
+        <input type="number" min="0" max="1" inputmode="numeric" class="stepper-val" id="olla-edit-pedido-ollas" value="0" onchange="ollaEditPedidoClamp('ollas')">
+        <button type="button" class="stepper-btn" onclick="ollaEditPedidoStep('ollas',1)">+</button>
       </div>
-      <div class="form-grid" style="margin-bottom:14px">
-        <div class="field"><span class="field-label">Referente 2</span><input id="olla-edit-resp2-nombre" placeholder="Nombre y apellido"></div>
-        <div class="field"><span class="field-label">Teléfono</span><input id="olla-edit-resp2-tel" placeholder="11-XXXX-XXXX"></div>
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <span class="field-label">Frecuencia proyectada</span>
-        <div class="toggle-group" id="olla-edit-frecuencia-group">
-          <div class="toggle-btn" data-frec="semanal" onclick="selectOllaEditFrecuencia('semanal')">Semanal</div>
-          <div class="toggle-btn" data-frec="quincenal" onclick="selectOllaEditFrecuencia('quincenal')">Quincenal</div>
-          <div class="toggle-btn" style="grid-column:span 2" data-frec="especifica_emergencia" onclick="selectOllaEditFrecuencia('especifica_emergencia')">Días específicos / Emergencia</div>
-        </div>
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <span class="field-label">Lugar de cocción</span>
-        <div class="toggle-group" id="olla-edit-lugar-group">
-          <div class="toggle-btn" data-lugar="casa_vecino" onclick="selectOllaEditLugar('casa_vecino')">Casa de vecino/militante</div>
-          <div class="toggle-btn" data-lugar="calle_vereda" onclick="selectOllaEditLugar('calle_vereda')">Calle / Vereda</div>
-          <div class="toggle-btn" data-lugar="centro_comunitario" onclick="selectOllaEditLugar('centro_comunitario')">Centro Comunitario / Club</div>
-          <div class="toggle-btn" data-lugar="aire_libre" onclick="selectOllaEditLugar('aire_libre')">Al aire libre / Plaza</div>
-          <div class="toggle-btn" style="grid-column:span 2" data-lugar="otro" onclick="selectOllaEditLugar('otro')">Otro (especificar)</div>
-        </div>
-        <div id="olla-edit-lugar-otro-wrap" style="display:none;margin-top:8px"><input id="olla-edit-lugar-otro" placeholder="Especificar lugar o referencia" style="font-size:14px;padding:10px"></div>
+    </div>
+    <div class="material-row" style="border-color:#8a5cf6;background:rgba(138,92,246,.08);margin-bottom:16px">
+      <div class="material-info"><div class="material-name" style="color:#6a3fd6;font-weight:600">Cuchillas</div><div class="material-stock">máximo 2</div></div>
+      <div class="stepper">
+        <button type="button" class="stepper-btn" onclick="ollaEditPedidoStep('cuchillas',-1)">−</button>
+        <input type="number" min="0" max="2" inputmode="numeric" class="stepper-val" id="olla-edit-pedido-cuchillas" value="0" onchange="ollaEditPedidoClamp('cuchillas')">
+        <button type="button" class="stepper-btn" onclick="ollaEditPedidoStep('cuchillas',1)">+</button>
       </div>
     </div>
 
-    <div id="olla-edit-step2-existente" style="display:none">
-      <div class="field" style="margin-bottom:8px"><span class="field-label">Días de funcionamiento</span></div>
-      <div class="checkbox-row" id="olla-edit-dias-list" style="margin-bottom:14px">
-        <label><input type="checkbox" value="lunes"> Lunes</label>
-        <label><input type="checkbox" value="martes"> Martes</label>
-        <label><input type="checkbox" value="miercoles"> Miércoles</label>
-        <label><input type="checkbox" value="jueves"> Jueves</label>
-        <label><input type="checkbox" value="viernes"> Viernes</label>
-        <label><input type="checkbox" value="sabado"> Sábado</label>
-        <label><input type="checkbox" value="domingo"> Domingo</label>
-      </div>
-      <div class="field" style="margin-bottom:8px"><span class="field-label">Turno</span></div>
-      <div class="checkbox-row" id="olla-edit-turnos-list" style="margin-bottom:14px">
-        <label><input type="checkbox" value="almuerzo"> Almuerzo</label>
-        <label><input type="checkbox" value="merienda"> Merienda</label>
-        <label><input type="checkbox" value="cena"> Cena</label>
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <span class="field-label">Modalidad</span>
-        <div class="toggle-group" id="olla-edit-modalidad-group" style="grid-template-columns:1fr">
-          <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="comedor_fisico" onclick="selectOllaEditModalidad('comedor_fisico')">Comedor en espacio físico</div>
-          <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="retiro_viandas" onclick="selectOllaEditModalidad('retiro_viandas')">Retiro de viandas / Para comer en la calle</div>
-          <div class="toggle-btn" style="align-items:flex-start;text-align:left" data-modalidad="ambulatorio" onclick="selectOllaEditModalidad('ambulatorio')">Ambulatorio / Recorrida</div>
-        </div>
-      </div>
-    </div>
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:14.5px;margin-bottom:16px">
+      <input type="checkbox" id="olla-edit-cuenta-infraestructura" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0">
+      Cuento, o puedo contar a corto plazo, con el resto de materiales para organizar una olla
+    </label>
 
-    <div class="field" style="margin-bottom:14px">
-      <span class="field-label">Sistema de cocción</span>
-      <div class="toggle-group" id="olla-edit-sistema-group">
-        <div class="toggle-btn" data-sistema="lena" onclick="selectOllaEditSistema('lena')">A leña</div>
-        <div class="toggle-btn" data-sistema="gas_garrafa" onclick="selectOllaEditSistema('gas_garrafa')">A gas (Mechero + Garrafa)</div>
-        <div class="toggle-btn" style="grid-column:span 2" data-sistema="gas_natural" onclick="selectOllaEditSistema('gas_natural')">Gas natural</div>
-      </div>
-    </div>
+    <div class="field" style="margin-bottom:16px"><span class="field-label">Observaciones</span><textarea id="olla-edit-observaciones"></textarea></div>
 
     <div class="form-grid" style="margin-bottom:14px">
-      <div class="field"><span class="field-label">Porciones por jornada</span><input id="olla-edit-porciones" type="number" min="0" style="font-size:16px;padding:12px"></div>
+      <div class="field"><span class="field-label">Porciones estimadas por jornada</span><input id="olla-edit-porciones" type="number" min="0" style="font-size:16px;padding:12px"></div>
       <div class="field"><span class="field-label">Jornadas al mes</span><input id="olla-edit-jornadas" type="number" min="0" style="font-size:16px;padding:12px"></div>
     </div>
 
     <div class="card-title" style="font-size:14px;margin-bottom:6px">Padrón de destinatarios (opcional)</div>
     <div id="olla-edit-padron-list" style="margin-bottom:10px"></div>
     <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPadronAdd()" style="margin-bottom:16px">＋ Agregar familia</button>
-
-    <div class="field" style="margin-bottom:8px"><span class="field-label">¿Cómo se consiguen los alimentos?</span></div>
-    <div class="checkbox-row" id="olla-edit-estrategia-list" style="margin-bottom:16px">
-      <label><input type="checkbox" value="donaciones_mangazo"> Donaciones / Mangazo local</label>
-      <label><input type="checkbox" value="militantes"> Aporte de militantes</label>
-      <label><input type="checkbox" value="programas_estatales"> Programas estatales</label>
-      <label><input type="checkbox" value="iglesias_redes"> Iglesias / Redes barriales</label>
-    </div>
-
-    <div class="field" style="margin-bottom:8px"><span class="field-label">Equipamiento solicitado a Provincia</span></div>
-    <div id="olla-edit-equipamiento-list" style="margin-bottom:16px"></div>
-
-    <div class="field" style="margin-bottom:8px"><span class="field-label">Necesidades de infraestructura</span></div>
-    <div id="olla-edit-necesidades-list"></div>
-
-    <div id="olla-edit-red-alimentaria" style="margin-top:16px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--muted);display:none"></div>
 
     <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary" onclick="guardarEdicionOlla()">Guardar cambios</button>
@@ -1413,6 +1361,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   </div>
 </div>
 
+<!-- MODAL INFO GENÉRICO ("i" de info) -->
+<div id="info-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;width:100%;max-width:420px">
+    <div id="info-modal-title" style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:10px"></div>
+    <div id="info-modal-text" style="font-size:14.5px;color:var(--text);line-height:1.6;white-space:pre-line"></div>
+    <div style="margin-top:18px"><button class="btn btn-primary" style="width:100%" onclick="document.getElementById('info-modal').style.display='none'">Entendido</button></div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1496,16 +1452,14 @@ try { await enableIndexedDbPersistence(db); } catch(e) { console.warn('Offline m
 let currentUser = null;
 let currentTab = 'inicio';
 let isRegistering = false;
-let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [], espacios = [], ollas = [];
+let visitas = [], manzanas = [], instituciones = [], alfabetizandos = [], espacios = [], ollas = [], puntosCiegos = [];
 let map = null, markers = [], userMarker = null;
 let mapFilterNodo = 'todos';
 let mapActiveLayers = { visitas: true, manzanas: true, instituciones: true, analfabetos: false, alfabetizadores: false, espacios: true, ollas: true, puntosciegos: true };
-let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null, unsubEspacios = null, unsubOllas = null;
+let unsubVisitas = null, unsubInst = null, unsubAlf = null, unsubMz = null, unsubConfig = null, unsubEspacios = null, unsubOllas = null, unsubPuntosCiegos = null;
 let espTipoActual = null, espEscalaActual = null, espFotos = {}, espFotosPendientes = false, espFotosRaw = {};
-let ollaObjetivoActual = null, ollaFrecuenciaActual = null, ollaLugarActual = null, ollaSistemaActual = null, ollaModalidadActual = null;
 let ollaPadronActual = [];
 let ollaPadronCtx = { arr: [], containerId: 'olla-padron-list' };
-let ollaDispositivosActual = [], ollaPuntosCiegosActual = [];
 let ollaDispTipoActual = null, ollaDispRefActual = null, ollaDispFrecuenciaActual = null;
 let ollaPcTipoActual = null, ollaPcRadioActual = null, ollaPcCausaActual = null, ollaPcPrioridadActual = null, ollaPcPoligonoPuntos = [];
 let preguntasCustom = [];
@@ -1549,6 +1503,12 @@ function toast(msg, error = false) {
   setTimeout(() => el.className = 'toast', 2500);
 }
 window.toast = toast;
+
+window.showInfo = (title, text) => {
+  document.getElementById('info-modal-title').textContent = title;
+  document.getElementById('info-modal-text').textContent = text;
+  document.getElementById('info-modal').style.display = 'flex';
+};
 
 window.addEventListener('online', () => { document.getElementById('offline-badge').style.display = 'none'; toast('Conexión restaurada'); });
 window.addEventListener('offline', () => { document.getElementById('offline-badge').style.display = 'inline'; });
@@ -1706,6 +1666,7 @@ window.doLogout = async () => {
   if (unsubMz) unsubMz();
   if (unsubEspacios) unsubEspacios();
   if (unsubOllas) unsubOllas();
+  if (unsubPuntosCiegos) unsubPuntosCiegos();
   await signOut(auth);
 };
 
@@ -1854,8 +1815,9 @@ window.abrirPrograma = (id) => {
     document.getElementById('nav').style.display = 'none';
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('sec-ollas').classList.add('active');
-    document.getElementById('olla-subnav').style.display = currentUser.rol === 'coordinador_general' ? 'flex' : 'none';
-    ollaMostrarVista('cargar');
+    document.getElementById('olla-subnav').style.display = 'flex';
+    document.getElementById('olla-tab-resumen').style.display = currentUser.rol === 'coordinador_general' ? '' : 'none';
+    ollaMostrarVista('nueva');
     resetOllaWizard();
     setTimeout(() => { initOllaMap(); ollaMap.invalidateSize(); }, 150);
   } else {
@@ -1925,6 +1887,12 @@ function subscribeToData() {
     qOllas,
     snap => { ollas = snap.docs.map(d => ({id:d.id,...d.data()})); ollas.sort((a,b) => ((b.fecha_creacion?.seconds||0) - (a.fecha_creacion?.seconds||0))); renderAll(); },
     err => { console.error('Error ollas:', err); }
+  );
+  const qPuntosCiegos = esGeneral ? collection(db, 'puntos_ciegos') : query(collection(db, 'puntos_ciegos'), where('nodo_id', '==', nid));
+  unsubPuntosCiegos = onSnapshot(
+    qPuntosCiegos,
+    snap => { puntosCiegos = snap.docs.map(d => ({id:d.id,...d.data()})); puntosCiegos.sort((a,b) => ((b.fecha_creacion?.seconds||0) - (a.fecha_creacion?.seconds||0))); renderAll(); },
+    err => { console.error('Error puntos ciegos:', err); }
   );
   if (nid) {
     unsubConfig = onSnapshot(
@@ -3000,6 +2968,7 @@ function updateMap() {
   const fManzanas = byNodo(manzanas);
   const fEspacios = byNodo(espacios);
   const fOllas = byNodo(ollas);
+  const fPuntosCiegos = byNodo(puntosCiegos);
 
   fVisitas.forEach(v => {
     if (!v.lat||!v.lng) return;
@@ -3051,31 +3020,32 @@ function updateMap() {
     fOllas.forEach(o => {
       if (!o.lat||!o.lng) return;
       const nodoName = NODOS.find(n => n.id === o.nodo_id)?.nombre || '';
+      const detalle = o.objetivo === 'existente'
+        ? `${OLLA_DISP_TIPO_LABELS[o.tipo]||o.tipo||''}${o.frecuencia?'<br>'+(OLLA_DISP_FRECUENCIA_LABELS[o.frecuencia]||o.frecuencia):''}`
+        : `${o.pedido?'<br>Pedido: '+(o.pedido.ollas||0)+' Olla(s), '+(o.pedido.cuchillas||0)+' Cuchilla(s)':''}${o.porciones_jornada?'<br>'+o.porciones_jornada+' porciones × '+(o.jornadas_mes||0)+' jornadas/mes':''}${o.indice_cobertura?'<br>'+(OLLA_COBERTURA_LABELS[o.indice_cobertura]||o.indice_cobertura):''}`;
       const m = L.marker([o.lat,o.lng],{icon:mkPinIcon('#c86a2c',iconoOlla,32)}).addTo(map)
-        .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🍲 ${o.nombre}</b><br>${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}${nodoName?' · '+nodoName:''}${o.porciones_jornada?'<br>'+o.porciones_jornada+' porciones × '+(o.jornadas_mes||0)+' jornadas/mes':''}${o.indice_cobertura?'<br>'+(OLLA_COBERTURA_LABELS[o.indice_cobertura]||o.indice_cobertura):''}${o.cupa?'<br><span style="font-family:monospace;font-size:11px">'+o.cupa+'</span>':''}</div>`);
+        .bindPopup(`<div style="font-family:'EB Garamond',serif;font-size:14px"><b>🍲 ${escHtml(o.nombre||'')}</b><br>${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}${nodoName?' · '+nodoName:''}${detalle}</div>`);
       markers.push(m);
     });
   }
 
   if (mapActiveLayers.puntosciegos) {
-    fOllas.forEach(o => {
-      (o.puntos_ciegos||[]).forEach(p => {
-        const estilo = {color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15, weight:2};
-        const popup = `<div style="font-family:'EB Garamond',serif;font-size:14px"><b>⚠ ${p.nombre_zona}</b><br>Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]||p.prioridad}<br>${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>`;
-        let capa = null, centro = null;
-        if (p.tipo_marcacion === 'radio' && p.lat && p.lng) {
-          capa = L.circle([p.lat,p.lng], {...estilo, radius: p.radio_m || 300}).addTo(map).bindPopup(popup);
-          centro = [p.lat, p.lng];
-        } else if (p.tipo_marcacion === 'poligono' && p.puntos && p.puntos.length >= 3) {
-          capa = L.polygon(p.puntos.map(v => [v.lat,v.lng]), estilo).addTo(map).bindPopup(popup);
-          centro = [p.puntos.reduce((s,v)=>s+v.lat,0)/p.puntos.length, p.puntos.reduce((s,v)=>s+v.lng,0)/p.puntos.length];
-        }
-        if (capa) markers.push(capa);
-        if (centro) {
-          const pin = L.marker(centro, {icon: mkPinIcon('#c94b4b', iconoAlerta, 28)}).addTo(map).bindPopup(popup);
-          markers.push(pin);
-        }
-      });
+    fPuntosCiegos.forEach(p => {
+      const estilo = {color:'#c94b4b', fillColor:'#c94b4b', fillOpacity:.15, weight:2};
+      const popup = `<div style="font-family:'EB Garamond',serif;font-size:14px"><b>⚠ ${escHtml(p.nombre_zona||'')}</b><br>Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]||p.prioridad}<br>${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>`;
+      let capa = null, centro = null;
+      if (p.tipo_marcacion === 'radio' && p.lat && p.lng) {
+        capa = L.circle([p.lat,p.lng], {...estilo, radius: p.radio_m || 300}).addTo(map).bindPopup(popup);
+        centro = [p.lat, p.lng];
+      } else if (p.tipo_marcacion === 'poligono' && p.puntos && p.puntos.length >= 3) {
+        capa = L.polygon(p.puntos.map(v => [v.lat,v.lng]), estilo).addTo(map).bindPopup(popup);
+        centro = [p.puntos.reduce((s,v)=>s+v.lat,0)/p.puntos.length, p.puntos.reduce((s,v)=>s+v.lng,0)/p.puntos.length];
+      }
+      if (capa) markers.push(capa);
+      if (centro) {
+        const pin = L.marker(centro, {icon: mkPinIcon('#c94b4b', iconoAlerta, 28)}).addTo(map).bindPopup(popup);
+        markers.push(pin);
+      }
     });
   }
 
@@ -4013,8 +3983,10 @@ window.eliminarEspacioDesdeEdit = async () => {
 // OLLAS POPULARES
 // ═══════════════════════════════════════════════════════════
 
-const OLLA_OBJETIVO_LABELS = { nueva: 'Nueva olla', existente: 'Olla existente' };
+const OLLA_OBJETIVO_LABELS = { nueva: 'Pedido de olla nueva', existente: 'Olla relevada' };
 const OLLA_SISTEMA_LABELS = { lena: 'A leña', gas_garrafa: 'A gas (Mechero + Garrafa)', gas_natural: 'Gas natural' };
+const OLLA_LUGAR_LABELS = { casa_vecino: 'Patio de un vecino', calle_vereda: 'Calle / Vereda', centro_comunitario: 'Club / Centro Comunitario', aire_libre: 'Espacio al aire libre / Plaza', otro: 'Otro' };
+const OLLA_FRECUENCIA_LABELS = { semanal: 'Semanal', quincenal: 'Quincenal', especifica: 'Días específicos' };
 
 // Masa técnica por cada 100 porciones.
 const OLLA_MASA_TECNICA_100 = [
@@ -4030,16 +4002,12 @@ const OLLA_MASA_TECNICA_100 = [
   {id:'carne', nombre:'Carne o alitas de pollo', cantidad:4, unidad:'kg', autogestion:true}
 ];
 
-const OLLA_EQUIPAMIENTO = [
-  {id:'ollas_80l', nombre:'Ollas populares (80 Lts)', unidad:'unidades'},
-  {id:'cuchillas', nombre:'Cuchillas de cocina', unidad:'unidades'}
-];
-
 const OLLA_NECESIDADES_INFRA = [
-  {id:'cucharon', nombre:'Cucharón grande', tipo:'check'},
   {id:'tablas', nombre:'Tablas para picar', tipo:'stepper', max:5},
+  {id:'cuchillos_cocina', nombre:'Cuchillos de cocina', tipo:'stepper', max:5},
   {id:'pelapapas', nombre:'Pelapapas', tipo:'stepper', max:2},
-  {id:'palanganas', nombre:'Palanganas plásticas / Bateas de pollería', tipo:'stepper', max:6},
+  {id:'palanganas', nombre:'Palanganas plásticas de uso exclusivo', tipo:'stepper', max:6},
+  {id:'cucharon', nombre:'Cucharón grande', tipo:'check'},
   {id:'mechero_garrafa', nombre:'Mechero y garrafa (si cocina a gas)', tipo:'check'},
   {id:'base_soporte', nombre:'Base/soporte pesado para olla de 90kg (si cocina a leña)', tipo:'check'}
 ];
@@ -4052,79 +4020,56 @@ function computeOllaConsumo(porciones, jornadas) {
 }
 
 function resetOllaWizard() {
-  ollaObjetivoActual = null; ollaFrecuenciaActual = null; ollaLugarActual = null; ollaSistemaActual = null; ollaModalidadActual = null;
   ollaPadronActual = [];
   ollaPadronCtx = { arr: ollaPadronActual, containerId: 'olla-padron-list' };
-  ['olla-nombre','olla-dir','olla-lat','olla-lng','olla-resp1-nombre','olla-resp1-tel','olla-resp2-nombre','olla-resp2-tel','olla-lugar-otro','olla-porciones','olla-jornadas']
+  ['olla-nombre','olla-dir','olla-lat','olla-lng','olla-resp-nombre','olla-resp-tel','olla-organizacion','olla-porciones','olla-jornadas','olla-observaciones']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const autoconv = document.getElementById('olla-autoconvocado'); if (autoconv) autoconv.checked = false;
+  const orgEl = document.getElementById('olla-organizacion'); if (orgEl) orgEl.disabled = false;
+  const infraEl = document.getElementById('olla-cuenta-infraestructura'); if (infraEl) infraEl.checked = false;
+  ['olla-pedido-ollas','olla-pedido-cuchillas'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 0; });
   const statusEl = document.getElementById('olla-loc-status'); if (statusEl) statusEl.textContent = '';
   clearOllaMap();
-  document.querySelectorAll('#olla-objetivo-group .toggle-btn, #olla-frecuencia-group .toggle-btn, #olla-lugar-group .toggle-btn, #olla-modalidad-group .toggle-btn, #olla-step-2 [data-sistema]')
-    .forEach(b => b.classList.remove('active'));
-  document.getElementById('olla-step2-nueva').style.display = 'none';
-  document.getElementById('olla-step2-existente').style.display = 'none';
-  document.getElementById('olla-lugar-otro-wrap').style.display = 'none';
-  document.querySelectorAll('#olla-dias-list input, #olla-turnos-list input, #olla-estrategia-list input').forEach(cb => cb.checked = false);
-  document.getElementById('olla-equipamiento-list').innerHTML = '';
-  document.getElementById('olla-necesidades-list').innerHTML = '';
   renderOllaPadronList();
-  ollaDispositivosActual = [];
-  ollaPuntosCiegosActual = [];
-  ollaDispCancelar();
-  ollaPcCancelar();
-  renderOllaDispList();
-  renderOllaPcList();
   showOllaStep(1);
 }
 
+window.toggleOllaAutoconvocado = (checked) => {
+  const org = document.getElementById('olla-organizacion');
+  org.disabled = checked;
+  if (checked) org.value = '';
+};
+
 window.showOllaStep = (n) => {
-  [1,2,3,4,5,6].forEach(i => { const el = document.getElementById('olla-step-'+i); if (el) el.style.display = (i===n)?'block':'none'; });
-  const labels = {1:'Objetivo y ubicación',2:'Plan de lanzamiento / Funcionamiento',3:'Porciones y padrón',4:'Insumos y solicitud',5:'Red alimentaria',6:'Resumen'};
-  document.getElementById('olla-step-label').textContent = `Paso ${n} de 6 · ${labels[n]}`;
+  [1,2,3,4,5].forEach(i => { const el = document.getElementById('olla-step-'+i); if (el) el.style.display = (i===n)?'block':'none'; });
+  const labels = {1:'Ubicación',2:'Responsable',3:'Pedido a Provincia',4:'Porciones y padrón',5:'Revisión y confirmación'};
+  document.getElementById('olla-step-label').textContent = `Paso ${n} de 5 · ${labels[n]}`;
 };
 
 window.nextOllaStep = (n) => {
   if (n === 2) {
-    if (!ollaObjetivoActual) return toast('Elegí si es una olla nueva o existente', true);
-    if (!document.getElementById('olla-nombre').value.trim()) return toast('Ingresá el nombre del espacio', true);
+    if (!document.getElementById('olla-nombre').value.trim()) return toast('Ingresá el nombre del lugar donde se realiza la Olla', true);
   }
   if (n === 3) {
-    if (!ollaSistemaActual) return toast('Elegí el sistema de cocción', true);
+    if (!document.getElementById('olla-resp-nombre').value.trim()) return toast('Ingresá el nombre del responsable de la olla', true);
   }
-  if (n === 4) {
-    const porciones = parseInt(document.getElementById('olla-porciones').value, 10) || 0;
-    const jornadas = parseInt(document.getElementById('olla-jornadas').value, 10) || 0;
-    if (!porciones || !jornadas) return toast('Ingresá porciones por jornada y jornadas al mes', true);
-    renderOllaConsumoList();
-    if (!document.getElementById('olla-equipamiento-list').children.length) renderOllaEquipamientoInto('olla-equipamiento-list', {});
-    if (!document.getElementById('olla-necesidades-list').children.length) renderOllaNecesidadesInto('olla-necesidades-list', {});
-  }
-  if (n === 6) renderOllaResumenStep();
+  if (n === 5) renderOllaResumenStep();
   showOllaStep(n);
 };
 
-window.selectOllaObjetivo = (obj) => {
-  ollaObjetivoActual = obj;
-  document.querySelectorAll('#olla-objetivo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.obj === obj));
-  document.getElementById('olla-step2-nueva').style.display = obj === 'nueva' ? 'block' : 'none';
-  document.getElementById('olla-step2-existente').style.display = obj === 'existente' ? 'block' : 'none';
+window.ollaPedidoStep = (tipo, delta) => {
+  const id = tipo === 'ollas' ? 'olla-pedido-ollas' : 'olla-pedido-cuchillas';
+  const max = tipo === 'ollas' ? 1 : 2;
+  const input = document.getElementById(id);
+  input.value = Math.min(max, Math.max(0, (parseInt(input.value,10)||0) + delta));
 };
-window.selectOllaFrecuencia = (f) => {
-  ollaFrecuenciaActual = f;
-  document.querySelectorAll('#olla-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === f));
-};
-window.selectOllaLugar = (l) => {
-  ollaLugarActual = l;
-  document.querySelectorAll('#olla-lugar-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lugar === l));
-  document.getElementById('olla-lugar-otro-wrap').style.display = l === 'otro' ? 'block' : 'none';
-};
-window.selectOllaSistema = (s) => {
-  ollaSistemaActual = s;
-  document.querySelectorAll('#olla-step-2 [data-sistema]').forEach(b => b.classList.toggle('active', b.dataset.sistema === s));
-};
-window.selectOllaModalidad = (m) => {
-  ollaModalidadActual = m;
-  document.querySelectorAll('#olla-modalidad-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.modalidad === m));
+window.ollaPedidoClamp = (tipo) => {
+  const id = tipo === 'ollas' ? 'olla-pedido-ollas' : 'olla-pedido-cuchillas';
+  const max = tipo === 'ollas' ? 1 : 2;
+  const input = document.getElementById(id);
+  let val = Math.max(0, parseInt(input.value,10)||0);
+  if (val > max) { val = max; toast(`Máximo ${max} unidad(es)`, true); }
+  input.value = val;
 };
 
 // Padrón de destinatarios: contexto compartido entre el wizard de carga y el modal de edición
@@ -4162,50 +4107,9 @@ window.ollaPadronRemove = (i) => {
   renderOllaPadronList();
 };
 
-function renderOllaConsumoList() {
-  const porciones = parseInt(document.getElementById('olla-porciones').value, 10) || 0;
-  const jornadas = parseInt(document.getElementById('olla-jornadas').value, 10) || 0;
-  const consumo = computeOllaConsumo(porciones, jornadas);
-  document.getElementById('olla-consumo-list').innerHTML = OLLA_MASA_TECNICA_100.map(it => `
-    <div class="material-row">
-      <div class="material-info">
-        <div class="material-name">${it.nombre}${it.autogestion ? ' <span class="badge badge-orange" style="margin-left:4px">Autogestión</span>' : ''}</div>
-        <div class="material-stock">${it.unidad}</div>
-      </div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${consumo[it.id]}</div>
-    </div>`).join('');
-}
-
-// Steppers/checkboxes de equipamiento y necesidades: usan selección relativa al
-// elemento (no ids por fila) para poder reutilizar las mismas funciones tanto en
-// el wizard de carga como en el modal de edición sin colisión de ids.
-function renderOllaEquipamientoInto(containerId, valoresGuardados) {
-  document.getElementById(containerId).innerHTML = OLLA_EQUIPAMIENTO.map(it => `
-    <div class="material-row" data-eq-id="${it.id}">
-      <div class="material-info"><div class="material-name">${it.nombre}</div><div class="material-stock">${it.unidad}</div></div>
-      <div class="stepper">
-        <button type="button" class="stepper-btn" onclick="ollaEquipStepQty(this,-1)">−</button>
-        <input type="number" min="0" inputmode="numeric" class="stepper-val" value="${(valoresGuardados && valoresGuardados[it.id]) || 0}" onchange="ollaEquipClampQty(this)">
-        <button type="button" class="stepper-btn" onclick="ollaEquipStepQty(this,1)">+</button>
-      </div>
-    </div>`).join('');
-}
-window.ollaEquipStepQty = (btn, delta) => {
-  const input = btn.parentElement.querySelector('.stepper-val');
-  input.value = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
-};
-window.ollaEquipClampQty = (input) => {
-  input.value = Math.max(0, parseInt(input.value, 10) || 0);
-};
-function readOllaEquipamientoFrom(containerId) {
-  const out = {};
-  document.querySelectorAll('#'+containerId+' [data-eq-id]').forEach(row => {
-    const val = parseInt(row.querySelector('.stepper-val').value, 10) || 0;
-    if (val > 0) out[row.dataset.eqId] = val;
-  });
-  return out;
-}
-
+// Steppers/checkboxes de necesidades de infraestructura: usan selección relativa
+// al elemento (no ids por fila) para poder reutilizar las mismas funciones tanto
+// en la Calculadora de elementos como en el modal de edición sin colisión de ids.
 function renderOllaNecesidadesInto(containerId, valoresGuardados) {
   document.getElementById(containerId).innerHTML = OLLA_NECESIDADES_INFRA.map(it => {
     if (it.tipo === 'check') {
@@ -4250,6 +4154,54 @@ function readOllaNecesidadesFrom(containerId) {
   return out;
 }
 
+// ═══════════════════════════════════════════════════════════
+// III - CALCULADORA DE ELEMENTOS (herramienta independiente, no persiste)
+// ═══════════════════════════════════════════════════════════
+let calcFrecuenciaActual = null, calcLugarActual = null, calcSistemaActual = null;
+
+function initCalcTool() {
+  renderOllaNecesidadesInto('calc-necesidades-list', {});
+  renderCalcResultado();
+}
+
+window.selectCalcFrecuencia = (f) => {
+  calcFrecuenciaActual = f;
+  document.querySelectorAll('#calc-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === f));
+  document.getElementById('calc-jornadas-wrap').style.display = f === 'especifica' ? 'block' : 'none';
+  renderCalcResultado();
+};
+window.selectCalcLugar = (l) => {
+  calcLugarActual = l;
+  document.querySelectorAll('#calc-lugar-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lugar === l));
+  document.getElementById('calc-lugar-otro-wrap').style.display = l === 'otro' ? 'block' : 'none';
+};
+window.selectCalcSistema = (s) => {
+  calcSistemaActual = s;
+  document.querySelectorAll('#calc-sistema-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.sistema === s));
+};
+
+function calcJornadasMes() {
+  if (calcFrecuenciaActual === 'semanal') return 4;
+  if (calcFrecuenciaActual === 'quincenal') return 2;
+  return parseInt((document.getElementById('calc-jornadas')||{}).value, 10) || 0;
+}
+
+window.renderCalcResultado = () => {
+  const porciones = parseInt((document.getElementById('calc-porciones')||{}).value, 10) || 0;
+  const jornadas = calcJornadasMes();
+  const consumo = computeOllaConsumo(porciones, jornadas);
+  const el = document.getElementById('calc-consumo-list');
+  if (!el) return;
+  el.innerHTML = OLLA_MASA_TECNICA_100.map(it => `
+    <div class="material-row">
+      <div class="material-info">
+        <div class="material-name">${it.nombre}${it.autogestion ? ' <span class="badge badge-orange" style="margin-left:4px">Autogestión</span>' : ''}</div>
+        <div class="material-stock">${it.unidad}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${consumo[it.id]}</div>
+    </div>`).join('');
+};
+
 // ─── Paso 5: red alimentaria (dispositivos cercanos + puntos ciegos) ───
 const OLLA_DISP_TIPO_LABELS = { olla_comedor: 'Olla Popular / Comedor', merendero: 'Merendero / Copa de leche', entrega_viandas: 'Entrega de viandas / bolsas' };
 const OLLA_DISP_REF_LABELS = { organizacion_social: 'Organización social / militante', iglesia_club: 'Iglesia / Club / Entidad de bien público', vecinos_independientes: 'Vecinos independientes', estatal_municipal: 'Estatal / Municipal', sin_datos: 'Sin datos / No especifica' };
@@ -4266,12 +4218,6 @@ function haversineMeters(lat1, lng1, lat2, lng2) {
   const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
   return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-}
-
-function generarCUPA(nodoId) {
-  const fecha = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  const rand = Math.random().toString(36).slice(2,6).toUpperCase();
-  return `CUPA-${(nodoId||'NODO').toUpperCase()}-${fecha}-${rand}`;
 }
 
 function computeIndiceCobertura(ollaLat, ollaLng, dispositivos, puntosCiegos) {
@@ -4345,36 +4291,46 @@ window.captureOllaDispLoc = async () => {
   } catch(e) { s.textContent = '✗ ' + e; }
 };
 
-window.ollaDispGuardar = () => {
+window.ollaDispGuardar = async () => {
   const nombre = document.getElementById('olla-disp-nombre').value.trim();
   if (!nombre) return toast('Ingresá el nombre del dispositivo', true);
   if (!ollaDispTipoActual) return toast('Elegí el tipo de dispositivo', true);
   const lat = parseFloat(document.getElementById('olla-disp-lat').value);
   const lng = parseFloat(document.getElementById('olla-disp-lng').value);
-  ollaDispositivosActual.push({
-    nombre,
-    tipo: ollaDispTipoActual,
-    referencia: ollaDispRefActual || 'sin_datos',
-    dias: Array.from(document.querySelectorAll('#olla-disp-dias-list input:checked')).map(cb => cb.value),
-    frecuencia: ollaDispFrecuenciaActual || null,
-    lat: isNaN(lat) ? null : lat,
-    lng: isNaN(lng) ? null : lng
-  });
-  window.ollaDispCancelar();
-  renderOllaDispList();
+  try {
+    await addDoc(collection(db, 'ollas'), {
+      nodo_id: currentUser.nodo_id,
+      objetivo: 'existente',
+      nombre,
+      tipo: ollaDispTipoActual,
+      referencia: ollaDispRefActual || 'sin_datos',
+      dias: Array.from(document.querySelectorAll('#olla-disp-dias-list input:checked')).map(cb => cb.value),
+      frecuencia: ollaDispFrecuenciaActual || null,
+      lat: isNaN(lat) ? null : lat,
+      lng: isNaN(lng) ? null : lng,
+      creado_por: currentUser.uid, creado_por_nombre: currentUser.nombre, creado_por_email: currentUser.email,
+      fecha_creacion: serverTimestamp()
+    });
+    window.ollaDispCancelar();
+    toast('Olla relevada ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
 };
-window.ollaDispEliminar = (i) => { ollaDispositivosActual.splice(i,1); renderOllaDispList(); };
+window.ollaDispEliminar = async (id) => {
+  if (!confirm('¿Eliminar este relevamiento?')) return;
+  try { await deleteDoc(doc(db, 'ollas', id)); toast('Eliminado'); } catch(e) { toast('Error: '+e.message, true); }
+};
 function renderOllaDispList() {
   const el = document.getElementById('olla-disp-list');
   if (!el) return;
-  el.innerHTML = ollaDispositivosActual.length ? ollaDispositivosActual.map((d,i) => `
+  const items = ollas.filter(o => o.objetivo === 'existente');
+  el.innerHTML = items.length ? items.map(d => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
       <div style="min-width:0">
         <div style="font-weight:600;font-size:14px">${escHtml(d.nombre)}</div>
         <div style="font-size:12px;color:var(--muted)">${OLLA_DISP_TIPO_LABELS[d.tipo]||d.tipo} · ${OLLA_DISP_REF_LABELS[d.referencia]||''}</div>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispEliminar(${i})">✕</button>
-    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no registraste dispositivos cercanos. Es opcional.</div>`;
+      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispEliminar('${d.id}')">✕</button>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no relevaste ollas existentes.</div>`;
 }
 
 // -- Puntos ciegos --
@@ -4475,14 +4431,14 @@ window.ollaPcDeshacerPunto = () => {
   ollaPcRedibujarPoligono();
 };
 
-window.ollaPcGuardar = () => {
+window.ollaPcGuardar = async () => {
   const nombre_zona = document.getElementById('olla-pc-nombre').value.trim();
   if (!nombre_zona) return toast('Ingresá el nombre de la zona', true);
   if (!ollaPcTipoActual) return toast('Elegí el tipo de marcación', true);
   if (!ollaPcCausaActual) return toast('Elegí la causa de la falta de cobertura', true);
   if (!ollaPcPrioridadActual) return toast('Elegí la prioridad sugerida', true);
   const poblacion_afectada = Array.from(document.querySelectorAll('#olla-pc-poblacion-list input:checked')).map(cb => cb.value);
-  const punto = { nombre_zona, poblacion_afectada, causa: ollaPcCausaActual, prioridad: ollaPcPrioridadActual, tipo_marcacion: ollaPcTipoActual };
+  const punto = { nodo_id: currentUser.nodo_id, nombre_zona, poblacion_afectada, causa: ollaPcCausaActual, prioridad: ollaPcPrioridadActual, tipo_marcacion: ollaPcTipoActual, creado_por: currentUser.uid, creado_por_nombre: currentUser.nombre, creado_por_email: currentUser.email, fecha_creacion: serverTimestamp() };
   if (ollaPcTipoActual === 'radio') {
     if (!ollaPcPin) return toast('Tocá el mapa para ubicar el centro de la zona', true);
     const c = ollaPcPin.getLatLng();
@@ -4491,107 +4447,94 @@ window.ollaPcGuardar = () => {
     if (ollaPcPoligonoPuntos.length < 3) return toast('Marcá al menos 3 vértices', true);
     punto.puntos = ollaPcPoligonoPuntos.map(([lat,lng]) => ({lat,lng}));
   }
-  ollaPuntosCiegosActual.push(punto);
-  window.ollaPcCancelar();
-  renderOllaPcList();
+  try {
+    await addDoc(collection(db, 'puntos_ciegos'), punto);
+    window.ollaPcCancelar();
+    toast('Punto ciego guardado ✓');
+  } catch(e) { toast('Error: '+e.message, true); }
 };
-window.ollaPcEliminar = (i) => { ollaPuntosCiegosActual.splice(i,1); renderOllaPcList(); };
+window.ollaPcEliminar = async (id) => {
+  if (!confirm('¿Eliminar este punto ciego?')) return;
+  try { await deleteDoc(doc(db, 'puntos_ciegos', id)); toast('Eliminado'); } catch(e) { toast('Error: '+e.message, true); }
+};
 function renderOllaPcList() {
   const el = document.getElementById('olla-pc-list');
   if (!el) return;
-  el.innerHTML = ollaPuntosCiegosActual.length ? ollaPuntosCiegosActual.map((p,i) => `
+  el.innerHTML = puntosCiegos.length ? puntosCiegos.map((p) => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
       <div style="min-width:0">
         <div style="font-weight:600;font-size:14px">${escHtml(p.nombre_zona)} <span class="badge ${p.prioridad==='alta'?'badge-red':p.prioridad==='media'?'badge-orange':'badge-blue'}" style="margin-left:4px">Prioridad ${OLLA_PC_PRIORIDAD_LABELS[p.prioridad]}</span></div>
-        <div style="font-size:12px;color:var(--muted)">${p.tipo_marcacion === 'radio' ? `Radio de ${p.radio_m}m` : `Polígono de ${p.puntos.length} vértices`} · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
+        <div style="font-size:12px;color:var(--muted)">${p.tipo_marcacion === 'radio' ? `Radio de ${p.radio_m}m` : `Polígono de ${(p.puntos||[]).length} vértices`} · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcEliminar(${i})">✕</button>
-    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no marcaste puntos ciegos. Es opcional.</div>`;
+      <button type="button" class="btn btn-secondary btn-sm" onclick="ollaPcEliminar('${p.id}')">✕</button>
+    </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no marcaste puntos ciegos.</div>`;
 }
 
 function renderOllaResumenStep() {
   ollaPadronSync();
   const nombre = document.getElementById('olla-nombre').value.trim();
   const dir = document.getElementById('olla-dir').value.trim();
-  const porciones = parseInt(document.getElementById('olla-porciones').value, 10) || 0;
-  const jornadas = parseInt(document.getElementById('olla-jornadas').value, 10) || 0;
-  const equipamiento = readOllaEquipamientoFrom('olla-equipamiento-list');
-  const equipoTxt = Object.entries(equipamiento).map(([id, q]) => `${(OLLA_EQUIPAMIENTO.find(e=>e.id===id)||{}).nombre||id}: ${q}`).join(', ') || 'Ninguno';
-  const lat = parseFloat(document.getElementById('olla-lat').value);
-  const lng = parseFloat(document.getElementById('olla-lng').value);
-  const cobertura = computeIndiceCobertura(lat, lng, ollaDispositivosActual, ollaPuntosCiegosActual);
-  const coberturaColor = cobertura === 'critica' ? 'badge-red' : cobertura === 'saturada' ? 'badge-gold' : 'badge-green';
+  const respNombre = document.getElementById('olla-resp-nombre').value.trim();
+  const respTel = document.getElementById('olla-resp-tel').value.trim();
+  const autoconvocado = document.getElementById('olla-autoconvocado').checked;
+  const organizacion = document.getElementById('olla-organizacion').value.trim();
+  const pedidoOllas = Math.min(1, parseInt(document.getElementById('olla-pedido-ollas').value,10)||0);
+  const pedidoCuchillas = Math.min(2, parseInt(document.getElementById('olla-pedido-cuchillas').value,10)||0);
+  const cuentaInfra = document.getElementById('olla-cuenta-infraestructura').checked;
   document.getElementById('olla-resumen').innerHTML = `
-    <div><b>${nombre}</b> · ${OLLA_OBJETIVO_LABELS[ollaObjetivoActual]}</div>
-    ${dir ? `<div>📍 ${dir}</div>` : ''}
-    <div>Sistema de cocción: ${OLLA_SISTEMA_LABELS[ollaSistemaActual] || '—'}</div>
-    <div>Porciones: ${porciones} por jornada × ${jornadas} jornadas al mes</div>
-    <div>Padrón cargado: ${ollaPadronCtx.arr.filter(p => p.nombre).length} familia(s)</div>
-    <div>Equipamiento solicitado: ${equipoTxt}</div>
-    <div>Dispositivos cercanos registrados: ${ollaDispositivosActual.length}</div>
-    <div>Puntos ciegos marcados: ${ollaPuntosCiegosActual.length}</div>
-    <div>Índice de cobertura: <span class="badge ${coberturaColor}">${OLLA_COBERTURA_LABELS[cobertura]}</span></div>`;
+    <div><b>${escHtml(nombre)}</b></div>
+    ${dir ? `<div>📍 ${escHtml(dir)}</div>` : ''}
+    <div>Responsable: ${escHtml(respNombre)||'—'}${respTel?' · '+escHtml(respTel):''}</div>
+    <div>${autoconvocado ? 'Vecinos autoconvocados sin organización' : 'Organización: '+(escHtml(organizacion)||'—')}</div>
+    <div>Pedido: ${pedidoOllas} Olla(s), ${pedidoCuchillas} Cuchilla(s)</div>
+    <div>Cuenta con infraestructura para organizar la olla: ${cuentaInfra ? 'Sí' : 'No'}</div>
+    <div>Padrón cargado: ${ollaPadronCtx.arr.filter(p => p.nombre).length} familia(s)</div>`;
 }
 
 window.guardarOlla = async () => {
   const nombre = document.getElementById('olla-nombre').value.trim();
-  if (!nombre || !ollaObjetivoActual) return toast('Faltan datos del Paso 1', true);
+  if (!nombre) return toast('Falta el nombre del lugar (Paso 1)', true);
   ollaPadronSync();
   const porciones = parseInt(document.getElementById('olla-porciones').value, 10) || 0;
   const jornadas = parseInt(document.getElementById('olla-jornadas').value, 10) || 0;
-  const estrategia_obtencion = Array.from(document.querySelectorAll('#olla-estrategia-list input:checked')).map(cb => cb.value);
-  const equipamiento = readOllaEquipamientoFrom('olla-equipamiento-list');
-  const necesidades_infra = readOllaNecesidadesFrom('olla-necesidades-list');
   const lat = parseFloat(document.getElementById('olla-lat').value) || null;
   const lng = parseFloat(document.getElementById('olla-lng').value) || null;
-  const dispositivos_cercanos = ollaDispositivosActual.map(d => ({...d, distancia_m: haversineMeters(lat, lng, d.lat, d.lng)}));
-  const indice_cobertura = computeIndiceCobertura(lat, lng, ollaDispositivosActual, ollaPuntosCiegosActual);
-  const cupa = generarCUPA(currentUser.nodo_id);
+  const autoconvocado = document.getElementById('olla-autoconvocado').checked;
+  const dispositivosExistentes = ollas.filter(o => o.objetivo === 'existente');
+  const indice_cobertura = computeIndiceCobertura(lat, lng, dispositivosExistentes, puntosCiegos);
   const nuevaOlla = {
     nodo_id: currentUser.nodo_id,
-    objetivo: ollaObjetivoActual,
+    objetivo: 'nueva',
     nombre,
     direccion: document.getElementById('olla-dir').value.trim(),
     lat, lng,
-    sistema_coccion: ollaSistemaActual,
+    responsable: { nombre: document.getElementById('olla-resp-nombre').value.trim(), telefono: document.getElementById('olla-resp-tel').value.trim() },
+    organizacion: autoconvocado ? '' : document.getElementById('olla-organizacion').value.trim(),
+    vecino_autoconvocado: autoconvocado,
+    pedido: { ollas: Math.min(1, parseInt(document.getElementById('olla-pedido-ollas').value,10)||0), cuchillas: Math.min(2, parseInt(document.getElementById('olla-pedido-cuchillas').value,10)||0) },
+    cuenta_con_infraestructura: document.getElementById('olla-cuenta-infraestructura').checked,
+    observaciones: document.getElementById('olla-observaciones').value.trim(),
     porciones_jornada: porciones,
     jornadas_mes: jornadas,
     padron: ollaPadronCtx.arr.filter(p => p.nombre),
     consumo: computeOllaConsumo(porciones, jornadas),
-    estrategia_obtencion,
-    equipamiento,
-    necesidades_infra,
-    dispositivos_cercanos,
-    puntos_ciegos: ollaPuntosCiegosActual,
     indice_cobertura,
-    cupa,
-    creado_por: currentUser.uid, fecha_creacion: serverTimestamp()
+    creado_por: currentUser.uid, creado_por_nombre: currentUser.nombre, creado_por_email: currentUser.email, fecha_creacion: serverTimestamp()
   };
-  if (ollaObjetivoActual === 'nueva') {
-    nuevaOlla.responsables = [
-      { nombre: document.getElementById('olla-resp1-nombre').value.trim(), telefono: document.getElementById('olla-resp1-tel').value.trim() },
-      { nombre: document.getElementById('olla-resp2-nombre').value.trim(), telefono: document.getElementById('olla-resp2-tel').value.trim() }
-    ];
-    nuevaOlla.frecuencia_proyectada = ollaFrecuenciaActual;
-    nuevaOlla.lugar_coccion = ollaLugarActual;
-    nuevaOlla.lugar_coccion_otro = document.getElementById('olla-lugar-otro').value.trim();
-  } else {
-    nuevaOlla.dias_funcionamiento = Array.from(document.querySelectorAll('#olla-dias-list input:checked')).map(cb => cb.value);
-    nuevaOlla.turnos = Array.from(document.querySelectorAll('#olla-turnos-list input:checked')).map(cb => cb.value);
-    nuevaOlla.modalidad = ollaModalidadActual;
-  }
   try {
     await addDoc(collection(db, 'ollas'), nuevaOlla);
-    toast(`Olla guardada ✓ · CUPA ${cupa}`);
+    toast('Pedido guardado ✓');
     resetOllaWizard();
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
 window.ollaMostrarVista = (v) => {
-  document.getElementById('olla-vista-cargar').style.display = v === 'cargar' ? 'block' : 'none';
-  document.getElementById('olla-vista-resumen').style.display = v === 'resumen' ? 'block' : 'none';
-  document.getElementById('olla-tab-cargar').classList.toggle('active', v === 'cargar');
-  document.getElementById('olla-tab-resumen').classList.toggle('active', v === 'resumen');
+  ['nueva','relevar','calc','resumen'].forEach(id => {
+    const vista = document.getElementById('olla-vista-'+id); if (vista) vista.style.display = v === id ? 'block' : 'none';
+    const tab = document.getElementById('olla-tab-'+id); if (tab) tab.classList.toggle('active', v === id);
+  });
+  if (v === 'relevar') { renderOllaDispList(); renderOllaPcList(); }
+  if (v === 'calc') initCalcTool();
   if (v === 'resumen') renderOllaResumenGeneral();
 };
 
@@ -4719,25 +4662,26 @@ window.buscarDireccionOlla = async () => {
 function renderOllas() {
   const card = document.getElementById('olla-list-card');
   if (!card) return;
-  if (!ollas.length) { card.style.display = 'none'; return; }
+  const items = ollas.filter(o => o.objetivo === 'nueva');
+  if (!items.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-  document.getElementById('olla-count').textContent = ollas.length;
-  document.getElementById('olla-list').innerHTML = ollas.map(o => {
+  document.getElementById('olla-count').textContent = items.length;
+  document.getElementById('olla-list').innerHTML = items.map(o => {
     const fecha = o.fecha_creacion?.seconds ? new Date(o.fecha_creacion.seconds*1000).toLocaleDateString('es-AR') : '';
+    const pedido = o.pedido || {};
     return `
     <div style="display:flex;gap:10px;padding:12px 15px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:8px">
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-          <div style="font-weight:600;font-size:15px">${o.nombre}</div>
+          <div style="font-weight:600;font-size:15px">${escHtml(o.nombre)}</div>
           <button class="btn btn-secondary btn-sm" onclick="abrirEditOlla('${o.id}')" style="flex-shrink:0;font-size:12px;padding:4px 10px">Editar</button>
         </div>
         <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
-          <span class="badge ${o.objetivo==='nueva'?'badge-gold':'badge-blue'}">${OLLA_OBJETIVO_LABELS[o.objetivo]||o.objetivo}</span>
+          ${(pedido.ollas||pedido.cuchillas) ? `<span class="badge badge-gold">Pedido: ${pedido.ollas||0} Olla(s), ${pedido.cuchillas||0} Cuchilla(s)</span>` : ''}
           ${o.porciones_jornada ? `<span class="badge badge-green">${o.porciones_jornada} porc. × ${o.jornadas_mes||0} jorn./mes</span>` : ''}
           ${o.indice_cobertura ? `<span class="badge ${o.indice_cobertura==='critica'?'badge-red':o.indice_cobertura==='saturada'?'badge-gold':'badge-green'}">${OLLA_COBERTURA_LABELS[o.indice_cobertura]}</span>` : ''}
         </div>
-        ${o.direccion?`<div style="font-size:13px;color:var(--muted);margin-top:5px">📍 ${o.direccion}</div>`:''}
-        ${o.cupa?`<div style="font-size:11px;color:var(--dim);margin-top:3px;font-family:var(--mono)">${o.cupa}</div>`:''}
+        ${o.direccion?`<div style="font-size:13px;color:var(--muted);margin-top:5px">📍 ${escHtml(o.direccion)}</div>`:''}
         ${fecha?`<div style="font-size:11px;color:var(--dim);margin-top:3px">${fecha}</div>`:''}
       </div>
     </div>`;
@@ -4745,7 +4689,6 @@ function renderOllas() {
 }
 
 // ─── Edición de una olla ya cargada ───
-let ollaEditObjetivoActual = null, ollaEditFrecuenciaActual = null, ollaEditLugarActual = null, ollaEditSistemaActual = null, ollaEditModalidadActual = null;
 let ollaEditPadronActual = [];
 let ollaEditMap = null, ollaEditPin = null, ollaEditAutocompleteTimer = null;
 
@@ -4760,52 +4703,15 @@ window.abrirEditOlla = (id) => {
   document.getElementById('olla-edit-porciones').value = o.porciones_jornada || '';
   document.getElementById('olla-edit-jornadas').value = o.jornadas_mes || '';
 
-  ollaEditObjetivoActual = o.objetivo || 'nueva';
-  document.querySelectorAll('#olla-edit-objetivo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.obj === ollaEditObjetivoActual));
-  document.getElementById('olla-edit-step2-nueva').style.display = ollaEditObjetivoActual === 'nueva' ? 'block' : 'none';
-  document.getElementById('olla-edit-step2-existente').style.display = ollaEditObjetivoActual === 'existente' ? 'block' : 'none';
-
-  const resp = o.responsables || [{},{}];
-  document.getElementById('olla-edit-resp1-nombre').value = resp[0]?.nombre || '';
-  document.getElementById('olla-edit-resp1-tel').value = resp[0]?.telefono || '';
-  document.getElementById('olla-edit-resp2-nombre').value = resp[1]?.nombre || '';
-  document.getElementById('olla-edit-resp2-tel').value = resp[1]?.telefono || '';
-
-  ollaEditFrecuenciaActual = o.frecuencia_proyectada || null;
-  document.querySelectorAll('#olla-edit-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === ollaEditFrecuenciaActual));
-  ollaEditLugarActual = o.lugar_coccion || null;
-  document.querySelectorAll('#olla-edit-lugar-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lugar === ollaEditLugarActual));
-  document.getElementById('olla-edit-lugar-otro-wrap').style.display = ollaEditLugarActual === 'otro' ? 'block' : 'none';
-  document.getElementById('olla-edit-lugar-otro').value = o.lugar_coccion_otro || '';
-
-  const dias = o.dias_funcionamiento || [];
-  document.querySelectorAll('#olla-edit-dias-list input').forEach(cb => cb.checked = dias.includes(cb.value));
-  const turnos = o.turnos || [];
-  document.querySelectorAll('#olla-edit-turnos-list input').forEach(cb => cb.checked = turnos.includes(cb.value));
-  ollaEditModalidadActual = o.modalidad || null;
-  document.querySelectorAll('#olla-edit-modalidad-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.modalidad === ollaEditModalidadActual));
-
-  ollaEditSistemaActual = o.sistema_coccion || null;
-  document.querySelectorAll('#olla-edit-sistema-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.sistema === ollaEditSistemaActual));
-
-  const estrategia = o.estrategia_obtencion || [];
-  document.querySelectorAll('#olla-edit-estrategia-list input').forEach(cb => cb.checked = estrategia.includes(cb.value));
-
-  renderOllaEquipamientoInto('olla-edit-equipamiento-list', o.equipamiento || {});
-  renderOllaNecesidadesInto('olla-edit-necesidades-list', o.necesidades_infra || {});
-
-  const redEl = document.getElementById('olla-edit-red-alimentaria');
-  if (o.cupa || (o.dispositivos_cercanos && o.dispositivos_cercanos.length) || (o.puntos_ciegos && o.puntos_ciegos.length)) {
-    redEl.style.display = 'block';
-    redEl.innerHTML = `
-      <div style="font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;font-size:11px;margin-bottom:6px">Red alimentaria (cargada al confirmar, no editable acá)</div>
-      <div>Dispositivos cercanos registrados: ${(o.dispositivos_cercanos||[]).length}</div>
-      <div>Puntos ciegos marcados: ${(o.puntos_ciegos||[]).length}</div>
-      ${o.indice_cobertura ? `<div>Índice de cobertura: <span class="badge ${o.indice_cobertura==='critica'?'badge-red':o.indice_cobertura==='saturada'?'badge-gold':'badge-green'}">${OLLA_COBERTURA_LABELS[o.indice_cobertura]}</span></div>` : ''}
-      ${o.cupa ? `<div style="margin-top:4px;font-family:var(--mono)">${o.cupa}</div>` : ''}`;
-  } else {
-    redEl.style.display = 'none';
-  }
+  document.getElementById('olla-edit-resp-nombre').value = o.responsable?.nombre || '';
+  document.getElementById('olla-edit-resp-tel').value = o.responsable?.telefono || '';
+  document.getElementById('olla-edit-organizacion').value = o.organizacion || '';
+  document.getElementById('olla-edit-autoconvocado').checked = !!o.vecino_autoconvocado;
+  document.getElementById('olla-edit-organizacion').disabled = !!o.vecino_autoconvocado;
+  document.getElementById('olla-edit-pedido-ollas').value = o.pedido?.ollas || 0;
+  document.getElementById('olla-edit-pedido-cuchillas').value = o.pedido?.cuchillas || 0;
+  document.getElementById('olla-edit-cuenta-infraestructura').checked = !!o.cuenta_con_infraestructura;
+  document.getElementById('olla-edit-observaciones').value = o.observaciones || '';
 
   ollaEditPadronActual = (o.padron || []).map(p => ({...p}));
   ollaPadronCtx = { arr: ollaEditPadronActual, containerId: 'olla-edit-padron-list' };
@@ -4826,28 +4732,25 @@ window.abrirEditOlla = (id) => {
   }, 120);
 };
 
-window.selectOllaEditObjetivo = (obj) => {
-  ollaEditObjetivoActual = obj;
-  document.querySelectorAll('#olla-edit-objetivo-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.obj === obj));
-  document.getElementById('olla-edit-step2-nueva').style.display = obj === 'nueva' ? 'block' : 'none';
-  document.getElementById('olla-edit-step2-existente').style.display = obj === 'existente' ? 'block' : 'none';
+window.toggleOllaEditAutoconvocado = (checked) => {
+  const org = document.getElementById('olla-edit-organizacion');
+  org.disabled = checked;
+  if (checked) org.value = '';
 };
-window.selectOllaEditFrecuencia = (f) => {
-  ollaEditFrecuenciaActual = f;
-  document.querySelectorAll('#olla-edit-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === f));
+
+window.ollaEditPedidoStep = (tipo, delta) => {
+  const id = tipo === 'ollas' ? 'olla-edit-pedido-ollas' : 'olla-edit-pedido-cuchillas';
+  const max = tipo === 'ollas' ? 1 : 2;
+  const input = document.getElementById(id);
+  input.value = Math.min(max, Math.max(0, (parseInt(input.value,10)||0) + delta));
 };
-window.selectOllaEditLugar = (l) => {
-  ollaEditLugarActual = l;
-  document.querySelectorAll('#olla-edit-lugar-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lugar === l));
-  document.getElementById('olla-edit-lugar-otro-wrap').style.display = l === 'otro' ? 'block' : 'none';
-};
-window.selectOllaEditModalidad = (m) => {
-  ollaEditModalidadActual = m;
-  document.querySelectorAll('#olla-edit-modalidad-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.modalidad === m));
-};
-window.selectOllaEditSistema = (s) => {
-  ollaEditSistemaActual = s;
-  document.querySelectorAll('#olla-edit-sistema-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.sistema === s));
+window.ollaEditPedidoClamp = (tipo) => {
+  const id = tipo === 'ollas' ? 'olla-edit-pedido-ollas' : 'olla-edit-pedido-cuchillas';
+  const max = tipo === 'ollas' ? 1 : 2;
+  const input = document.getElementById(id);
+  let val = Math.max(0, parseInt(input.value,10)||0);
+  if (val > max) { val = max; toast(`Máximo ${max} unidad(es)`, true); }
+  input.value = val;
 };
 
 function initOllaEditMap() {
@@ -4974,39 +4877,23 @@ window.guardarEdicionOlla = async () => {
   ollaPadronSync();
   const porciones = parseInt(document.getElementById('olla-edit-porciones').value, 10) || 0;
   const jornadas = parseInt(document.getElementById('olla-edit-jornadas').value, 10) || 0;
-  const estrategia_obtencion = Array.from(document.querySelectorAll('#olla-edit-estrategia-list input:checked')).map(cb => cb.value);
-  const equipamiento = readOllaEquipamientoFrom('olla-edit-equipamiento-list');
-  const necesidades_infra = readOllaNecesidadesFrom('olla-edit-necesidades-list');
+  const autoconvocado = document.getElementById('olla-edit-autoconvocado').checked;
   const cambios = {
-    objetivo: ollaEditObjetivoActual,
     nombre,
     direccion: document.getElementById('olla-edit-dir').value.trim(),
     lat: parseFloat(document.getElementById('olla-edit-lat').value) || null,
     lng: parseFloat(document.getElementById('olla-edit-lng').value) || null,
-    sistema_coccion: ollaEditSistemaActual,
+    responsable: { nombre: document.getElementById('olla-edit-resp-nombre').value.trim(), telefono: document.getElementById('olla-edit-resp-tel').value.trim() },
+    organizacion: autoconvocado ? '' : document.getElementById('olla-edit-organizacion').value.trim(),
+    vecino_autoconvocado: autoconvocado,
+    pedido: { ollas: Math.min(1, parseInt(document.getElementById('olla-edit-pedido-ollas').value,10)||0), cuchillas: Math.min(2, parseInt(document.getElementById('olla-edit-pedido-cuchillas').value,10)||0) },
+    cuenta_con_infraestructura: document.getElementById('olla-edit-cuenta-infraestructura').checked,
+    observaciones: document.getElementById('olla-edit-observaciones').value.trim(),
     porciones_jornada: porciones,
     jornadas_mes: jornadas,
     padron: ollaEditPadronActual.filter(p => p.nombre),
-    consumo: computeOllaConsumo(porciones, jornadas),
-    estrategia_obtencion,
-    equipamiento,
-    necesidades_infra
+    consumo: computeOllaConsumo(porciones, jornadas)
   };
-  if (ollaEditObjetivoActual === 'nueva') {
-    cambios.responsables = [
-      { nombre: document.getElementById('olla-edit-resp1-nombre').value.trim(), telefono: document.getElementById('olla-edit-resp1-tel').value.trim() },
-      { nombre: document.getElementById('olla-edit-resp2-nombre').value.trim(), telefono: document.getElementById('olla-edit-resp2-tel').value.trim() }
-    ];
-    cambios.frecuencia_proyectada = ollaEditFrecuenciaActual;
-    cambios.lugar_coccion = ollaEditLugarActual;
-    cambios.lugar_coccion_otro = document.getElementById('olla-edit-lugar-otro').value.trim();
-    cambios.dias_funcionamiento = []; cambios.turnos = []; cambios.modalidad = null;
-  } else {
-    cambios.dias_funcionamiento = Array.from(document.querySelectorAll('#olla-edit-dias-list input:checked')).map(cb => cb.value);
-    cambios.turnos = Array.from(document.querySelectorAll('#olla-edit-turnos-list input:checked')).map(cb => cb.value);
-    cambios.modalidad = ollaEditModalidadActual;
-    cambios.responsables = []; cambios.frecuencia_proyectada = null; cambios.lugar_coccion = null; cambios.lugar_coccion_otro = '';
-  }
   try {
     await updateDoc(doc(db, 'ollas', id), cambios);
     cerrarEditOllaModal();
@@ -5026,19 +4913,22 @@ window.eliminarOllaDesdeEdit = async () => {
 
 // ─── Resumen de pedidos para coordinación general ───
 function getOllaResumenFilas(nodoFiltro) {
-  const ollasFiltradas = nodoFiltro === 'todos' ? ollas : ollas.filter(o => o.nodo_id === nodoFiltro);
+  const pedidos = ollas.filter(o => o.objetivo === 'nueva');
+  const ollasFiltradas = nodoFiltro === 'todos' ? pedidos : pedidos.filter(o => o.nodo_id === nodoFiltro);
   const totalesConsumo = {};
-  const totalesEquipo = {};
+  let totalOllas = 0, totalCuchillas = 0;
   ollasFiltradas.forEach(o => {
     Object.entries(o.consumo || {}).forEach(([id, qty]) => { totalesConsumo[id] = (totalesConsumo[id]||0) + (parseFloat(qty)||0); });
-    Object.entries(o.equipamiento || {}).forEach(([id, qty]) => { totalesEquipo[id] = (totalesEquipo[id]||0) + (parseInt(qty,10)||0); });
+    totalOllas += (o.pedido?.ollas || 0);
+    totalCuchillas += (o.pedido?.cuchillas || 0);
   });
   const filasConsumo = OLLA_MASA_TECNICA_100
     .map(it => ({...it, total: Math.round((totalesConsumo[it.id]||0) * 10) / 10}))
     .filter(it => it.total > 0);
-  const filasEquipo = OLLA_EQUIPAMIENTO
-    .map(it => ({...it, total: totalesEquipo[it.id]||0}))
-    .filter(it => it.total > 0);
+  const filasEquipo = [
+    {nombre:'Ollas', unidad:'unidades', total: totalOllas},
+    {nombre:'Cuchillas', unidad:'unidades', total: totalCuchillas}
+  ].filter(it => it.total > 0);
   return { ollasFiltradas, filasConsumo, filasEquipo };
 }
 
@@ -5054,8 +4944,8 @@ function renderOllaResumenGeneral() {
   const { ollasFiltradas, filasConsumo, filasEquipo } = getOllaResumenFilas(nodoFiltro);
 
   document.getElementById('olla-resumen-general-meta').textContent = nodoFiltro === 'todos'
-    ? `${ollasFiltradas.length} olla(s) relevada(s) en total`
-    : `${ollasFiltradas.length} olla(s) relevada(s) en este nodo`;
+    ? `${ollasFiltradas.length} pedido(s) en total`
+    : `${ollasFiltradas.length} pedido(s) en este nodo`;
 
   listEl.innerHTML = filasConsumo.length ? filasConsumo.map(it => `
     <div class="material-row">
@@ -5069,6 +4959,14 @@ function renderOllaResumenGeneral() {
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
     </div>`).join('') : `<div style="color:var(--dim);font-size:14px">Todavía no hay equipamiento pedido.</div>`;
 
+  const detalleBody = document.getElementById('olla-resumen-detalle-body');
+  if (detalleBody) {
+    detalleBody.innerHTML = ollasFiltradas.length ? ollasFiltradas.map(o => {
+      const fecha = o.fecha_creacion?.seconds ? new Date(o.fecha_creacion.seconds*1000).toLocaleString('es-AR') : '—';
+      return `<tr><td>${escHtml(o.nombre||'')}</td><td class="mono">${o.pedido?.ollas||0}</td><td class="mono">${o.pedido?.cuchillas||0}</td><td>${escHtml(o.creado_por_nombre||o.creado_por_email||'—')}</td><td class="mono">${fecha}</td></tr>`;
+    }).join('') : `<tr><td colspan="5" style="color:var(--dim)">Todavía no hay pedidos.</td></tr>`;
+  }
+
   const cSaturada = ollasFiltradas.filter(o => o.indice_cobertura === 'saturada').length;
   const cOptimizada = ollasFiltradas.filter(o => o.indice_cobertura === 'optimizada').length;
   const cCritica = ollasFiltradas.filter(o => o.indice_cobertura === 'critica').length;
@@ -5077,12 +4975,14 @@ function renderOllaResumenGeneral() {
     <div class="stat"><div class="stat-val" style="color:var(--green)">${cOptimizada}</div><div class="stat-label">Optimizadas</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--red)">${cCritica}</div><div class="stat-label">Críticas</div></div>`;
 
-  const puntosAlta = ollasFiltradas.flatMap(o => (o.puntos_ciegos||[]).filter(p => p.prioridad === 'alta').map(p => ({...p, nodo: (NODOS.find(n=>n.id===o.nodo_id)||{}).nombre || o.nodo_id, olla: o.nombre})));
+  const nombreDeNodo = n => (NODOS.find(x=>x.id===n)||{}).nombre || n;
+  const puntosFiltrados = nodoFiltro === 'todos' ? puntosCiegos : puntosCiegos.filter(p => p.nodo_id === nodoFiltro);
+  const puntosAlta = puntosFiltrados.filter(p => p.prioridad === 'alta');
   document.getElementById('olla-resumen-puntos-ciegos-list').innerHTML = puntosAlta.length ? puntosAlta.map(p => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;gap:8px">
       <div>
-        <div style="font-weight:600;font-size:14px">${p.nombre_zona}</div>
-        <div style="font-size:12px;color:var(--muted)">${p.nodo} · cerca de "${p.olla}" · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
+        <div style="font-weight:600;font-size:14px">${escHtml(p.nombre_zona)}</div>
+        <div style="font-size:12px;color:var(--muted)">${nombreDeNodo(p.nodo_id)} · ${OLLA_PC_CAUSA_LABELS[p.causa]||''}</div>
       </div>
       <span class="badge badge-red">Alta</span>
     </div>`).join('') : `<div style="color:var(--dim);font-size:14px">No hay puntos ciegos de prioridad alta.</div>`;
@@ -5091,8 +4991,8 @@ function renderOllaResumenGeneral() {
 window.exportOllaResumenXLSX = () => {
   const sel = document.getElementById('olla-resumen-nodo-select');
   const nodoFiltro = sel ? sel.value : 'todos';
-  const { filasConsumo, filasEquipo } = getOllaResumenFilas(nodoFiltro);
-  if (!filasConsumo.length && !filasEquipo.length) { toast('No hay pedidos para exportar', true); return; }
+  const { ollasFiltradas, filasConsumo, filasEquipo } = getOllaResumenFilas(nodoFiltro);
+  if (!ollasFiltradas.length) { toast('No hay pedidos para exportar', true); return; }
 
   const nodoLabel = nodoFiltro === 'todos' ? 'Todos los nodos' : (NODOS.find(n => n.id === nodoFiltro)?.nombre || nodoFiltro);
   const data = [
@@ -5103,12 +5003,24 @@ window.exportOllaResumenXLSX = () => {
     ['Insumo', 'Unidad', 'Total'],
     ...filasConsumo.map(it => [it.nombre, it.unidad, it.total]),
     [],
-    ['Equipamiento pedido a Tolosa'],
+    ['Equipamiento pedido a Provincia'],
     ['Ítem', 'Unidad', 'Total'],
-    ...filasEquipo.map(it => [it.nombre, it.unidad, it.total])
+    ...filasEquipo.map(it => [it.nombre, it.unidad, it.total]),
+    [],
+    ['Detalle de pedidos'],
+    ['Olla', 'Dirección', 'Nodo', 'Ollas', 'Cuchillas', 'Usuario', 'Fecha'],
+    ...ollasFiltradas.map(o => [
+      o.nombre || '',
+      o.direccion || '',
+      (NODOS.find(n=>n.id===o.nodo_id)||{}).nombre || o.nodo_id || '',
+      o.pedido?.ollas || 0,
+      o.pedido?.cuchillas || 0,
+      o.creado_por_nombre || o.creado_por_email || '',
+      o.fecha_creacion?.seconds ? new Date(o.fecha_creacion.seconds*1000).toLocaleString('es-AR') : ''
+    ])
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wch:42},{wch:14},{wch:14}];
+  ws['!cols'] = [{wch:28},{wch:28},{wch:16},{wch:8},{wch:10},{wch:22},{wch:18}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Resumen de pedidos');
   const wbArray = XLSX.write(wb, {bookType:'xlsx', type:'array'});
@@ -5125,7 +5037,7 @@ window.exportOllaResumenXLSX = () => {
 
 function renderAll() {
   if (!currentUser) return;
-  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos(); renderEspacios(); renderEspResumenGeneral(); renderOllas(); renderOllaResumenGeneral();
+  renderInicio(); renderManzanas(); renderVisitas(); renderInstituciones(); renderAlfabetizandos(); renderDatos(); renderEspacios(); renderEspResumenGeneral(); renderOllas(); renderOllaDispList(); renderOllaPcList(); renderOllaResumenGeneral();
   if (currentTab === 'mapa') updateMap();
   if (currentTab === 'territorio') updateMzMap();
 }
