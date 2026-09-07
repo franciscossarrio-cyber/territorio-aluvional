@@ -353,8 +353,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <!-- PROXIMAMENTE (placeholder de programas sin desarrollar) -->
     <div class="section" id="sec-proximamente">
       <div class="card" style="text-align:center;padding:48px 20px">
-        <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Próximamente</div>
-        <div id="proximamente-titulo" style="font-size:24px;font-weight:700;margin-bottom:20px"></div>
+        <div id="proximamente-titulo" style="font-size:24px;font-weight:700;margin-bottom:14px"></div>
+        <div id="proximamente-desc" style="font-size:14.5px;color:var(--muted);line-height:1.6;max-width:480px;margin:0 auto 16px"></div>
+        <div style="font-size:13px;color:var(--orange);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:24px">Aún en construcción</div>
         <button class="btn btn-secondary" onclick="mostrarMenu()">← Volver al menú</button>
       </div>
     </div>
@@ -1794,9 +1795,11 @@ window.abrirPrograma = (id) => {
   document.getElementById('header-back').style.display = 'inline-flex';
   if (id === 'alfabetizacion') {
     document.getElementById('header-sub').textContent = 'ALFABETIZACIÓN';
-    document.getElementById('nav').style.display = 'flex';
-    initNav();
-    switchTab('relevamiento');
+    document.getElementById('nav').style.display = 'none';
+    document.getElementById('proximamente-titulo').textContent = 'Alfabetización';
+    document.getElementById('proximamente-desc').textContent = 'Herramienta para capacitarte en ser Alfabetizador. El verdadero cambio es la educación. Guía de clases y métodos para que otro también pueda aprender a leer y escribir.';
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-proximamente').classList.add('active');
   } else if (id === 'mapa') {
     document.getElementById('header-sub').textContent = 'MAPA';
     document.getElementById('nav').style.display = 'none';
@@ -1821,10 +1824,10 @@ window.abrirPrograma = (id) => {
     resetOllaWizard();
     setTimeout(() => { initOllaMap(); ollaMap.invalidateSize(); }, 150);
   } else {
-    const titulos = {};
-    document.getElementById('header-sub').textContent = titulos[id].toUpperCase();
+    document.getElementById('header-sub').textContent = 'PRÓXIMAMENTE';
     document.getElementById('nav').style.display = 'none';
-    document.getElementById('proximamente-titulo').textContent = titulos[id];
+    document.getElementById('proximamente-titulo').textContent = 'Próximamente';
+    document.getElementById('proximamente-desc').textContent = '';
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('sec-proximamente').classList.add('active');
   }
