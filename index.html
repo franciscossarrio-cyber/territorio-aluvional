@@ -319,19 +319,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   <div class="main">
     <!-- MENU PRINCIPAL -->
     <div class="section" id="sec-menu">
-      <div class="aviso" id="menu-aviso" style="display:none">
-        <span class="aviso-icon">📣</span>
-        <div class="aviso-body">
-          <div class="section-title" style="margin-bottom:0">Bonaerenses Solidarios</div>
-          <div style="color:var(--gold-dark);font-size:15px;font-weight:600;font-style:italic;margin-top:6px">Organizando la Comunidad</div>
-          <div style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:600px;line-height:1.6">
-            ¡Hola! Esta es una aplicación para ayudar a organizar la solidaridad en nuestros barrios Bonaerenses.<br><br>
-            Podés gestionar jornadas para arreglar espacios públicos de tu barrio (baldíos, plazas, clubes). Calcular qué necesitás para organizar una Olla popular, y capacitarte como Alfabetizador, para aprender a enseñar a leer y escribir a algún vecino que no sepa.<br><br>
-            ¡Nadie se salva solo! ¡La Comunidad Organizada es la respuesta!
-          </div>
+      <template id="tmpl-aviso-menu">
+        <div class="section-title" style="margin-bottom:0">Bonaerenses Solidarios</div>
+        <div style="color:var(--gold-dark);font-size:15px;font-weight:600;font-style:italic;margin-top:6px">Organizando la Comunidad</div>
+        <div style="color:var(--muted);font-size:14.5px;margin-top:10px;line-height:1.6">
+          ¡Hola! Esta es una aplicación para ayudar a organizar la solidaridad en nuestros barrios Bonaerenses.<br><br>
+          Podés gestionar jornadas para arreglar espacios públicos de tu barrio (baldíos, plazas, clubes). Calcular qué necesitás para organizar una Olla popular, y capacitarte como Alfabetizador, para aprender a enseñar a leer y escribir a algún vecino que no sepa.<br><br>
+          ¡Nadie se salva solo! ¡La Comunidad Organizada es la respuesta!
         </div>
-        <button type="button" class="aviso-close" onclick="cerrarMenuAviso()" aria-label="Cerrar aviso">✕</button>
-      </div>
+      </template>
       <div class="menu-grid">
         <div class="menu-card" style="position:relative" onclick="abrirPrograma('mapa')">
           <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Mapa','Lo primero que tenés que hacer es delimitar tu campo de acción solidaria. Seleccioná en el mapa tu zona de referencia para tus proyectos y ayudanos a detectar los que ya existen.')">ⓘ</button>
@@ -779,7 +775,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
       <!-- ═══ I - OLLA NUEVA ═══ -->
       <div id="olla-vista-nueva">
-      <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Para pedir Olla y Cuchillas a Provincia y organizar una olla nueva. Te recomendamos revisar las otras dos solapas para organizarnos mejor.</div>
+      <template id="tmpl-aviso-ollas-nueva"><div style="font-size:13.5px;color:var(--muted);line-height:1.6">Para pedir Olla y Cuchillas a Provincia y organizar una olla nueva. Te recomendamos revisar las otras dos solapas para organizarnos mejor.</div></template>
       <div class="card">
         <div class="step-indicator" id="olla-step-label">Paso 1 de 5 · Ubicación</div>
 
@@ -894,7 +890,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
       <!-- ═══ II - RELEVADOR DE OLLAS EXISTENTES ═══ -->
       <div id="olla-vista-relevar" style="display:none">
-        <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Es necesario que articulemos con todos los espacios solidarios del barrio para que nadie pase hambre. Mapeá las ollas del barrio y qué día funcionan. Todas las ollas que releves acá se marcarán en tu mapa para tener mayor registro del territorio en el que nos organizamos. Los puntos ciegos son los lugares que detectamos donde hay una población vulnerable sin organización resolviendo la comida.</div>
+        <template id="tmpl-aviso-ollas-relevar"><div style="font-size:13.5px;color:var(--muted);line-height:1.6">Es necesario que articulemos con todos los espacios solidarios del barrio para que nadie pase hambre. Mapeá las ollas del barrio y qué día funcionan. Todas las ollas que releves acá se marcarán en tu mapa para tener mayor registro del territorio en el que nos organizamos. Los puntos ciegos son los lugares que detectamos donde hay una población vulnerable sin organización resolviendo la comida.</div></template>
 
         <div class="card">
           <div class="card-title" style="font-size:14px">Ollas y dispositivos de asistencia alimentaria</div>
@@ -1029,7 +1025,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
       <!-- ═══ III - CALCULADORA DE ELEMENTOS ═══ -->
       <div id="olla-vista-calc" style="display:none">
-        <div class="card card-gold" style="font-size:13.5px;color:var(--muted);line-height:1.6">Esta herramienta es para calcular logísticamente todo lo que se requiere para organizar una olla y que funcione. Sin esto va a ser difícil sostenerla. Lamentablemente por ahora no contamos con más materiales para aportar desde Provincia.</div>
+        <template id="tmpl-aviso-ollas-calc"><div style="font-size:13.5px;color:var(--muted);line-height:1.6">Esta herramienta es para calcular logísticamente todo lo que se requiere para organizar una olla y que funcione. Sin esto va a ser difícil sostenerla. Lamentablemente por ahora no contamos con más materiales para aportar desde Provincia.</div></template>
 
         <div class="card">
           <div style="font-size:12.5px;color:var(--dim);margin-bottom:16px;line-height:1.5">*Una porción es un plato de guiso nutritivo, para que una persona esté satisfecha (450cm³).</div>
@@ -1308,6 +1304,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <button class="btn btn-secondary" onclick="cerrarEditEspModal()">Cancelar</button>
       <button class="btn" style="margin-left:auto;background:rgba(220,50,50,.12);color:var(--red);border:1px solid rgba(220,50,50,.3)" onclick="eliminarEspacioDesdeEdit()">Eliminar</button>
     </div>
+  </div>
+</div>
+
+<div id="aviso-popup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;position:relative">
+    <button type="button" class="aviso-close" onclick="cerrarAvisoPopup()" aria-label="Cerrar aviso" style="position:absolute;top:10px;right:10px">✕</button>
+    <div id="aviso-popup-body" style="padding-right:18px"></div>
   </div>
 </div>
 
@@ -1800,11 +1803,21 @@ function initNav() {
   ).join('');
 }
 
-const MENU_AVISO_LS_KEY = 'aviso_menu_cerrado';
-window.cerrarMenuAviso = () => {
-  try { localStorage.setItem(MENU_AVISO_LS_KEY, '1'); } catch(e) {}
-  const el = document.getElementById('menu-aviso');
-  if (el) el.style.display = 'none';
+function mostrarAvisoPopup(key, templateId) {
+  let cerrado = false;
+  try { cerrado = localStorage.getItem('aviso_'+key+'_cerrado') === '1'; } catch(e) {}
+  if (cerrado) return;
+  const tmpl = document.getElementById(templateId);
+  const modal = document.getElementById('aviso-popup-modal');
+  if (!tmpl || !modal) return;
+  document.getElementById('aviso-popup-body').innerHTML = tmpl.innerHTML;
+  modal.dataset.key = key;
+  modal.style.display = 'flex';
+}
+window.cerrarAvisoPopup = () => {
+  const modal = document.getElementById('aviso-popup-modal');
+  if (modal.dataset.key) { try { localStorage.setItem('aviso_'+modal.dataset.key+'_cerrado', '1'); } catch(e) {} }
+  modal.style.display = 'none';
 };
 
 window.mostrarMenu = function() {
@@ -1814,10 +1827,7 @@ window.mostrarMenu = function() {
   document.getElementById('header-sub').textContent = 'MENÚ PRINCIPAL';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-menu').classList.add('active');
-  let avisoCerrado = false;
-  try { avisoCerrado = localStorage.getItem(MENU_AVISO_LS_KEY) === '1'; } catch(e) {}
-  const avisoEl = document.getElementById('menu-aviso');
-  if (avisoEl) avisoEl.style.display = avisoCerrado ? 'none' : 'flex';
+  mostrarAvisoPopup('menu', 'tmpl-aviso-menu');
   window.scrollTo(0, 0);
 }
 
@@ -4656,8 +4666,9 @@ window.ollaMostrarVista = (v) => {
     const vista = document.getElementById('olla-vista-'+id); if (vista) vista.style.display = v === id ? 'block' : 'none';
     const tab = document.getElementById('olla-tab-'+id); if (tab) tab.classList.toggle('active', v === id);
   });
-  if (v === 'relevar') { renderOllaDispList(); renderOllaPcList(); }
-  if (v === 'calc') initCalcTool();
+  if (v === 'nueva') mostrarAvisoPopup('ollas_nueva', 'tmpl-aviso-ollas-nueva');
+  if (v === 'relevar') { renderOllaDispList(); renderOllaPcList(); mostrarAvisoPopup('ollas_relevar', 'tmpl-aviso-ollas-relevar'); }
+  if (v === 'calc') { initCalcTool(); mostrarAvisoPopup('ollas_calc', 'tmpl-aviso-ollas-calc'); }
   if (v === 'resumen') renderOllaResumenGeneral();
 };
 
