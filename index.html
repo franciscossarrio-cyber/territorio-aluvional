@@ -319,16 +319,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   <div class="main">
     <!-- MENU PRINCIPAL -->
     <div class="section" id="sec-menu">
-      <div class="card card-gold" style="position:relative;overflow:hidden;margin-bottom:4px">
-        <div style="position:absolute;top:0;right:0;width:220px;height:220px;background:radial-gradient(circle at top right,rgba(0,173,195,.08),transparent);pointer-events:none"></div>
-        <div style="position:absolute;bottom:0;left:0;width:160px;height:160px;background:radial-gradient(circle at bottom left,rgba(230,33,117,.05),transparent);pointer-events:none"></div>
-        <div class="section-title" style="margin-bottom:0">Bonaerenses Solidarios</div>
-        <div style="color:var(--gold-dark);font-size:15px;font-weight:600;font-style:italic;margin-top:6px">Organizando la Comunidad</div>
-        <div style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:600px;line-height:1.6">
-          ¡Hola! Esta es una aplicación para ayudar a organizar la solidaridad en nuestros barrios Bonaerenses.<br><br>
-          Podés gestionar jornadas para arreglar espacios públicos de tu barrio (baldíos, plazas, clubes). Calcular qué necesitás para organizar una Olla popular, y capacitarte como Alfabetizador, para aprender a enseñar a leer y escribir a algún vecino que no sepa.<br><br>
-          ¡Nadie se salva solo! ¡La Comunidad Organizada es la respuesta!
+      <div class="aviso" id="menu-aviso" style="display:none">
+        <span class="aviso-icon">📣</span>
+        <div class="aviso-body">
+          <div class="section-title" style="margin-bottom:0">Bonaerenses Solidarios</div>
+          <div style="color:var(--gold-dark);font-size:15px;font-weight:600;font-style:italic;margin-top:6px">Organizando la Comunidad</div>
+          <div style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:600px;line-height:1.6">
+            ¡Hola! Esta es una aplicación para ayudar a organizar la solidaridad en nuestros barrios Bonaerenses.<br><br>
+            Podés gestionar jornadas para arreglar espacios públicos de tu barrio (baldíos, plazas, clubes). Calcular qué necesitás para organizar una Olla popular, y capacitarte como Alfabetizador, para aprender a enseñar a leer y escribir a algún vecino que no sepa.<br><br>
+            ¡Nadie se salva solo! ¡La Comunidad Organizada es la respuesta!
+          </div>
         </div>
+        <button type="button" class="aviso-close" onclick="cerrarMenuAviso()" aria-label="Cerrar aviso">✕</button>
       </div>
       <div class="menu-grid">
         <div class="menu-card" style="position:relative" onclick="abrirPrograma('mapa')">
@@ -1798,6 +1800,13 @@ function initNav() {
   ).join('');
 }
 
+const MENU_AVISO_LS_KEY = 'aviso_menu_cerrado';
+window.cerrarMenuAviso = () => {
+  try { localStorage.setItem(MENU_AVISO_LS_KEY, '1'); } catch(e) {}
+  const el = document.getElementById('menu-aviso');
+  if (el) el.style.display = 'none';
+};
+
 window.mostrarMenu = function() {
   programaActual = null;
   document.getElementById('nav').style.display = 'none';
@@ -1805,6 +1814,10 @@ window.mostrarMenu = function() {
   document.getElementById('header-sub').textContent = 'MENÚ PRINCIPAL';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-menu').classList.add('active');
+  let avisoCerrado = false;
+  try { avisoCerrado = localStorage.getItem(MENU_AVISO_LS_KEY) === '1'; } catch(e) {}
+  const avisoEl = document.getElementById('menu-aviso');
+  if (avisoEl) avisoEl.style.display = avisoCerrado ? 'none' : 'flex';
 }
 
 window.abrirPrograma = (id) => {
