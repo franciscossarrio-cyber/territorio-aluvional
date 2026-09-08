@@ -1818,10 +1818,12 @@ window.mostrarMenu = function() {
   try { avisoCerrado = localStorage.getItem(MENU_AVISO_LS_KEY) === '1'; } catch(e) {}
   const avisoEl = document.getElementById('menu-aviso');
   if (avisoEl) avisoEl.style.display = avisoCerrado ? 'none' : 'flex';
+  window.scrollTo(0, 0);
 }
 
 window.abrirPrograma = (id) => {
   programaActual = id;
+  window.scrollTo(0, 0);
   document.getElementById('header-back').style.display = 'inline-flex';
   if (id === 'alfabetizacion') {
     document.getElementById('header-sub').textContent = 'ALFABETIZACIÓN';
@@ -1865,6 +1867,7 @@ window.abrirPrograma = (id) => {
 
 window.switchTab = (id) => {
   currentTab = id;
+  window.scrollTo(0, 0);
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+id)?.classList.add('active');
   const tabs = getVisibleTabs();
@@ -3593,6 +3596,7 @@ window.guardarEspacio = async () => {
 };
 
 window.espMostrarVista = (v) => {
+  window.scrollTo(0, 0);
   document.getElementById('esp-vista-cargar').style.display = v === 'cargar' ? 'block' : 'none';
   document.getElementById('esp-vista-resumen').style.display = v === 'resumen' ? 'block' : 'none';
   document.getElementById('esp-tab-cargar').classList.toggle('active', v === 'cargar');
@@ -4647,6 +4651,7 @@ window.guardarOlla = async () => {
 };
 
 window.ollaMostrarVista = (v) => {
+  window.scrollTo(0, 0);
   ['nueva','relevar','calc','resumen'].forEach(id => {
     const vista = document.getElementById('olla-vista-'+id); if (vista) vista.style.display = v === id ? 'block' : 'none';
     const tab = document.getElementById('olla-tab-'+id); if (tab) tab.classList.toggle('active', v === id);
