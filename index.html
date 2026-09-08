@@ -931,9 +931,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
                 <div class="toggle-btn" data-frec="esporadica" onclick="selectOllaDispFrecuencia('esporadica')">Esporádica</div>
               </div>
             </div>
-            <div class="field" style="margin-bottom:8px"><span class="field-label">Ubicación</span></div>
+            <div class="field autocomplete-wrap" style="margin-bottom:10px">
+              <span class="field-label">Dirección</span>
+              <input id="olla-disp-dir" placeholder="Calle y número" style="font-size:14px;padding:10px" autocomplete="off" oninput="onOllaDispDirInput()">
+              <div class="autocomplete-list" id="olla-disp-autocomplete-list" style="display:none"></div>
+            </div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
               <button class="btn btn-secondary" onclick="captureOllaDispLoc()" style="font-size:14px;padding:10px 14px">📍 Usar mi ubicación actual</button>
+              <button class="btn btn-secondary" onclick="buscarDireccionOllaDisp()" style="font-size:14px;padding:10px 14px">🔍 Buscar en mapa</button>
               <span id="olla-disp-loc-status" style="font-size:13px;color:var(--dim)"></span>
             </div>
             <div id="olla-disp-map-container" style="width:100%;height:180px;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px"></div>
@@ -1083,8 +1088,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
             </div>
           </div>
           <div id="olla-resumen-general-meta" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
-          <div class="card-title" style="font-size:14px">Insumos alimentarios (consumo mensual proyectado)</div>
-          <div id="olla-resumen-consumo-list" style="margin-bottom:18px"></div>
           <div class="card-title" style="font-size:14px">Equipamiento pedido a Provincia</div>
           <div id="olla-resumen-equipo-list" style="margin-bottom:18px"></div>
           <div class="card-title" style="font-size:14px">Detalle de pedidos</div>
@@ -4251,8 +4254,9 @@ function computeIndiceCobertura(ollaLat, ollaLng, dispositivos, puntosCiegos) {
 // -- Dispositivos cercanos --
 function ollaDispResetForm() {
   ollaDispTipoActual = null; ollaDispRefActual = null; ollaDispFrecuenciaActual = null;
-  ['olla-disp-nombre','olla-disp-lat','olla-disp-lng'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['olla-disp-nombre','olla-disp-dir','olla-disp-lat','olla-disp-lng'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const s = document.getElementById('olla-disp-loc-status'); if (s) s.textContent = '';
+  hideOllaDispAutocomplete();
   document.querySelectorAll('#olla-disp-tipo-group .toggle-btn, #olla-disp-ref-group .toggle-btn, #olla-disp-frecuencia-group .toggle-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#olla-disp-dias-list input').forEach(cb => cb.checked = false);
   if (ollaDispPin && ollaDispMap) { ollaDispMap.removeLayer(ollaDispPin); ollaDispPin = null; }
@@ -4279,7 +4283,7 @@ window.selectOllaDispFrecuencia = (f) => {
   document.querySelectorAll('#olla-disp-frecuencia-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.frec === f));
 };
 
-let ollaDispMap = null, ollaDispPin = null;
+let ollaDispMap = null, ollaDispPin = null, ollaDispAutocompleteTimer = null;
 function initOllaDispMap() {
   if (ollaDispMap) return;
   const ollaLat = parseFloat(document.getElementById('olla-lat').value);
@@ -4309,6 +4313,79 @@ window.captureOllaDispLoc = async () => {
   } catch(e) { s.textContent = '✗ ' + e; }
 };
 
+window.onOllaDispDirInput = () => {
+  clearTimeout(ollaDispAutocompleteTimer);
+  const val = document.getElementById('olla-disp-dir').value.trim();
+  if (val.length < 3) { hideOllaDispAutocomplete(); return; }
+  ollaDispAutocompleteTimer = setTimeout(() => fetchOllaDispAutocomplete(val), 400);
+};
+
+async function fetchOllaDispAutocomplete(text) {
+  const depto = NODO_DEPTO[currentUser?.nodo_id] || '';
+  const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(text)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=6`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    showOllaDispAutocomplete(data.direcciones || []);
+  } catch(e) { hideOllaDispAutocomplete(); }
+}
+
+function showOllaDispAutocomplete(results) {
+  const list = document.getElementById('olla-disp-autocomplete-list');
+  if (!results.length) { hideOllaDispAutocomplete(); return; }
+  list.innerHTML = results.map(r => {
+    const label = r.nomenclatura || `${r.calle?.nombre} ${r.altura?.valor}`;
+    const lat = r.ubicacion?.lat;
+    const lon = r.ubicacion?.lon;
+    if (!lat || !lon) return '';
+    const safeLabel = label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="autocomplete-item" onclick="selectOllaDispAutocomplete(${lat}, ${lon}, '${safeLabel}')">📍 ${label}</div>`;
+  }).filter(Boolean).join('');
+  if (!list.innerHTML) { hideOllaDispAutocomplete(); return; }
+  list.style.display = 'block';
+}
+
+function hideOllaDispAutocomplete() {
+  const list = document.getElementById('olla-disp-autocomplete-list');
+  if (list) list.style.display = 'none';
+}
+
+window.selectOllaDispAutocomplete = (lat, lon, label) => {
+  setOllaDispLocation(parseFloat(lat), parseFloat(lon));
+  if (ollaDispMap) ollaDispMap.setView([parseFloat(lat), parseFloat(lon)], 17);
+  document.getElementById('olla-disp-dir').value = label;
+  document.getElementById('olla-disp-loc-status').textContent = '✓ Dirección encontrada';
+  hideOllaDispAutocomplete();
+};
+
+window.buscarDireccionOllaDisp = async () => {
+  const dir = document.getElementById('olla-disp-dir').value.trim();
+  if (!dir) return toast('Escribí la dirección primero', true);
+  const s = document.getElementById('olla-disp-loc-status');
+  s.textContent = 'Buscando...';
+  const depto = NODO_DEPTO[currentUser.nodo_id] || '';
+  try {
+    const url = `https://apis.datos.gob.ar/georef/api/direcciones?direccion=${encodeURIComponent(dir)}&departamento=${encodeURIComponent(depto)}&provincia=Buenos%20Aires&max=3`;
+    const resp = await fetch(url);
+    const data = resp.ok ? await resp.json() : {};
+    const results = data.direcciones || [];
+    if (results.length > 0 && results[0].ubicacion?.lat) {
+      setOllaDispLocation(results[0].ubicacion.lat, results[0].ubicacion.lon);
+      if (ollaDispMap) ollaDispMap.setView([results[0].ubicacion.lat, results[0].ubicacion.lon], 17);
+      s.textContent = `✓ ${results[0].nomenclatura || 'Dirección encontrada'}`;
+    } else {
+      s.textContent = '✗ No se encontró. Tocá el mapa para ubicar manualmente.';
+      if (!ollaDispMap) initOllaDispMap();
+      setTimeout(() => ollaDispMap.invalidateSize(), 100);
+    }
+  } catch(e) {
+    s.textContent = '✗ Error buscando. Tocá el mapa.';
+    if (!ollaDispMap) initOllaDispMap();
+    setTimeout(() => ollaDispMap.invalidateSize(), 100);
+  }
+};
+
 window.ollaDispGuardar = async () => {
   const nombre = document.getElementById('olla-disp-nombre').value.trim();
   if (!nombre) return toast('Ingresá el nombre del dispositivo', true);
@@ -4320,6 +4397,7 @@ window.ollaDispGuardar = async () => {
       nodo_id: currentUser.nodo_id,
       objetivo: 'existente',
       nombre,
+      direccion: document.getElementById('olla-disp-dir').value.trim(),
       tipo: ollaDispTipoActual,
       referencia: ollaDispRefActual || 'sin_datos',
       dias: Array.from(document.querySelectorAll('#olla-disp-dias-list input:checked')).map(cb => cb.value),
@@ -4346,6 +4424,7 @@ function renderOllaDispList() {
       <div style="min-width:0">
         <div style="font-weight:600;font-size:14px">${escHtml(d.nombre)}</div>
         <div style="font-size:12px;color:var(--muted)">${OLLA_DISP_TIPO_LABELS[d.tipo]||d.tipo} · ${OLLA_DISP_REF_LABELS[d.referencia]||''}</div>
+        ${d.direccion?`<div style="font-size:12px;color:var(--muted)">📍 ${escHtml(d.direccion)}</div>`:''}
       </div>
       <button type="button" class="btn btn-secondary btn-sm" onclick="ollaDispEliminar('${d.id}')">✕</button>
     </div>`).join('') : `<div style="color:var(--dim);font-size:13px">Todavía no relevaste ollas existentes.</div>`;
@@ -4933,45 +5012,34 @@ window.eliminarOllaDesdeEdit = async () => {
 function getOllaResumenFilas(nodoFiltro) {
   const pedidos = ollas.filter(o => o.objetivo === 'nueva');
   const ollasFiltradas = nodoFiltro === 'todos' ? pedidos : pedidos.filter(o => o.nodo_id === nodoFiltro);
-  const totalesConsumo = {};
   let totalOllas = 0, totalCuchillas = 0;
   ollasFiltradas.forEach(o => {
-    Object.entries(o.consumo || {}).forEach(([id, qty]) => { totalesConsumo[id] = (totalesConsumo[id]||0) + (parseFloat(qty)||0); });
     totalOllas += (o.pedido?.ollas || 0);
     totalCuchillas += (o.pedido?.cuchillas || 0);
   });
-  const filasConsumo = OLLA_MASA_TECNICA_100
-    .map(it => ({...it, total: Math.round((totalesConsumo[it.id]||0) * 10) / 10}))
-    .filter(it => it.total > 0);
   const filasEquipo = [
     {nombre:'Ollas', unidad:'unidades', total: totalOllas},
     {nombre:'Cuchillas', unidad:'unidades', total: totalCuchillas}
   ].filter(it => it.total > 0);
-  return { ollasFiltradas, filasConsumo, filasEquipo };
+  return { ollasFiltradas, filasEquipo };
 }
 
 function renderOllaResumenGeneral() {
-  const listEl = document.getElementById('olla-resumen-consumo-list');
-  if (!listEl || currentUser.rol !== 'coordinador_general') return;
+  const equipoEl = document.getElementById('olla-resumen-equipo-list');
+  if (!equipoEl || currentUser.rol !== 'coordinador_general') return;
 
   const sel = document.getElementById('olla-resumen-nodo-select');
   if (sel && sel.options.length === 1) {
     NODOS.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = n.nombre; sel.appendChild(o); });
   }
   const nodoFiltro = sel ? sel.value : 'todos';
-  const { ollasFiltradas, filasConsumo, filasEquipo } = getOllaResumenFilas(nodoFiltro);
+  const { ollasFiltradas, filasEquipo } = getOllaResumenFilas(nodoFiltro);
 
   document.getElementById('olla-resumen-general-meta').textContent = nodoFiltro === 'todos'
     ? `${ollasFiltradas.length} pedido(s) en total`
     : `${ollasFiltradas.length} pedido(s) en este nodo`;
 
-  listEl.innerHTML = filasConsumo.length ? filasConsumo.map(it => `
-    <div class="material-row">
-      <div class="material-info"><div class="material-name">${it.nombre}</div><div class="material-stock">${it.unidad}</div></div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
-    </div>`).join('') : `<div style="color:var(--dim);font-size:14px">Todavía no hay consumo calculado.</div>`;
-
-  document.getElementById('olla-resumen-equipo-list').innerHTML = filasEquipo.length ? filasEquipo.map(it => `
+  equipoEl.innerHTML = filasEquipo.length ? filasEquipo.map(it => `
     <div class="material-row">
       <div class="material-info"><div class="material-name">${it.nombre}</div><div class="material-stock">${it.unidad}</div></div>
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">${it.total}</div>
@@ -5009,17 +5077,13 @@ function renderOllaResumenGeneral() {
 window.exportOllaResumenXLSX = () => {
   const sel = document.getElementById('olla-resumen-nodo-select');
   const nodoFiltro = sel ? sel.value : 'todos';
-  const { ollasFiltradas, filasConsumo, filasEquipo } = getOllaResumenFilas(nodoFiltro);
+  const { ollasFiltradas, filasEquipo } = getOllaResumenFilas(nodoFiltro);
   if (!ollasFiltradas.length) { toast('No hay pedidos para exportar', true); return; }
 
   const nodoLabel = nodoFiltro === 'todos' ? 'Todos los nodos' : (NODOS.find(n => n.id === nodoFiltro)?.nombre || nodoFiltro);
   const data = [
     ['Resumen de pedidos - Ollas Populares'],
     [nodoLabel],
-    [],
-    ['Insumos alimentarios (consumo mensual proyectado)'],
-    ['Insumo', 'Unidad', 'Total'],
-    ...filasConsumo.map(it => [it.nombre, it.unidad, it.total]),
     [],
     ['Equipamiento pedido a Provincia'],
     ['Ítem', 'Unidad', 'Total'],
