@@ -99,8 +99,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .aviso-body{flex:1;min-width:0}
 .aviso-close{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);padding:4px;margin:-4px -4px -4px 0;flex-shrink:0}
 .aviso-close:hover{color:var(--text)}
-.mano-titilante{display:inline-block;animation:titilar 1s ease-in-out infinite}
-@keyframes titilar{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.25)}}
+.mano-titilante{display:inline-block;font-size:22px;line-height:1;vertical-align:middle;animation:titilar 1s ease-in-out infinite}
+@keyframes titilar{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.5)}}
 .card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
 .section-title{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:4px}
 .section-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px}
@@ -400,15 +400,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <button id="mfl-puntosciegos" class="map-filter-btn active" onclick="toggleMapLayer('puntosciegos')">Puntos ciegos</button>
         <button id="btn-editar-zona" class="map-filter-btn" onclick="iniciarEdicionZona()" style="display:none;margin-left:auto"><span class="mano-titilante">👉</span> 📍 Configurar zona de influencia</button>
       </div>
+      <div id="zona-edit-bar" style="display:none;background:var(--surface);border:1px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:10px;box-shadow:var(--shadow-1)">
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px">Moví y hacé zoom hasta encuadrar tu zona de influencia. Después tocá "Guardar zona".</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="guardarZonaEdicion()" style="font-size:13px;padding:8px 14px">✓ Guardar zona</button>
+          <button class="btn btn-secondary" onclick="cancelarEdicionZona()" style="font-size:13px;padding:8px 14px">Cancelar</button>
+        </div>
+      </div>
       <div style="position:relative">
         <div id="map-container"></div>
-        <div id="zona-edit-bar" style="display:none;position:absolute;top:10px;left:10px;right:10px;z-index:1000;background:rgba(255,255,255,.96);border:1px solid var(--gold);border-radius:3px;padding:10px 14px;backdrop-filter:blur(8px);box-shadow:var(--shadow-2)">
-          <div style="font-size:13px;color:var(--text);margin-bottom:8px">Moví y hacé zoom hasta encuadrar tu zona de influencia. Después tocá "Guardar zona".</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" onclick="guardarZonaEdicion()" style="font-size:13px;padding:8px 14px">✓ Guardar zona</button>
-            <button class="btn btn-secondary" onclick="cancelarEdicionZona()" style="font-size:13px;padding:8px 14px">Cancelar</button>
-          </div>
-        </div>
         <div class="map-controls">
           <button class="map-control-btn" onclick="captureMyLocation()">📍 Mi ubicación</button>
           <button class="map-control-btn" onclick="fitMapToMarkers()">🔍 Ver todo</button>
@@ -3123,9 +3123,10 @@ window.iniciarEdicionZona = () => {
   aplicarRestriccionMapa();
   document.getElementById('zona-edit-bar').style.display = 'block';
   document.getElementById('btn-editar-zona').style.display = 'none';
-  if (validarZona(zonaInfluencia)) {
-    map.fitBounds(zonaToLatLngBounds(zonaInfluencia));
-  }
+  setTimeout(() => {
+    map.invalidateSize();
+    if (validarZona(zonaInfluencia)) map.fitBounds(zonaToLatLngBounds(zonaInfluencia));
+  }, 50);
 };
 
 window.guardarZonaEdicion = async () => {
@@ -3152,6 +3153,7 @@ function finalizarEdicionZona() {
   document.getElementById('zona-edit-bar').style.display = 'none';
   aplicarRestriccionMapa();
   actualizarBotonZona();
+  setTimeout(() => map.invalidateSize(), 50);
 }
 
 let mzMap = null;
