@@ -382,6 +382,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
     <!-- MAPA -->
     <div class="section" id="sec-mapa">
+      <template id="tmpl-aviso-mapa"><div style="font-size:13.5px;color:var(--muted);line-height:1.6">Lo primero que tenés que hacer es delimitar tu campo de acción solidaria. Seleccioná en el mapa tu zona de referencia para tus proyectos y ayudanos a detectar los que ya existen.</div></template>
       <div><div class="section-title">Mapa del Territorio</div><div class="section-sub" id="mapa-sub">Visualización georreferenciada del relevamiento de tu nodo.</div></div>
       <div class="map-filters" id="map-filters">
         <div id="map-filter-nodo" style="display:none">
@@ -1882,7 +1883,7 @@ window.switchTab = (id) => {
   document.getElementById('sec-'+id)?.classList.add('active');
   const tabs = getVisibleTabs();
   document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]?.id===id));
-  if (id === 'mapa') setTimeout(initMap, 100);
+  if (id === 'mapa') { setTimeout(initMap, 100); mostrarAvisoPopup('mapa', 'tmpl-aviso-mapa'); }
   if (id === 'territorio') setTimeout(initMzMap, 100);
   if (id === 'equipo') loadEquipo();
   renderAll();
