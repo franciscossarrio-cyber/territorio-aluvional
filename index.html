@@ -2909,7 +2909,9 @@ function actualizarBotonZona() {
   const btnZona = document.getElementById('btn-editar-zona');
   if (!btnZona) return;
   btnZona.style.display = esCoordNodo() ? 'inline-block' : 'none';
-  btnZona.innerHTML = '<span class="mano-titilante">👉</span> ' + (validarZona(zonaInfluencia) ? '📍 Editar zona de influencia' : '📍 Configurar zona de influencia');
+  const zonaYaConfigurada = validarZona(zonaInfluencia);
+  const mano = zonaYaConfigurada ? '' : '<span class="mano-titilante">👉</span> ';
+  btnZona.innerHTML = mano + (zonaYaConfigurada ? '📍 Editar zona de influencia' : '📍 Configurar zona de influencia');
 }
 
 function initMap() {
