@@ -94,6 +94,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;box-shadow:var(--shadow-1)}
 .card-gold{border-left:3px solid var(--gold)}
+.aviso{display:flex;align-items:flex-start;gap:10px;background:var(--gold-bg);border:1px solid var(--gold);border-radius:var(--radius-md);padding:14px 16px;position:relative}
+.aviso-icon{font-size:18px;line-height:1;flex-shrink:0}
+.aviso-body{flex:1;min-width:0}
+.aviso-close{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);padding:4px;margin:-4px -4px -4px 0;flex-shrink:0}
+.aviso-close:hover{color:var(--text)}
 .card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
 .section-title{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:4px}
 .section-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px}
@@ -365,10 +370,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
     <!-- INICIO -->
     <div class="section" id="sec-inicio">
-      <div class="card card-gold" style="position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle at top right,rgba(158,124,46,.06),transparent);pointer-events:none"></div>
-        <h1 style="font-size:24px;font-weight:700;color:var(--gold-dark);line-height:1.2">Relevamiento Territorial</h1>
-        <p style="color:var(--muted);font-size:14.5px;margin-top:10px;max-width:620px;line-height:1.6" id="inicio-welcome"></p>
+      <div><div class="section-title">Relevamiento Territorial</div></div>
+      <div class="aviso" id="inicio-aviso" style="display:none">
+        <span class="aviso-icon">📣</span>
+        <div class="aviso-body">
+          <p style="color:var(--muted);font-size:14.5px;margin:0;line-height:1.6" id="inicio-welcome"></p>
+        </div>
+        <button type="button" class="aviso-close" onclick="cerrarInicioAviso()" aria-label="Cerrar aviso">✕</button>
       </div>
       <div class="stats" id="inicio-stats"></div>
       <div class="card" id="inicio-hallazgos" style="display:none"><div class="card-title" style="color:var(--gold)">Hallazgos del relevamiento</div><div class="stats" id="inicio-hallazgos-stats"></div></div>
@@ -5124,11 +5132,22 @@ function renderAll() {
   if (currentTab === 'territorio') updateMzMap();
 }
 
+const INICIO_AVISO_LS_KEY = 'aviso_inicio_cerrado';
+window.cerrarInicioAviso = () => {
+  try { localStorage.setItem(INICIO_AVISO_LS_KEY, '1'); } catch(e) {}
+  const el = document.getElementById('inicio-aviso');
+  if (el) el.style.display = 'none';
+};
+
 function renderInicio() {
   const esGeneral = currentUser.rol === 'coordinador_general';
   document.getElementById('inicio-welcome').textContent = esGeneral
     ? `Bienvenido/a, ${currentUser.nombre}. Estás viendo los datos de todos los nodos en tiempo real.`
     : `Bienvenido/a, ${currentUser.nombre}. Estás relevando en ${getNodoName()}. Los datos se sincronizan en tiempo real con tu nodo.`;
+  let avisoCerrado = false;
+  try { avisoCerrado = localStorage.getItem(INICIO_AVISO_LS_KEY) === '1'; } catch(e) {}
+  const avisoEl = document.getElementById('inicio-aviso');
+  if (avisoEl) avisoEl.style.display = avisoCerrado ? 'none' : 'flex';
   document.getElementById('inicio-stats').innerHTML = `
     <div class="stat"><div class="stat-val" style="color:var(--gold)">${visitas.length}</div><div class="stat-label">Hogares Relevados</div></div>
     <div class="stat"><div class="stat-val" style="color:var(--blue)">${manzanas.length}</div><div class="stat-label">Manzanas</div></div>
