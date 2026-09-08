@@ -99,6 +99,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .aviso-body{flex:1;min-width:0}
 .aviso-close{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);padding:4px;margin:-4px -4px -4px 0;flex-shrink:0}
 .aviso-close:hover{color:var(--text)}
+.mano-titilante{display:inline-block;animation:titilar 1s ease-in-out infinite}
+@keyframes titilar{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.25)}}
 .card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
 .section-title{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:4px}
 .section-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px}
@@ -393,12 +395,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <button id="mfl-visitas" class="map-filter-btn active" onclick="toggleMapLayer('visitas')">Visitas</button>
         <button id="mfl-manzanas" class="map-filter-btn active" onclick="toggleMapLayer('manzanas')">Manzanas</button>
         <button id="mfl-instituciones" class="map-filter-btn active" onclick="toggleMapLayer('instituciones')">Instituciones</button>
-        <button id="mfl-analfabetos" class="map-filter-btn" onclick="toggleMapLayer('analfabetos')">Analfabetos</button>
-        <button id="mfl-alfabetizadores" class="map-filter-btn" onclick="toggleMapLayer('alfabetizadores')">Alfab. pot.</button>
         <button id="mfl-espacios" class="map-filter-btn active" onclick="toggleMapLayer('espacios')">Espacios públicos</button>
         <button id="mfl-ollas" class="map-filter-btn active" onclick="toggleMapLayer('ollas')">🍲 Ollas</button>
         <button id="mfl-puntosciegos" class="map-filter-btn active" onclick="toggleMapLayer('puntosciegos')">Puntos ciegos</button>
-        <button id="btn-editar-zona" class="map-filter-btn" onclick="iniciarEdicionZona()" style="display:none;margin-left:auto">📍 Configurar zona de influencia</button>
+        <button id="btn-editar-zona" class="map-filter-btn" onclick="iniciarEdicionZona()" style="display:none;margin-left:auto"><span class="mano-titilante">👉</span> 📍 Configurar zona de influencia</button>
       </div>
       <div style="position:relative">
         <div id="map-container"></div>
@@ -2909,7 +2909,7 @@ function actualizarBotonZona() {
   const btnZona = document.getElementById('btn-editar-zona');
   if (!btnZona) return;
   btnZona.style.display = esCoordNodo() ? 'inline-block' : 'none';
-  btnZona.textContent = validarZona(zonaInfluencia) ? '📍 Editar zona de influencia' : '📍 Configurar zona de influencia';
+  btnZona.innerHTML = '<span class="mano-titilante">👉</span> ' + (validarZona(zonaInfluencia) ? '📍 Editar zona de influencia' : '📍 Configurar zona de influencia');
 }
 
 function initMap() {
