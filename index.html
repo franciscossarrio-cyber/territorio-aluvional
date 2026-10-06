@@ -355,6 +355,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           <span>Recuperación de Espacios Públicos</span>
           <span class="menu-card-desc">Relevamiento, diagnóstico y pedido de materiales</span>
         </div>
+        <div class="menu-card" id="menu-card-equipo" style="position:relative;display:none;grid-column:1/-1" onclick="abrirPrograma('equipo')">
+          <button type="button" class="menu-card-info" onclick="event.stopPropagation();showInfo('Equipo','Solo para coordinadores. Desde acá invitás compañeros/as por email o les creás una cuenta, y administrás quiénes forman parte de tu nodo.')">ⓘ</button>
+          <span class="menu-card-icon"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+          <span>Equipo</span>
+          <span class="menu-card-desc">Invitar y agregar compañeros/as al nodo</span>
+        </div>
       </div>
     </div>
 
@@ -1780,6 +1786,8 @@ function showApp() {
   mostrarMenu();
   const btnP = document.getElementById('btn-personalizar-form');
   if (btnP) btnP.style.display = currentUser.rol === 'coordinador_nodo' ? 'block' : 'none';
+  const esCoord = currentUser.rol === 'coordinador_nodo' || currentUser.rol === 'coordinador_general';
+  document.getElementById('menu-card-equipo').style.display = esCoord ? 'flex' : 'none';
 }
 
 const TABS = [
@@ -1843,6 +1851,10 @@ window.abrirPrograma = (id) => {
     document.getElementById('proximamente-desc').textContent = 'Herramienta para capacitarte en ser Alfabetizador. El verdadero cambio es la educación. Guía de clases y métodos para que otro también pueda aprender a leer y escribir.';
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('sec-proximamente').classList.add('active');
+  } else if (id === 'equipo') {
+    document.getElementById('header-sub').textContent = 'EQUIPO';
+    document.getElementById('nav').style.display = 'none';
+    switchTab('equipo');
   } else if (id === 'mapa') {
     document.getElementById('header-sub').textContent = 'MAPA';
     document.getElementById('nav').style.display = 'none';
